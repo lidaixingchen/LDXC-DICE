@@ -87,14 +87,111 @@ const newStatusIntensity = ref('medium');
 const newStatusValue = ref<number | string>('1');
 const newStatusRounds = ref<number | string>('3');
 
+const SPV_MAP: Record<string, number> = {
+  'F级': 5, 'E级': 10, 'D级': 15, 'C级': 20,
+  'B级': 25, 'A级': 35, 'S级': 50, 'SS级': 70, 'SSS级': 95,
+};
+
+function getSPV(level: string): number {
+  return SPV_MAP[level] || 5;
+}
+
+interface EquipmentSlot {
+  name: string;
+  physDmg: number;
+  magicDmg: number;
+  physDef: number;
+  magicDef: number;
+  hpBonus: number;
+  dodgeBonus: number;
+}
+
+const equipment = ref<EquipmentSlot>({
+  name: '',
+  physDmg: 0,
+  magicDmg: 0,
+  physDef: 0,
+  magicDef: 0,
+  hpBonus: 0,
+  dodgeBonus: 0,
+});
+
+interface CombatState {
+  active: boolean;
+  round: number;
+  enemyName: string;
+  enemyMaxHP: number;
+  enemyCurrentHP: number;
+  playerMaxHP: number;
+  playerCurrentHP: number;
+  playerShield: number;
+}
+
+const combat = ref<CombatState>({
+  active: false,
+  round: 1,
+  enemyName: '',
+  enemyMaxHP: 100,
+  enemyCurrentHP: 100,
+  playerMaxHP: 100,
+  playerCurrentHP: 100,
+  playerShield: 0,
+});
+
+function startCombat(): void {
+  const spv = getSPV(worldLevel.value);
+  const levelConfig = WORLD_LEVEL_CONFIG[worldLevel.value];
+  combat.value = {
+    active: true,
+    round: 1,
+    enemyName: combat.value.enemyName || '未知敌人',
+    enemyMaxHP: combat.value.enemyMaxHP || spv * 5 * 2,
+    enemyCurrentHP: combat.value.enemyMaxHP || spv * 5 * 2,
+    playerMaxHP: levelConfig.hpBase + (playerDefense.value !== '' ? Number(playerDefense.value) * 5 : 0) + equipment.value.hpBonus,
+    playerCurrentHP: levelConfig.hpBase + (playerDefense.value !== '' ? Number(playerDefense.value) * 5 : 0) + equipment.value.hpBonus,
+    playerShield: 0,
+  };
+}
+
+function endCombat(): void {
+  combat.value.active = false;
+  combat.value.round = 1;
+}
+
+function nextRound(): void {
+  if (!combat.value.active) return;
+  combat.value.round++;
+  decayStatuses();
+  if (combat.value.round >= 6) {
+    const erosionDamage = Math.max(1, Math.floor(combat.value.playerMaxHP * 0.05));
+    combat.value.playerCurrentHP = Math.max(0, combat.value.playerCurrentHP - erosionDamage);
+  }
+}
+
+function applyDamageToEnemy(damage: number): void {
+  if (!combat.value.active) return;
+  combat.value.enemyCurrentHP = Math.max(0, combat.value.enemyCurrentHP - damage);
+}
+
+function applyDamageToPlayer(damage: number): void {
+  if (!combat.value.active) return;
+  if (combat.value.playerShield > 0) {
+    const absorbed = Math.min(combat.value.playerShield, damage);
+    combat.value.playerShield -= absorbed;
+    damage -= absorbed;
+  }
+  combat.value.playerCurrentHP = Math.max(0, combat.value.playerCurrentHP - damage);
+}
+
 const ATTR_MAPPING: Record<string, string[]> = {
-  attackPower: ['攻击力', '攻击', 'ATK', 'Atk', 'atk', '物攻', '物理攻击', '法攻', '法术攻击', '武力', '力量'],
+  strength: ['力量', 'STR', 'Str', 'str', '力量值', '体力', '物理攻击力'],
+  agility: ['敏捷', 'AGI', 'Agi', 'agi', '敏捷值', '速度', 'SPD', 'Spd', '闪避'],
+  endurance: ['体质', 'END', 'End', 'end', '耐力', '耐力值', '体力上限', 'HP', 'Hp', 'hp', '生命值', '血量', '物防', '防御力'],
+  intelligence: ['智力', 'INT', 'Int', 'int', '智力值', '智慧', '魔力', '法攻', '法术攻击力'],
+  perception: ['感知', 'PER', 'Per', 'per', '感知值', '洞察', '察觉', '法防', '法术防御'],
+  charisma: ['魅力', 'CHA', 'Cha', 'cha', '魅力值', '魅力属性', 'CHR', 'Chr', '暴击率'],
+  attackPower: ['攻击力', '攻击', 'ATK', 'Atk', 'atk', '物攻', '物理攻击', '法攻', '法术攻击'],
   defense: ['防御力', '防御', 'DEF', 'Def', 'def', '物防', '物理防御', '法防', '法术防御', '护甲', '防御值'],
-  charisma: ['魅力', 'CHA', 'Cha', 'cha', '魅力值', '魅力属性', 'CHR', 'Chr'],
-  agility: ['敏捷', 'AGI', 'Agi', 'agi', '敏捷值', '速度', 'SPD', 'Spd'],
-  strength: ['力量', 'STR', 'Str', 'str', '力量值', '体力', '体质'],
-  intelligence: ['智力', 'INT', 'Int', 'int', '智力值', '智慧', '魔力'],
-  endurance: ['耐力', 'END', 'End', 'end', '耐力值', '体力上限', 'HP', 'Hp', 'hp', '生命值', '血量'],
 };
 
 function findAttrValue(attrs: Record<string, number>, keys: string[]): number | null {
@@ -102,6 +199,38 @@ function findAttrValue(attrs: Record<string, number>, keys: string[]): number | 
     if (attrs[key] !== undefined) return attrs[key];
   }
   return null;
+}
+
+interface DerivedStats {
+  physAtk: number;
+  magicAtk: number;
+  physDef: number;
+  magicDef: number;
+  hp: number;
+  ddc: number;
+  critRate: number;
+}
+
+function deriveCombatStats(attrs: Record<string, number>, level: string): DerivedStats {
+  const str = findAttrValue(attrs, ATTR_MAPPING.strength) || 0;
+  const agi = findAttrValue(attrs, ATTR_MAPPING.agility) || 0;
+  const end = findAttrValue(attrs, ATTR_MAPPING.endurance) || 0;
+  const intVal = findAttrValue(attrs, ATTR_MAPPING.intelligence) || 0;
+  const per = findAttrValue(attrs, ATTR_MAPPING.perception) || 0;
+  const cha = findAttrValue(attrs, ATTR_MAPPING.charisma) || 0;
+
+  const spv = getSPV(level);
+  const hpBase = WORLD_LEVEL_CONFIG[level]?.hpBase || 25;
+
+  return {
+    physAtk: str + equipment.value.physDmg,
+    magicAtk: intVal + equipment.value.magicDmg,
+    physDef: end + equipment.value.physDef,
+    magicDef: per + equipment.value.magicDef,
+    hp: Math.max(1, end * 5 + hpBase + equipment.value.hpBonus),
+    ddc: 10 + Math.max(computeAIDMAttrMod(agi), computeAIDMAttrMod(per)) + equipment.value.dodgeBonus,
+    critRate: computeCritRate(cha),
+  };
 }
 
 function autoFillFromCharacter(charName: string): void {
@@ -118,6 +247,15 @@ function autoFillFromCharacter(charName: string): void {
 
   const cha = findAttrValue(attrs, ATTR_MAPPING.charisma);
   if (cha !== null) charisma.value = cha;
+
+  const str = findAttrValue(attrs, ATTR_MAPPING.strength);
+  if (str !== null && attrValue.value === '') attrValue.value = str;
+
+  const agi = findAttrValue(attrs, ATTR_MAPPING.agility);
+  if (agi !== null) oppAgility.value = String(agi);
+
+  const end = findAttrValue(attrs, ATTR_MAPPING.endurance);
+  if (end !== null && playerDefense.value === '') playerDefense.value = end;
 
   initiatorName.value = charName;
 }
@@ -1042,6 +1180,27 @@ onMounted(() => {
             </option>
           </select>
         </div>
+        <div v-if="!isCustomMode" class="acu-spv-panel">
+          <div class="acu-dice-form-label centered">SPV体系</div>
+          <div class="acu-spv-grid">
+            <div class="acu-spv-item">
+              <span class="acu-spv-label">SPV</span>
+              <span class="acu-spv-value">{{ getSPV(worldLevel) }}</span>
+            </div>
+            <div class="acu-spv-item">
+              <span class="acu-spv-label">HP基础</span>
+              <span class="acu-spv-value">{{ WORLD_LEVEL_CONFIG[worldLevel].hpBase }}</span>
+            </div>
+            <div class="acu-spv-item">
+              <span class="acu-spv-label">技能基准</span>
+              <span class="acu-spv-value">{{ getSPV(worldLevel) * 1.0 }}</span>
+            </div>
+            <div class="acu-spv-item">
+              <span class="acu-spv-label">装备基准</span>
+              <span class="acu-spv-value">{{ Math.floor(getSPV(worldLevel) * 0.6) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="checkMode === 'standard' && !isCustomMode">
@@ -1343,6 +1502,91 @@ onMounted(() => {
             }}</span>
           </div>
         </div>
+      </div>
+
+      <div class="acu-equipment-panel" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense')">
+        <div class="acu-section-title"><span><i class="fa-solid fa-shield-halved"></i> 装备</span></div>
+        <div class="acu-dice-form-row cols-4">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">物伤加成</div>
+            <input v-model.number="equipment.physDmg" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">法伤加成</div>
+            <input v-model.number="equipment.magicDmg" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">物防加成</div>
+            <input v-model.number="equipment.physDef" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">法防加成</div>
+            <input v-model.number="equipment.magicDef" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+        <div class="acu-dice-form-row cols-3">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">HP加成</div>
+            <input v-model.number="equipment.hpBonus" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">闪避加值</div>
+            <input v-model.number="equipment.dodgeBonus" type="number" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="acu-combat-manager" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense' || checkMode === 'initiative')">
+        <div class="acu-section-title">
+          <span><i class="fa-solid fa-swords"></i> 战斗管理器</span>
+          <template v-if="!combat.active">
+            <button class="acu-tiny-btn accent" @click="startCombat" title="开始战斗">⚔️ 开始</button>
+          </template>
+          <template v-else>
+            <span class="acu-combat-round-badge">第{{ combat.round }}回合</span>
+            <button class="acu-tiny-btn" @click="nextRound" title="下一回合">⏭️ 下一回合</button>
+            <button class="acu-tiny-btn danger" @click="endCombat" title="结束战斗">🏳️ 结束</button>
+          </template>
+        </div>
+
+        <template v-if="combat.active">
+          <div class="acu-combat-bars">
+            <div class="acu-combat-bar-group">
+              <div class="acu-combat-bar-label">👤 {{ initiatorName || '玩家' }}</div>
+              <div class="acu-hp-bar">
+                <div class="acu-hp-fill player" :style="{ width: (combat.playerCurrentHP / combat.playerMaxHP * 100) + '%' }"></div>
+              </div>
+              <span class="acu-hp-text">{{ combat.playerCurrentHP }}/{{ combat.playerMaxHP }}
+                <span v-if="combat.playerShield > 0" class="acu-shield-text"> 🛡️{{ combat.playerShield }}</span>
+              </span>
+            </div>
+            <div class="acu-combat-bar-group">
+              <div class="acu-combat-bar-label">👹 {{ combat.enemyName || '敌人' }}</div>
+              <div class="acu-hp-bar enemy">
+                <div class="acu-hp-fill enemy" :style="{ width: (combat.enemyCurrentHP / combat.enemyMaxHP * 100) + '%' }"></div>
+              </div>
+              <span class="acu-hp-text">{{ combat.enemyCurrentHP }}/{{ combat.enemyMaxHP }}</span>
+            </div>
+          </div>
+
+          <div class="acu-combat-enemy-setup" style="margin-top:4px;">
+            <div class="acu-dice-form-row cols-2">
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">敌人名称</div>
+                <input v-model="combat.enemyName" type="text" class="acu-dice-input" placeholder="敌人名称" />
+              </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">敌人最大HP</div>
+                <input v-model.number="combat.enemyMaxHP" type="number" class="acu-dice-input" placeholder="100" />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="combat.round >= 6" class="acu-env-erosion">
+            ⚠️ 环境侵蚀生效！每回合承受 {{ Math.floor(combat.playerMaxHP * 0.05) }} 点真实伤害
+          </div>
+        </template>
+        <div v-else class="acu-empty-hint">点击「开始」进入战斗模式追踪回合与HP</div>
       </div>
 
       <div class="acu-status-panel" v-if="!isCustomMode">
@@ -1995,5 +2239,125 @@ onMounted(() => {
 
     &:hover { opacity: 0.85; }
   }
+}
+
+.acu-spv-panel {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.4);
+}
+
+.acu-spv-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.acu-spv-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 2px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+
+  .acu-spv-label {
+    font-size: 8px;
+    color: var(--acu-text-sub);
+  }
+
+  .acu-spv-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--acu-accent);
+  }
+}
+
+.acu-equipment-panel {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 4px;
+  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
+
+  .cols-4 { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+
+  .cols-3 { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+}
+
+.acu-combat-manager {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 4px;
+  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
+
+  .acu-combat-round-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f39c12;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(243, 156, 18, 0.15);
+  }
+}
+
+.acu-combat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.acu-combat-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .acu-combat-bar-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--acu-text-main);
+  }
+}
+
+.acu-hp-bar {
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(231, 76, 60, 0.2);
+  position: relative;
+
+  &.enemy { background: rgba(231, 76, 60, 0.15); }
+}
+
+.acu-hp-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+
+  &.player { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+  &.enemy { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+}
+
+.acu-hp-text {
+  font-size: 9px;
+  color: var(--acu-text-sub);
+}
+
+.acu-shield-text {
+  color: #3498db;
+  font-weight: 700;
+}
+
+.acu-env-erosion {
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: #e67e22;
+  background: rgba(230, 126, 34, 0.1);
+  border: 1px dashed rgba(230, 126, 34, 0.3);
 }
 </style>
