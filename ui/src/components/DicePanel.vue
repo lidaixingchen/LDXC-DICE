@@ -18,13 +18,15 @@ const { characters, currentCharacter, attributeButtons, selectCharacter, getRand
 const nameDropdown = useDropdownSuggestions<{ name: string }>();
 const attrDropdown = useDropdownSuggestions<AttributeButton>();
 
-type CheckMode = 'standard' | 'contest' | 'combat' | 'defense';
+type CheckMode = 'standard' | 'contest' | 'combat' | 'defense' | 'initiative' | 'escape';
 
 const CHECK_MODES = [
   { id: 'standard', name: '标准检定', icon: 'fa-solid fa-dice-d20', description: '非战斗场景的技能检定' },
   { id: 'contest', name: '对抗检定', icon: 'fa-solid fa-people-arrows', description: '双方对抗比较' },
   { id: 'combat', name: '战斗检定', icon: 'fa-solid fa-hand-fist', description: '攻击检定与伤害计算' },
   { id: 'defense', name: '防守检定', icon: 'fa-solid fa-shield', description: '闪避与防御判定' },
+  { id: 'initiative', name: '先攻检定', icon: 'fa-solid fa-bolt', description: '敏捷对抗决定行动顺序' },
+  { id: 'escape', name: '逃跑检定', icon: 'fa-solid fa-person-running', description: '脱离战斗的检定' },
 ];
 
 const isRolling = ref(false);
@@ -60,6 +62,30 @@ const targetDodgeMod = ref<number | string>('');
 const enemyAtkMod = ref<number | string>('');
 const enemyAttackPower = ref<number | string>('');
 const playerDefense = ref<number | string>('');
+
+const oppAgility = ref<number | string>('');
+const escapeType = ref<'solo' | 'surrounded' | 'obstacle'>('solo');
+const escapeEnemyCount = ref<number | string>('1');
+const escapeEnemyAgility = ref<number | string>('');
+const escapeObstacleMod = ref<number | string>('0');
+
+interface StatusEffect {
+  id: number;
+  name: string;
+  type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
+  intensity: 'weak' | 'medium' | 'strong';
+  value: number;
+  remainingRounds: number;
+  description: string;
+}
+
+let statusIdCounter = 0;
+const activeStatuses = ref<StatusEffect[]>([]);
+const newStatusName = ref('');
+const newStatusType = ref('debuff');
+const newStatusIntensity = ref('medium');
+const newStatusValue = ref<number | string>('1');
+const newStatusRounds = ref<number | string>('3');
 
 const ATTR_MAPPING: Record<string, string[]> = {
   attackPower: ['攻击力', '攻击', 'ATK', 'Atk', 'atk', '物攻', '物理攻击', '法攻', '法术攻击', '武力', '力量'],
@@ -364,6 +390,193 @@ async function handleStandardCheck(): Promise<void> {
 ${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`))}
 </meta:检定结果>`;
   await sendToTextarea(content);
+}
+
+async function handleInitiativeCheck(): Promise<void> {
+  const formula = '1d20';
+  const level = worldLevel.value;
+
+  const myAgiVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const myAgiMod = computeAIDMAttrMod(myAgiVal);
+  const myMasteryBonus = getMasteryBonus(level);
+
+  const oppAgiVal = oppAgility.value !== '' ? Number(oppAgility.value) : 10;
+  const oppAgiMod = computeAIDMAttrMod(oppAgiVal);
+  const oppMasteryBonus = getMasteryBonus(level);
+
+  const myRollResult = roll(formula);
+  const myRollTotal = myRollResult.total;
+  const myTotal = myRollTotal + myAgiMod + myMasteryBonus;
+
+  const oppRollResult = roll(formula);
+  const oppRollTotal = oppRollResult.total;
+  const oppTotal = oppRollTotal + oppAgiMod + oppMasteryBonus;
+
+  const isFirst = myTotal > oppTotal;
+  let outcomeText = '';
+
+  if (myTotal > oppTotal) {
+    outcomeText = '先手！';
+  } else if (myTotal < oppTotal) {
+    outcomeText = '后手！';
+  } else {
+    outcomeText = '同时行动！';
+  }
+
+  lastResult.value = {
+    success: isFirst,
+    roll: myRollTotal,
+    total: myTotal,
+    target: oppTotal,
+    margin: myTotal - oppTotal,
+    criticalSuccess: false,
+    criticalFailure: false,
+    outcome: outcomeText,
+    message: `己方: D20(${myRollTotal}) + 敏捷(${myAgiMod}) + 掌握(${myMasteryBonus}) = ${myTotal} | 对方: D20(${oppRollTotal}) + 敏捷(${oppAgiMod}) + 掌握(${oppMasteryBonus}) = ${oppTotal}`,
+    diceType: formula,
+    presetId: 'initiative',
+  };
+  showResult.value = true;
+
+  const content = `<meta:检定结果>
+【AIDM先攻检定】
+
+🎲 己方投骰：
+・D20：${myRollTotal}
+・敏捷属性加成：${myAgiMod}（敏捷${myAgiVal}）
+・掌握加成：${myMasteryBonus}
+・最终值：${myTotal}
+
+🎲 对方投骰：
+・D20：${oppRollTotal}
+・敏捷属性加成：${oppAgiMod}（敏捷${oppAgiVal}）
+・掌握加成：${oppMasteryBonus}
+・最终值：${oppTotal}
+
+⚡ 结果对比：${myTotal} vs ${oppTotal}
+${myTotal > oppTotal ? '✅ 先手行动权！' : (myTotal < oppTotal ? '❌ 后手行动！' : '⚖️ 同时行动！')}
+</meta:检定结果>`;
+  await sendToTextarea(content);
+}
+
+async function handleEscapeCheck(): Promise<void> {
+  const formula = '1d20';
+  const level = worldLevel.value;
+
+  const myAgiVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const myAgiMod = computeAIDMAttrMod(myAgiVal);
+  const masteryBonus = getMasteryBonus(level);
+  const mod = modifier.value !== '' ? Number(modifier.value) : 0;
+
+  let escapeDC: number;
+  let dcDescription: string;
+
+  switch (escapeType.value) {
+    case 'solo': {
+      escapeDC = 10;
+      dcDescription = `单对单逃跑，DC=10（基础）`;
+      break;
+    }
+    case 'surrounded': {
+      const enemyCount = escapeEnemyCount.value !== '' ? Number(escapeEnemyCount.value) : 1;
+      const enemyAgi = escapeEnemyAgility.value !== '' ? Number(escapeEnemyAgility.value) : 0;
+      const enemyAgiMod = computeAIDMAttrMod(enemyAgi);
+      escapeDC = 10 + enemyAgiMod + enemyCount * 2;
+      dcDescription = `被包围逃跑，DC=10+敌方敏捷(${enemyAgiMod})+敌人数量×2(${enemyCount * 2})=${escapeDC}`;
+      break;
+    }
+    case 'obstacle': {
+      const enemyAgi = escapeEnemyAgility.value !== '' ? Number(escapeEnemyAgility.value) : 0;
+      const enemyAgiMod = computeAIDMAttrMod(enemyAgi);
+      const obstacleMod = escapeObstacleMod.value !== '' ? Number(escapeObstacleMod.value) : 0;
+      escapeDC = 10 + enemyAgiMod + obstacleMod;
+      dcDescription = `有障碍物掩护逃跑，DC=10+敌方敏捷(${enemyAgiMod})+环境修正(${obstacleMod})=${escapeDC}`;
+      break;
+    }
+  }
+
+  const result = roll(formula);
+  const rollTotal = result.total;
+  const finalValue = rollTotal + myAgiMod + mod;
+
+  const isSuccess = finalValue >= escapeDC;
+
+  lastResult.value = {
+    success: isSuccess,
+    roll: rollTotal,
+    total: finalValue,
+    target: escapeDC,
+    margin: finalValue - escapeDC,
+    criticalSuccess: false,
+    criticalFailure: false,
+    outcome: isSuccess ? '逃跑成功！' : '逃跑失败，浪费一回合',
+    message: `D20(${rollTotal}) + 敏捷(${myAgiMod})${mod !== 0 ? ` + 修正(${mod >= 0 ? '+' : ''}${mod})` : ''} = ${finalValue} vs DC ${escapeDC}`,
+    diceType: formula,
+    presetId: 'escape',
+  };
+  showResult.value = true;
+
+  const typeLabel = escapeType.value === 'solo' ? '单对单' : (escapeType.value === 'surrounded' ? '被包围' : '有障碍');
+  const content = `<meta:检定结果>
+【AIDM逃跑检定 - ${typeLabel}】
+
+🎲 判定过程：
+・D20投骰：${rollTotal}
+・敏捷属性加成：${myAgiMod}（敏捷${myAgiVal}）
+・额外修正：${mod}
+・最终值：${finalValue}
+
+📊 DC对比：${finalValue} ${isSuccess ? '≥' : '<'} ${escapeDC}
+（${dcDescription}）
+${isSuccess ? '🏃 逃跑成功！脱离战斗！' : '🚫 逃跑失败！浪费一回合，敌人获得免费攻击机会'}
+</meta:检定结果>`;
+  await sendToTextarea(content);
+}
+
+function addStatus(): void {
+  const name = newStatusName.value.trim();
+  if (!name) return;
+
+  statusIdCounter++;
+  activeStatuses.value.push({
+    id: statusIdCounter,
+    name,
+    type: newStatusType.value,
+    intensity: newStatusIntensity.value,
+    value: newStatusValue.value !== '' ? Number(newStatusValue.value) : 1,
+    remainingRounds: newStatusRounds.value !== '' ? Number(newStatusRounds.value) : 3,
+    description: '',
+  });
+
+  newStatusName.value = '';
+  newStatusValue.value = '1';
+  newStatusRounds.value = '3';
+}
+
+function removeStatus(id: number): void {
+  activeStatuses.value = activeStatuses.value.filter(s => s.id !== id);
+}
+
+function decayStatuses(): void {
+  activeStatuses.value = activeStatuses.value
+    .map(s => ({ ...s, remainingRounds: s.remainingRounds - 1 }))
+    .filter(s => s.remainingRounds > 0);
+}
+
+function clearAllStatuses(): void {
+  activeStatuses.value = [];
+}
+
+function getStatusEnvModifier(): { advantage: number; disadvantage: number } {
+  let advantage = 0;
+  let disadvantage = 0;
+
+  for (const s of activeStatuses.value) {
+    if (s.type === 'buff') advantage += s.intensity === 'weak' ? 1 : (s.intensity === 'medium' ? 2 : 3);
+    if (s.type === 'debuff') disadvantage += s.intensity === 'weak' ? 1 : (s.intensity === 'medium' ? 2 : 3);
+  }
+
+  return { advantage, disadvantage };
 }
 
 async function handleContestCheck(): Promise<void> {
@@ -685,6 +898,12 @@ async function handleRoll(): Promise<void> {
         break;
       case 'defense':
         await handleDefenseCheck();
+        break;
+      case 'initiative':
+        await handleInitiativeCheck();
+        break;
+      case 'escape':
+        await handleEscapeCheck();
         break;
     }
   } catch (e) {
@@ -1045,6 +1264,131 @@ onMounted(() => {
         </div>
       </div>
 
+      <div v-if="checkMode === 'initiative' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">己方敏捷</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">对方敏捷</div>
+            <input v-model="oppAgility" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">己方敏捷加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">对方敏捷加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">双方掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="checkMode === 'escape' && !isCustomMode">
+        <div class="acu-dice-form-row cols-3">
+          <div>
+            <div class="acu-dice-form-label centered">逃跑场景</div>
+            <select v-model="escapeType" class="acu-dice-select">
+              <option value="solo">单对单</option>
+              <option value="surrounded">被包围</option>
+              <option value="obstacle">有障碍物掩护</option>
+            </select>
+          </div>
+          <div>
+            <div class="acu-dice-form-label">己方敏捷</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">修正值</div>
+            <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div v-if="escapeType !== 'solo'" class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field" v-if="escapeType === 'surrounded'">
+            <div class="acu-dice-form-label">敌人数量</div>
+            <input v-model="escapeEnemyCount" type="text" class="acu-dice-input" placeholder="1" />
+          </div>
+          <div class="acu-dice-field" v-if="escapeType === 'obstacle'">
+            <div class="acu-dice-form-label">环境修正</div>
+            <input v-model="escapeObstacleMod" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">敌方敏捷</div>
+            <input v-model="escapeEnemyAgility" type="text" class="acu-dice-input" placeholder="0（影响DC）" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">敏捷加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">场景DC:</span>
+            <span class="acu-dice-info-value">{{
+              escapeType === 'solo'
+                ? 10
+                : (escapeType === 'surrounded'
+                  ? (10 + (escapeEnemyAgility !== '' ? computeAIDMAttrMod(Number(escapeEnemyAgility)) : 0) + (escapeEnemyCount !== '' ? Number(escapeEnemyCount) * 2 : 2))
+                  : (10 + (escapeEnemyAgility !== '' ? computeAIDMAttrMod(Number(escapeEnemyAgility)) : 0) + (escapeObstacleMod !== '' ? Number(escapeObstacleMod) : 0)))
+            }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="acu-status-panel" v-if="!isCustomMode">
+        <div class="acu-section-title">
+          <span><i class="fa-solid fa-flask"></i> 状态效果</span>
+          <button class="acu-tiny-btn" title="回合衰减" @click="decayStatuses">⏱️ 回合-1</button>
+          <button class="acu-tiny-btn danger" title="清除全部" @click="clearAllStatuses">🗑️ 清除</button>
+        </div>
+
+        <div v-if="activeStatuses.length > 0" class="acu-status-list">
+          <div v-for="s in activeStatuses" :key="s.id" class="acu-status-item" :class="`status-${s.type}`">
+            <div class="acu-status-header">
+              <span class="acu-status-name">{{ s.name }}</span>
+              <span class="acu-status-badge" :class="s.intensity">{{ s.intensity === 'weak' ? '弱' : (s.intensity === 'medium' ? '中' : '强') }}</span>
+              <span class="acu-status-type">{{ s.type === 'buff' ? '增益' : (s.type === 'debuff' ? '减益' : (s.type === 'dot' ? '持续伤' : (s.type === 'control' ? '控制' : '护盾'))) }}</span>
+              <button class="acu-status-remove" @click="removeStatus(s.id)" title="移除">×</button>
+            </div>
+            <div class="acu-status-detail">
+              数值:{{ s.value }} | 剩余:{{ s.remainingRounds }}回合
+            </div>
+          </div>
+        </div>
+        <div v-else class="acu-empty-hint">无活跃状态效果</div>
+
+        <div class="acu-status-add">
+          <div class="acu-dice-form-row cols-5">
+            <input v-model="newStatusName" type="text" class="acu-dice-input" placeholder="状态名称" />
+            <select v-model="newStatusType" class="acu-dice-select">
+              <option value="debuff">减益</option>
+              <option value="buff">增益</option>
+              <option value="dot">持续伤害</option>
+              <option value="control">控制</option>
+              <option value="shield">护盾</option>
+            </select>
+            <select v-model="newStatusIntensity" class="acu-dice-select">
+              <option value="weak">弱效</option>
+              <option value="medium">中效</option>
+              <option value="strong">强效</option>
+            </select>
+            <input v-model="newStatusValue" type="text" class="acu-dice-input" placeholder="数值" style="width:50px" />
+            <input v-model="newStatusRounds" type="text" class="acu-dice-input" placeholder="回合" style="width:45px" />
+          </div>
+          <button class="acu-full-btn accent" @click="addStatus" style="margin-top:4px;font-size:11px;padding:4px 8px;">+ 添加状态</button>
+        </div>
+      </div>
+
       <div v-if="isCustomMode" class="acu-dice-custom-area">
         <div class="acu-dice-form-row cols-3">
           <div>
@@ -1178,7 +1522,7 @@ onMounted(() => {
 
 .acu-dice-mode-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-bottom: 4px;
 }
@@ -1522,6 +1866,134 @@ onMounted(() => {
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+}
+
+.acu-tiny-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+  }
+
+  &.danger:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
+  }
+}
+
+.acu-status-panel {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 8px;
+  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
+
+  .acu-section-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--acu-text-sub);
+    margin-bottom: 6px;
+  }
+}
+
+.acu-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.acu-status-item {
+  padding: 5px 8px;
+  border-radius: 4px;
+  border-left: 3px solid;
+  font-size: 10px;
+
+  &.status-buff { border-color: #27ae60; background: rgba(39, 174, 96, 0.08); }
+  &.status-debuff { border-color: #e74c3c; background: rgba(231, 76, 60, 0.08); }
+  &.status-dot { border-color: #f39c12; background: rgba(243, 156, 18, 0.08); }
+  &.status-control { border-color: #9b59b6; background: rgba(155, 89, 182, 0.08); }
+  &.status-shield { border-color: #3498db; background: rgba(52, 152, 219, 0.08); }
+}
+
+.acu-status-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.acu-status-name {
+  font-weight: 700;
+  color: var(--acu-text-main);
+}
+
+.acu-status-badge {
+  font-size: 9px;
+  padding: 0 4px;
+  border-radius: 3px;
+
+  &.weak { background: #95a5a6; color: white; }
+  &.medium { background: #f39c12; color: white; }
+  &.strong { background: #e74c3c; color: white; }
+}
+
+.acu-status-type {
+  font-size: 9px;
+  color: var(--acu-text-sub);
+}
+
+.acu-status-remove {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.15); }
+}
+
+.acu-status-detail {
+  font-size: 9px;
+  color: var(--acu-text-sub);
+  margin-top: 2px;
+  padding-left: 4px;
+}
+
+.acu-status-add {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--acu-border);
+
+  .cols-5 {
+    grid-template-columns: 1fr 70px 60px 50px 45px;
+    gap: 3px;
+  }
+
+  .accent {
+    background: var(--acu-accent);
+    color: white;
+    border-color: var(--acu-accent);
+
+    &:hover { opacity: 0.85; }
   }
 }
 </style>
