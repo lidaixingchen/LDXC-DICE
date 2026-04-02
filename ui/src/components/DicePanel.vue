@@ -18,23 +18,48 @@ const { characters, currentCharacter, attributeButtons, selectCharacter, getRand
 const nameDropdown = useDropdownSuggestions<{ name: string }>();
 const attrDropdown = useDropdownSuggestions<AttributeButton>();
 
+type CheckMode = 'standard' | 'contest' | 'combat' | 'defense';
+
+const CHECK_MODES = [
+  { id: 'standard', name: '标准检定', icon: 'fa-solid fa-dice-d20', description: '非战斗场景的技能检定' },
+  { id: 'contest', name: '对抗检定', icon: 'fa-solid fa-people-arrows', description: '双方对抗比较' },
+  { id: 'combat', name: '战斗检定', icon: 'fa-solid fa-hand-fist', description: '攻击检定与伤害计算' },
+  { id: 'defense', name: '防守检定', icon: 'fa-solid fa-shield', description: '闪避与防御判定' },
+];
+
 const isRolling = ref(false);
 const lastResult = ref<CheckResult | null>(null);
 const showResult = ref(false);
 
+const checkMode = ref<CheckMode>('standard');
 const initiatorName = ref('');
 const attrName = ref('');
 const attrValue = ref<number | string>('');
 const targetValue = ref<number | string>('');
 const modifier = ref<number | string>('');
 const difficulty = ref('normal');
-const successCriteria = ref('gte');
 const customDiceExpr = ref('1d20');
 const customJudgeMode = ref('>=');
 const customTargetValue = ref<number | string>('');
 const isCustomMode = ref(false);
-const activeQuickPresetId = ref('aidm_standard');
 const worldLevel = ref('F级');
+
+const oppAttr = ref<number | string>('');
+const oppRoll = ref<number | string>('');
+const envAdvantage = ref<number | string>('');
+const envDisadvantage = ref<number | string>('');
+const statusAdvantage = ref<number | string>('');
+const statusDisadvantage = ref<number | string>('');
+
+const attackType = ref<'物理' | '法术'>('物理');
+const attackPower = ref<number | string>('');
+const targetDefense = ref<number | string>('');
+const charisma = ref<number | string>('');
+const targetDodgeMod = ref<number | string>('');
+
+const enemyAtkMod = ref<number | string>('');
+const enemyAttackPower = ref<number | string>('');
+const playerDefense = ref<number | string>('');
 
 interface WorldLevelConfig {
   baseDC: number;
@@ -99,7 +124,6 @@ function getBaseDC(level: string): number {
 const QUICK_PRESETS = computed(() => {
   const list = presets.value.filter(p => p.visible !== false).map(p => ({ id: p.id!, name: p.name }));
   return [
-    { id: 'aidm_standard', name: 'AIDM标准' },
     { id: '__custom__', name: '自定义' },
     ...list,
   ];
@@ -111,11 +135,6 @@ const DIFFICULTY_OPTIONS = [
   { value: 'extreme', label: '极难 (+6)' },
 ];
 
-const SUCCESS_CRITERIA_OPTIONS = [
-  { id: 'gte', name: '≥ (AIDM)' },
-  { id: 'lte', name: '≤ (COC)' },
-];
-
 const JUDGE_MODE_OPTIONS = [
   { id: '>=', name: '>=' },
   { id: '<=', name: '<=' },
@@ -124,27 +143,25 @@ const JUDGE_MODE_OPTIONS = [
   { id: 'none', name: '无判定' },
 ];
 
-const isAIDM = computed(() => activeQuickPresetId.value === 'aidm_standard');
-const isDND = computed(() => successCriteria.value === 'gte');
+const ATTACK_TYPE_OPTIONS = [
+  { value: '物理', label: '物理攻击' },
+  { value: '法术', label: '法术攻击' },
+];
+
+function selectCheckMode(mode: CheckMode): void {
+  checkMode.value = mode;
+  showResult.value = false;
+  lastResult.value = null;
+}
 
 function selectQuickPreset(id: string): void {
-  activeQuickPresetId.value = id;
   isCustomMode.value = id === '__custom__';
-
-  if (id === 'aidm_standard') {
-    successCriteria.value = 'gte';
-    customDiceExpr.value = '1d20';
-  } else if (id === '__custom__') {
+  if (id === '__custom__') {
     customDiceExpr.value = '1d20';
   } else {
     selectPreset(id);
     const p = presets.value.find(x => x.id === id);
     if (p) {
-      if (p.diceExpression === '1d20') {
-        successCriteria.value = 'gte';
-      } else if (p.diceExpression === '1d100') {
-        successCriteria.value = 'lte';
-      }
       customDiceExpr.value = p.diceExpression || '1d20';
     }
   }
@@ -159,9 +176,6 @@ function handleSelectCharacter(name: string): void {
 function handleSelectAttribute(attr: AttributeButton): void {
   attrName.value = attr.name;
   attrValue.value = attr.value;
-  if (!isDND.value) {
-    targetValue.value = attr.value;
-  }
   attrDropdown.close();
 }
 
@@ -170,10 +184,336 @@ function randomSkill(): void {
   if (attr) {
     attrName.value = attr.name;
     attrValue.value = attr.value;
-    if (!isDND.value) {
-      targetValue.value = attr.value;
-    }
   }
+}
+
+function computeDamageReduction(defense: number, attackPower: number): number {
+  const ratio = defense / attackPower;
+  if (ratio < 0.5) return 0;
+  if (ratio < 0.8) return 0.2;
+  if (ratio < 1) return 0.4;
+  if (ratio < 1.5) return 0.6;
+  return 0.8;
+}
+
+function computeCritRate(charismaVal: number): number {
+  return Math.min(50, 5 + Math.floor(charismaVal / 2));
+}
+
+async function handleStandardCheck(): Promise<void> {
+  const formula = '1d20';
+  const mod = modifier.value !== '' ? Number(modifier.value) : 0;
+  const attr = attrName.value || '自由检定';
+  const diff = difficulty.value;
+  const level = worldLevel.value;
+
+  const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const attrMod = computeAIDMAttrMod(attrVal);
+  const masteryBonus = getMasteryBonus(level);
+  const baseDC = getBaseDC(level);
+  const diffMod = DIFFICULTY_MOD[diff] || 0;
+  const finalDC = baseDC + diffMod;
+
+  let target = targetValue.value !== '' ? Number(targetValue.value) : finalDC;
+  if (target === 0) target = finalDC;
+
+  const result = roll(formula);
+  const rollTotal = result.total;
+  const finalValue = rollTotal + attrMod + masteryBonus + mod;
+
+  let isCritSuccess = rollTotal === 20;
+  let isCritFailure = rollTotal === 1;
+  let isSuccess = finalValue >= target;
+  let outcomeText = '';
+
+  if (isCritSuccess) {
+    outcomeText = '大成功！';
+    isSuccess = true;
+  } else if (isCritFailure) {
+    outcomeText = '大失败！';
+    isSuccess = false;
+  } else if (isSuccess) {
+    outcomeText = '成功';
+  } else {
+    outcomeText = '失败';
+  }
+
+  const judgeResult = isSuccess ? '≥' : '<';
+  const diffLabel = diff === 'normal' ? '常规' : (diff === 'hard' ? '困难' : '极难');
+
+  lastResult.value = {
+    success: isSuccess,
+    roll: rollTotal,
+    total: finalValue,
+    target: target,
+    margin: finalValue - target,
+    criticalSuccess: isCritSuccess,
+    criticalFailure: isCritFailure,
+    outcome: outcomeText,
+    message: `D20(${rollTotal}) + 属性加成(${attrMod}) + 掌握加成(${masteryBonus})${mod !== 0 ? ` + 修正(${mod >= 0 ? '+' : ''}${mod})` : ''} = ${finalValue}`,
+    diceType: formula,
+    presetId: 'standard',
+  };
+  showResult.value = true;
+
+  const initiator = initiatorName.value || '<user>';
+  const content = `<meta:检定结果>
+【AIDM标准检定】
+
+🎲 判定过程：
+・D20投骰：${rollTotal}
+・属性加成：${attrMod}（${attr}: ${attrVal}）
+・掌握加成：${masteryBonus}
+・额外修正：${mod}
+・最终值：${finalValue}
+
+📊 DC对比：${finalValue} ${judgeResult} ${target}
+（世界等级${level}，基础DC ${baseDC}，难度调整${diffLabel} ${diffMod > 0 ? '+' : ''}${diffMod}）
+${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : '❌ 失败'))}
+</meta:检定结果>`;
+  await sendToTextarea(content);
+}
+
+async function handleContestCheck(): Promise<void> {
+  const formula = '1d20';
+  const level = worldLevel.value;
+
+  const myAttrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const myAttrMod = computeAIDMAttrMod(myAttrVal);
+  const myMasteryBonus = getMasteryBonus(level);
+
+  const oppAttrVal = oppAttr.value !== '' ? Number(oppAttr.value) : 10;
+  const oppAttrMod = computeAIDMAttrMod(oppAttrVal);
+
+  const oppRollVal = oppRoll.value !== '' ? Number(oppRoll.value) : 10;
+
+  const envAdv = envAdvantage.value !== '' ? Number(envAdvantage.value) : 0;
+  const envDis = envDisadvantage.value !== '' ? Number(envDisadvantage.value) : 0;
+  const statAdv = statusAdvantage.value !== '' ? Number(statusAdvantage.value) : 0;
+  const statDis = statusDisadvantage.value !== '' ? Number(statusDisadvantage.value) : 0;
+
+  const attrDiff = myAttrMod - oppAttrMod;
+  const attrAdvDice = attrDiff > 0 ? Math.min(3, attrDiff) : 0;
+  const totalAdv = attrAdvDice + envAdv + statAdv;
+  const totalDis = envDis + statDis;
+  const netAdv = totalAdv - totalDis;
+
+  const result = roll(formula);
+  const rollTotal = result.total;
+  const myTotal = rollTotal + myAttrMod + myMasteryBonus;
+  const oppTotal = oppRollVal + oppAttrMod;
+
+  let isSuccess = myTotal > oppTotal;
+  let outcomeText = '';
+
+  if (myTotal > oppTotal) {
+    outcomeText = '获胜！';
+  } else if (myTotal < oppTotal) {
+    outcomeText = '落败！';
+    isSuccess = false;
+  } else {
+    outcomeText = '平局！';
+    isSuccess = false;
+  }
+
+  lastResult.value = {
+    success: isSuccess,
+    roll: rollTotal,
+    total: myTotal,
+    target: oppTotal,
+    margin: myTotal - oppTotal,
+    criticalSuccess: false,
+    criticalFailure: false,
+    outcome: outcomeText,
+    message: `己方: D20(${rollTotal}) + 属性(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal} | 对方: D20(${oppRollVal}) + 属性(${oppAttrMod}) = ${oppTotal}`,
+    diceType: formula,
+    presetId: 'contest',
+  };
+  showResult.value = true;
+
+  const initiator = initiatorName.value || '<user>';
+  const content = `<meta:检定结果>
+【AIDM对抗检定】
+
+📊 属性对比：
+・己方属性加成：${myAttrMod}（属性${myAttrVal}）
+・对方属性加成：${oppAttrMod}（属性${oppAttrVal}）
+・属性差：${attrDiff} → 属性优势骰：${attrAdvDice}个
+
+🎲 骰子池计算：
+・优势骰：${totalAdv}个（属性${attrAdvDice} + 环境${envAdv} + 状态${statAdv}）
+・劣势骰：${totalDis}个（环境${envDis} + 状态${statDis}）
+・净优势：${netAdv}
+
+🎯 投骰结果：
+・己方：D20(${rollTotal}) + 属性加成(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal}
+・对方：D20(${oppRollVal}) + 属性加成(${oppAttrMod}) = ${oppTotal}
+
+${myTotal > oppTotal ? '✅ 获胜！' : (myTotal < oppTotal ? '❌ 落败！' : '⚖️ 平局！')}
+</meta:检定结果>`;
+  await sendToTextarea(content);
+}
+
+async function handleCombatCheck(): Promise<void> {
+  const formula = '1d20';
+  const level = worldLevel.value;
+
+  const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const attrMod = computeAIDMAttrMod(attrVal);
+  const masteryBonus = getMasteryBonus(level);
+  const mod = modifier.value !== '' ? Number(modifier.value) : 0;
+
+  const baseDDC = getBaseDC(level);
+  const dodgeMod = targetDodgeMod.value !== '' ? Number(targetDodgeMod.value) : 0;
+  const finalDC = baseDDC + dodgeMod;
+
+  const atkPower = attackPower.value !== '' ? Number(attackPower.value) : 10;
+  const tgtDefense = targetDefense.value !== '' ? Number(targetDefense.value) : 5;
+  const charismaVal = charisma.value !== '' ? Number(charisma.value) : 10;
+
+  const critRate = computeCritRate(charismaVal);
+
+  const result = roll(formula);
+  const rollTotal = result.total;
+  const finalValue = rollTotal + attrMod + masteryBonus + mod;
+
+  const isCrit = rollTotal <= Math.floor(critRate / 5);
+  const isHit = finalValue >= finalDC;
+  const isCritHit = isCrit && isHit;
+
+  const damageReduction = computeDamageReduction(tgtDefense, atkPower);
+  const baseDamage = Math.max(1, Math.floor(atkPower * (1 - damageReduction)));
+  const finalDamage = isCritHit ? baseDamage * 2 : baseDamage;
+
+  let outcomeText = '';
+  let isSuccess = false;
+
+  if (isCritHit) {
+    outcomeText = '暴击命中！';
+    isSuccess = true;
+  } else if (isHit) {
+    outcomeText = '命中！';
+    isSuccess = true;
+  } else {
+    outcomeText = '未命中！';
+  }
+
+  const levelName = level.replace('级', '');
+
+  lastResult.value = {
+    success: isSuccess,
+    roll: rollTotal,
+    total: finalValue,
+    target: finalDC,
+    margin: finalValue - finalDC,
+    criticalSuccess: isCritHit,
+    criticalFailure: false,
+    outcome: outcomeText,
+    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | 伤害: ${finalDamage}${isCritHit ? ' (暴击x2)' : ''}`,
+    diceType: formula,
+    presetId: 'combat',
+  };
+  showResult.value = true;
+
+  const initiator = initiatorName.value || '<user>';
+  const content = `<meta:检定结果>
+【AIDM战斗检定】
+
+🎲 判定过程：
+・D20投骰：${rollTotal}
+・属性加成：${attrMod}（${attrName.value || '属性'}: ${attrVal}）
+・掌握加成：${masteryBonus}
+・额外修正：${mod}
+・最终值：${finalValue}
+
+📊 DDC对比：${finalValue} ${isHit ? '≥' : '<'} ${finalDC}
+（目标等级${levelName}级，基础DDC ${baseDDC}，闪避加值${dodgeMod}）
+${isCritHit ? '💥 暴击命中！' : (isHit ? '✅ 命中！' : '❌ 未命中！')}
+
+⚔️ 伤害计算：
+・攻击力：${atkPower}
+・目标防御：${tgtDefense}
+・伤害减免：${Math.round(damageReduction * 100)}%
+・基础伤害：${baseDamage}
+最终伤害：${finalDamage}${isCritHit ? '（暴击双倍）' : ''}
+</meta:检定结果>`;
+  await sendToTextarea(content);
+}
+
+async function handleDefenseCheck(): Promise<void> {
+  const formula = '1d20';
+  const level = worldLevel.value;
+
+  const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+  const attrMod = computeAIDMAttrMod(attrVal);
+  const masteryBonus = getMasteryBonus(level);
+  const dodgeMod = modifier.value !== '' ? Number(modifier.value) : 0;
+
+  const baseDC = getBaseDC(level);
+  const enemyAtk = enemyAtkMod.value !== '' ? Number(enemyAtkMod.value) : 0;
+  const finalDC = baseDC + enemyAtk;
+
+  const enemyAtkPower = enemyAttackPower.value !== '' ? Number(enemyAttackPower.value) : 10;
+  const myDefense = playerDefense.value !== '' ? Number(playerDefense.value) : 5;
+
+  const result = roll(formula);
+  const rollTotal = result.total;
+  const finalValue = rollTotal + attrMod + masteryBonus + dodgeMod;
+
+  const isDodge = finalValue >= finalDC;
+
+  const damageReduction = computeDamageReduction(myDefense, enemyAtkPower);
+  const baseDamage = Math.max(1, Math.floor(enemyAtkPower * (1 - damageReduction)));
+
+  let outcomeText = '';
+  let isSuccess = false;
+
+  if (isDodge) {
+    outcomeText = '闪避成功！';
+    isSuccess = true;
+  } else {
+    outcomeText = '被击中！';
+  }
+
+  const levelName = level.replace('级', '');
+
+  lastResult.value = {
+    success: isSuccess,
+    roll: rollTotal,
+    total: finalValue,
+    target: finalDC,
+    margin: finalValue - finalDC,
+    criticalSuccess: false,
+    criticalFailure: false,
+    outcome: outcomeText,
+    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${isDodge ? '闪避成功' : `承受伤害: ${baseDamage}`}`,
+    diceType: formula,
+    presetId: 'defense',
+  };
+  showResult.value = true;
+
+  const initiator = initiatorName.value || '<user>';
+  const content = `<meta:检定结果>
+【AIDM防守检定】
+
+🎲 判定过程：
+・D20投骰：${rollTotal}
+・属性加成：${attrMod}（敏捷/感知取高）
+・掌握加成：${masteryBonus}
+・闪避加值：${dodgeMod}
+・最终值：${finalValue}
+
+📊 DC对比：${finalValue} ${isDodge ? '≥' : '<'} ${finalDC}
+（敌方等级${levelName}级，基础DC ${baseDC}，攻击加成${enemyAtk}）
+${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
+
+⚔️ 被击中伤害：
+・敌方攻击力：${enemyAtkPower}
+・我方防御：${myDefense}
+・伤害减免：${Math.round(damageReduction * 100)}%
+・承受伤害：${baseDamage}
+</meta:检定结果>`;
+  await sendToTextarea(content);
 }
 
 async function handleRoll(): Promise<void> {
@@ -229,84 +569,20 @@ async function handleRoll(): Promise<void> {
       return;
     }
 
-    const formula = '1d20';
-    const mod = modifier.value !== '' ? Number(modifier.value) : 0;
-    const attr = attrName.value || '自由检定';
-    const diff = difficulty.value;
-    const level = worldLevel.value;
-
-    const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
-    const attrMod = computeAIDMAttrMod(attrVal);
-    const masteryBonus = getMasteryBonus(level);
-    const baseDC = getBaseDC(level);
-    const diffMod = DIFFICULTY_MOD[diff] || 0;
-    const finalDC = baseDC + diffMod;
-
-    let target = targetValue.value !== '' ? Number(targetValue.value) : finalDC;
-
-    if (target === 0) {
-      target = finalDC;
+    switch (checkMode.value) {
+      case 'standard':
+        await handleStandardCheck();
+        break;
+      case 'contest':
+        await handleContestCheck();
+        break;
+      case 'combat':
+        await handleCombatCheck();
+        break;
+      case 'defense':
+        await handleDefenseCheck();
+        break;
     }
-
-    const result = roll(formula);
-    const rollTotal = result.total;
-    const finalValue = rollTotal + attrMod + masteryBonus + mod;
-
-    let isCritSuccess = rollTotal === 20;
-    let isCritFailure = rollTotal === 1;
-    let isSuccess = finalValue >= target;
-    let outcomeText = '';
-
-    if (isCritSuccess) {
-      outcomeText = '大成功！';
-      isSuccess = true;
-    } else if (isCritFailure) {
-      outcomeText = '大失败！';
-      isSuccess = false;
-    } else if (isSuccess) {
-      outcomeText = '成功';
-    } else {
-      outcomeText = '失败';
-    }
-
-    const judgeResult = isSuccess ? '≥' : '<';
-    const judgeExpr = isSuccess
-      ? `${finalValue}${judgeResult}${target}`
-      : `${finalValue}${judgeResult}${target}`;
-
-    const diffLabel = diff === 'normal' ? '常规' : (diff === 'hard' ? '困难' : '极难');
-
-    lastResult.value = {
-      success: isSuccess,
-      roll: rollTotal,
-      total: finalValue,
-      target: target,
-      margin: finalValue - target,
-      criticalSuccess: isCritSuccess,
-      criticalFailure: isCritFailure,
-      outcome: outcomeText,
-      message: `D20(${rollTotal}) + 属性加成(${attrMod}) + 掌握加成(${masteryBonus})${mod !== 0 ? ` + 修正(${mod >= 0 ? '+' : ''}${mod})` : ''} = ${finalValue}`,
-      diceType: formula,
-      presetId: activeQuickPresetId.value,
-    };
-    showResult.value = true;
-
-    const initiator = initiatorName.value || '<user>';
-    const content = `<meta:检定结果>
-【AIDM标准检定】
-
-🎲 判定过程：
-・D20投骰：${rollTotal}
-・属性加成：${attrMod}（${attr}: ${attrVal}）
-・掌握加成：${masteryBonus}
-・额外修正：${mod}
-・最终值：${finalValue}
-
-📊 DC对比：${finalValue} ${judgeResult} ${target}
-（世界等级${level}，基础DC ${baseDC}，难度调整${diffLabel} ${diffMod > 0 ? '+' : ''}${diffMod}）
-${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : '❌ 失败'))}
-</meta:检定结果>`;
-    await sendToTextarea(content);
   } catch (e) {
     console.error('[DicePanel] 掷骰失败:', e);
   } finally {
@@ -384,16 +660,17 @@ watch(difficulty, () => {
 onMounted(() => {
   initDiceSystem();
   loadPresets();
-  selectQuickPreset('aidm_standard');
 });
 </script>
 
 <template>
   <div class="acu-dice-panel">
     <div class="acu-dice-panel-header">
-      <div class="acu-dice-panel-title"><i class="fa-solid fa-dice-d20"></i> 普通检定</div>
+      <div class="acu-dice-panel-title">
+        <i :class="CHECK_MODES.find(m => m.id === checkMode)?.icon || 'fa-solid fa-dice-d20'"></i>
+        {{ CHECK_MODES.find(m => m.id === checkMode)?.name || '检定' }}
+      </div>
       <div class="acu-dice-panel-actions">
-        <button title="切换到对抗检定" @click="switchToOpposed"><i class="fa-solid fa-people-arrows"></i></button>
         <button title="历史记录" @click="showHistory"><i class="fa-solid fa-history"></i></button>
         <button title="系统设置" @click="openSettings"><i class="fa-solid fa-cog"></i></button>
         <button @click="emit('close')"><i class="fa-solid fa-times"></i></button>
@@ -401,21 +678,18 @@ onMounted(() => {
     </div>
 
     <div class="acu-dice-panel-body">
-      <div class="acu-dice-quick-section">
-        <div class="acu-dice-section-title">
-          <span><i class="fa-solid fa-sliders"></i> 检定规则</span>
-        </div>
-        <div class="acu-dice-quick-presets">
-          <button
-            v-for="p in QUICK_PRESETS"
-            :key="p.id"
-            class="acu-dice-quick-preset-btn"
-            :class="{ active: activeQuickPresetId === p.id }"
-            @click="selectQuickPreset(p.id)"
-          >
-            {{ p.name }}
-          </button>
-        </div>
+      <div class="acu-dice-mode-tabs">
+        <button
+          v-for="m in CHECK_MODES"
+          :key="m.id"
+          class="acu-dice-mode-tab"
+          :class="{ active: checkMode === m.id }"
+          :title="m.description"
+          @click="selectCheckMode(m.id as CheckMode)"
+        >
+          <i :class="m.icon"></i>
+          <span>{{ m.name }}</span>
+        </button>
       </div>
 
       <div class="acu-dice-quick-section">
@@ -436,38 +710,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="acu-dice-form-row cols-2">
-        <div class="acu-dice-field">
-          <div class="acu-dice-form-label">名字</div>
-          <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
-        </div>
-        <div class="acu-dice-field">
-          <div class="acu-dice-form-label">
-            <span>属性名</span>
-            <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
-              <i class="fa-solid fa-dice"></i>
-            </button>
-          </div>
-          <input v-model="attrName" type="text" class="acu-dice-input" placeholder="自由检定" />
-        </div>
-      </div>
-
-      <div class="acu-dice-form-row cols-2">
-        <div class="acu-dice-field">
-          <div class="acu-dice-form-label">属性值</div>
-          <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
-        </div>
-        <div class="acu-dice-field">
-          <div class="acu-dice-form-label">目标DC</div>
-          <input
-            v-model="targetValue"
-            type="text"
-            class="acu-dice-input"
-            :placeholder="`留空=${getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0)}`"
-          />
-        </div>
-      </div>
-
       <div v-if="!isCustomMode" class="acu-dice-form-row cols-3">
         <div>
           <div class="acu-dice-form-label centered">世界等级</div>
@@ -477,30 +719,225 @@ onMounted(() => {
             </option>
           </select>
         </div>
-        <div>
-          <div class="acu-dice-form-label centered">难度调整</div>
-          <select v-model="difficulty" class="acu-dice-select">
-            <option v-for="o in DIFFICULTY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
-          </select>
+      </div>
+
+      <div v-if="checkMode === 'standard' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>属性名</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <input v-model="attrName" type="text" class="acu-dice-input" placeholder="自由检定" />
+          </div>
         </div>
-        <div>
-          <div class="acu-dice-form-label">修正值</div>
-          <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">目标DC</div>
+            <input
+              v-model="targetValue"
+              type="text"
+              class="acu-dice-input"
+              :placeholder="`留空=${getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0)}`"
+            />
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
+          <div>
+            <div class="acu-dice-form-label centered">难度调整</div>
+            <select v-model="difficulty" class="acu-dice-select">
+              <option v-for="o in DIFFICULTY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+          <div>
+            <div class="acu-dice-form-label">修正值</div>
+            <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">属性加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">最终DC:</span>
+            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
+          </div>
         </div>
       </div>
 
-      <div v-if="isAIDM && !isCustomMode" class="acu-dice-info-bar">
-        <div class="acu-dice-info-item">
-          <span class="acu-dice-info-label">属性加成:</span>
-          <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+      <div v-if="checkMode === 'contest' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">己方属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">对方属性值</div>
+            <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
         </div>
-        <div class="acu-dice-info-item">
-          <span class="acu-dice-info-label">掌握加成:</span>
-          <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">对方投骰值</div>
+            <input v-model="oppRoll" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
         </div>
-        <div class="acu-dice-info-item">
-          <span class="acu-dice-info-label">最终DC:</span>
-          <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
+
+        <div class="acu-dice-section-title" style="margin-top: 8px;">
+          <span><i class="fa-solid fa-plus-minus"></i> 优势/劣势调整</span>
+        </div>
+        <div class="acu-dice-form-row cols-2">
+          <div>
+            <div class="acu-dice-form-label">环境优势</div>
+            <input v-model="envAdvantage" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">环境劣势</div>
+            <input v-model="envDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+        <div class="acu-dice-form-row cols-2">
+          <div>
+            <div class="acu-dice-form-label">状态优势</div>
+            <input v-model="statusAdvantage" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">状态劣势</div>
+            <input v-model="statusDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">己方加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">对方加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="checkMode === 'combat' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">攻击属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">攻击类型</div>
+            <select v-model="attackType" class="acu-dice-select">
+              <option v-for="o in ATTACK_TYPE_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
+          <div>
+            <div class="acu-dice-form-label">攻击力</div>
+            <input v-model="attackPower" type="text" class="acu-dice-input" placeholder="10" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">目标防御</div>
+            <input v-model="targetDefense" type="text" class="acu-dice-input" placeholder="5" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">魅力值</div>
+            <input v-model="charisma" type="text" class="acu-dice-input" placeholder="10" />
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div>
+            <div class="acu-dice-form-label">修正值</div>
+            <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">目标闪避加值</div>
+            <input v-model="targetDodgeMod" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">属性加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">暴击率:</span>
+            <span class="acu-dice-info-value">{{ computeCritRate(charisma !== '' ? Number(charisma) : 10) }}%</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">目标DDC:</span>
+            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (targetDodgeMod !== '' ? Number(targetDodgeMod) : 0) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="checkMode === 'defense' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">闪避属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="敏捷/感知取高" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">闪避加值</div>
+            <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
+          <div>
+            <div class="acu-dice-form-label">敌方攻击修正</div>
+            <input v-model="enemyAtkMod" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">敌方攻击力</div>
+            <input v-model="enemyAttackPower" type="text" class="acu-dice-input" placeholder="10" />
+          </div>
+          <div>
+            <div class="acu-dice-form-label">我方防御</div>
+            <input v-model="playerDefense" type="text" class="acu-dice-input" placeholder="5" />
+          </div>
+        </div>
+
+        <div class="acu-dice-info-bar">
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">属性加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">闪避DC:</span>
+            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (enemyAtkMod !== '' ? Number(enemyAtkMod) : 0) }}</span>
+          </div>
         </div>
       </div>
 
@@ -523,7 +960,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="attributeButtons.length > 0 && !isCustomMode" class="acu-dice-quick-compact">
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'standard'" class="acu-dice-quick-compact">
         <button
           v-for="a in attributeButtons.slice(0, 12)"
           :key="a.name"
@@ -534,6 +971,23 @@ onMounted(() => {
           <span class="label">{{ a.name }}</span>
           <span class="val">{{ a.value }}</span>
         </button>
+      </div>
+
+      <div class="acu-dice-quick-section">
+        <div class="acu-dice-section-title">
+          <span><i class="fa-solid fa-sliders"></i> 自定义规则</span>
+        </div>
+        <div class="acu-dice-quick-presets">
+          <button
+            v-for="p in QUICK_PRESETS"
+            :key="p.id"
+            class="acu-dice-quick-preset-btn"
+            :class="{ active: isCustomMode && p.id === '__custom__' }"
+            @click="selectQuickPreset(p.id)"
+          >
+            {{ p.name }}
+          </button>
+        </div>
       </div>
 
       <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
@@ -616,6 +1070,51 @@ onMounted(() => {
   gap: 8px;
   padding: 12px;
   overflow-y: auto;
+}
+
+.acu-dice-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.acu-dice-mode-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 14px;
+  }
+
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  &:hover {
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+  }
+
+  &.active {
+    background: var(--acu-accent);
+    color: white;
+    border-color: var(--acu-accent);
+  }
 }
 
 .acu-dice-quick-section {
