@@ -250,45 +250,10 @@ function computeCritRate(charismaVal: number): number {
   return Math.min(50, 5 + Math.floor(charismaVal / 2));
 }
 
-type CritLevel = 'none' | 'normal' | 'great' | 'fatal';
-
-function computeCritLevel(rollValue: number, critRate: number, isHit: boolean): CritLevel {
-  if (!isHit) return 'none';
-  const critThreshold = Math.floor(critRate / 5);
-  if (rollValue === 1) return 'fatal';
-  if (rollValue <= critThreshold) {
-    if (rollValue <= Math.max(1, critThreshold / 3)) return 'fatal';
-    if (rollValue <= Math.max(1, critThreshold / 2)) return 'great';
-    return 'normal';
-  }
-  return 'none';
-}
-
-function getCritMultiplier(critLevel: CritLevel): number {
-  switch (critLevel) {
-    case 'fatal': return 3;
-    case 'great': return 2.5;
-    case 'normal': return 2;
-    default: return 1;
-  }
-}
-
-function getCritName(critLevel: CritLevel): string {
-  switch (critLevel) {
-    case 'fatal': return '致命暴击！';
-    case 'great': return '大暴击！';
-    case 'normal': return '暴击！';
-    default: return '';
-  }
-}
-
-function getCritEmoji(critLevel: CritLevel): string {
-  switch (critLevel) {
-    case 'fatal': return '💀💥';
-    case 'great': return '💥';
-    case 'normal': return '⚡';
-    default: return '';
-  }
+function isCritHit(rollValue: number, critRatePercent: number, didHit: boolean): boolean {
+  if (!didHit) return false;
+  const threshold = Math.floor(critRatePercent / 5);
+  return rollValue <= threshold;
 }
 
 function rollWithAdvantage(formula: string, advantageCount: number, disadvantageCount: number): { total: number; breakdown: string; rolls: number[] } {
@@ -359,6 +324,12 @@ async function handleStandardCheck(): Promise<void> {
     outcomeText = '失败';
   }
 
+  let hpPenalty = 0;
+  const triggerPenalty = !isSuccess && !isCritFailure && Math.random() < 0.5;
+  if (triggerPenalty) {
+    hpPenalty = Math.max(1, Math.min(10, target - finalValue));
+  }
+
   const judgeResult = isSuccess ? '≥' : '<';
   const diffLabel = diff === 'normal' ? '常规' : (diff === 'hard' ? '困难' : '极难');
 
@@ -390,7 +361,7 @@ async function handleStandardCheck(): Promise<void> {
 
 📊 DC对比：${finalValue} ${judgeResult} ${target}
 （世界等级${level}，基础DC ${baseDC}，难度调整${diffLabel} ${diffMod > 0 ? '+' : ''}${diffMod}）
-${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : '❌ 失败'))}
+${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`))}
 </meta:检定结果>`;
   await sendToTextarea(content);
 }
@@ -510,18 +481,17 @@ async function handleCombatCheck(): Promise<void> {
   const finalValue = rollTotal + attrMod + masteryBonus + mod;
 
   const isHit = finalValue >= finalDC;
-  const critLevel = computeCritLevel(rollTotal, critRate, isHit);
-  const critMultiplier = getCritMultiplier(critLevel);
+  const isCrit = isCritHit(rollTotal, critRate, isHit);
 
   const damageReduction = computeDamageReduction(tgtDefense, atkPower);
   const baseDamage = Math.max(1, Math.floor(atkPower * (1 - damageReduction)));
-  const finalDamage = Math.floor(baseDamage * critMultiplier);
+  const finalDamage = isCrit ? baseDamage * 2 : baseDamage;
 
   let outcomeText = '';
   let isSuccess = false;
 
-  if (critLevel !== 'none') {
-    outcomeText = getCritName(critLevel);
+  if (isCrit) {
+    outcomeText = '⚡ 暴击命中！';
     isSuccess = true;
   } else if (isHit) {
     outcomeText = '命中！';
@@ -539,17 +509,16 @@ async function handleCombatCheck(): Promise<void> {
     total: finalValue,
     target: finalDC,
     margin: finalValue - finalDC,
-    criticalSuccess: critLevel !== 'none',
+    criticalSuccess: isCrit,
     criticalFailure: false,
     outcome: outcomeText,
-    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${atkTypeLabel}伤害: ${finalDamage}${critLevel !== 'none' ? ` (${getCritName(critLevel)}x${critMultiplier})` : ''}`,
+    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${atkTypeLabel}伤害: ${finalDamage}${isCrit ? ' (暴击x2)' : ''}`,
     diceType: formula,
     presetId: 'combat',
   };
   showResult.value = true;
 
   const initiator = initiatorName.value || '<user>';
-  const critEmoji = getCritEmoji(critLevel);
   const content = `<meta:检定结果>
 【AIDM战斗检定 - ${atkTypeLabel}】
 
@@ -562,15 +531,15 @@ async function handleCombatCheck(): Promise<void> {
 
 📊 DDC对比：${finalValue} ${isHit ? '≥' : '<'} ${finalDC}
 （目标等级${levelName}级，基础DDC ${baseDDC}，闪避加值${dodgeMod}）
-${critLevel !== 'none' ? `${critEmoji} ${getCritName(critLevel)}` : (isHit ? '✅ 命中！' : '❌ 未命中！')}
+${isCrit ? '⚡ 暴击命中！' : (isHit ? '✅ 命中！' : '❌ 未命中！')}
 
 ⚔️ 伤害计算：
 ・攻击力：${atkPower}
 ・目标防御：${tgtDefense}
 ・伤害减免：${Math.round(damageReduction * 100)}%
 ・基础伤害：${baseDamage}
-${critLevel !== 'none' ? `・暴击倍率：x${critMultiplier}` : ''}
-最终伤害：${finalDamage}${critLevel !== 'none' ? '（暴击）' : ''}
+${isCrit ? '・暴击倍率：x2' : ''}
+最终伤害：${finalDamage}${isCrit ? '（暴击）' : ''}
 </meta:检定结果>`;
   await sendToTextarea(content);
 }
@@ -584,16 +553,16 @@ async function handleDefenseCheck(): Promise<void> {
   const masteryBonus = getMasteryBonus(level);
   const dodgeMod = modifier.value !== '' ? Number(modifier.value) : 0;
 
-  const baseDC = getBaseDC(level);
-  const enemyAtk = enemyAtkMod.value !== '' ? Number(enemyAtkMod.value) : 0;
-  const finalDC = baseDC + enemyAtk;
+  const worldBaseDC = getBaseDC(level);
+  const enemyAttrMod = enemyAtkMod.value !== '' ? Number(enemyAtkMod.value) : 0;
+  const finalDC = worldBaseDC + enemyAttrMod + masteryBonus;
 
   const enemyAtkPower = enemyAttackPower.value !== '' ? Number(enemyAttackPower.value) : 10;
   const myDefense = playerDefense.value !== '' ? Number(playerDefense.value) : 5;
 
   const result = roll(formula);
   const rollTotal = result.total;
-  const finalValue = rollTotal + attrMod + masteryBonus + dodgeMod;
+  const finalValue = rollTotal + attrMod + dodgeMod;
 
   const isDodge = finalValue >= finalDC;
 
@@ -621,7 +590,7 @@ async function handleDefenseCheck(): Promise<void> {
     criticalSuccess: false,
     criticalFailure: false,
     outcome: outcomeText,
-    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${isDodge ? '闪避成功' : `承受伤害: ${baseDamage}`}`,
+    message: `D20(${rollTotal}) + 属性(${attrMod})${dodgeMod !== 0 ? ` + 闪避(${dodgeMod})` : ''} = ${finalValue} | ${isDodge ? '闪避成功' : `承受伤害: ${baseDamage}`}`,
     diceType: formula,
     presetId: 'defense',
   };
@@ -633,13 +602,13 @@ async function handleDefenseCheck(): Promise<void> {
 
 🎲 判定过程：
 ・D20投骰：${rollTotal}
-・属性加成：${attrMod}（敏捷/感知取高）
-・掌握加成：${masteryBonus}
-・闪避加值：${dodgeMod}
+・敏捷/感知属性加成：${attrMod}
+・掌握加成：已含于敌方DC中
+・装备闪避加值：${dodgeMod}
 ・最终值：${finalValue}
 
 📊 DC对比：${finalValue} ${isDodge ? '≥' : '<'} ${finalDC}
-（敌方等级${levelName}级，基础DC ${baseDC}，攻击加成${enemyAtk}）
+（敌方等级${levelName}级，基础DC ${worldBaseDC}，敌方属性加成${enemyAttrMod}，敌方掌握加成${masteryBonus}）
 ${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
 
 ⚔️ 被击中伤害：
