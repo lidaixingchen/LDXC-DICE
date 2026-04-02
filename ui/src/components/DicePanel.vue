@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, provide, ref, watch } from 'vue';
 import { useCharacterData, useDiceSystem, useDropdownSuggestions, usePresets } from '../composables';
 import type { AttributeButton } from '../composables/useCharacterData';
 import type { CheckResult } from '../types';
@@ -1140,7 +1140,7 @@ interface SaveData {
 const saveSlots = ref<SaveSlot[]>([]);
 const exportText = ref('');
 const importText = ref('');
-const activeToolTab = ref('save');
+const activeToolTab = ref('world');
 
 function findSaveSlot(id: number): SaveSlot | undefined {
   return saveSlots.value.find(s => s.id === id);
@@ -1361,6 +1361,13 @@ function generateSkills(): void {
 
   generatedSkills.value = skills;
 }
+
+provide('aidmInitiatorName', initiatorName);
+provide('aidmWorldLevel', worldLevel);
+provide('aidmCombat', combat);
+provide('aidmEquipment', equipment);
+provide('aidmStatuses', activeStatuses);
+provide('aidmCurrentCharacter', currentCharacter);
 
 loadSaveSlots();
 
@@ -1881,40 +1888,12 @@ onMounted(() => {
 
       <div class="acu-tools-section">
         <div class="acu-tools-tabs">
-          <button :class="{ active: activeToolTab === 'save' }" @click="activeToolTab = 'save'" class="acu-tool-tab">
-            <i class="fa-solid fa-floppy-disk"></i> 存档
-          </button>
           <button :class="{ active: activeToolTab === 'world' }" @click="activeToolTab = 'world'; generateWorlds()" class="acu-tool-tab">
             <i class="fa-solid fa-globe"></i> 世界
           </button>
           <button :class="{ active: activeToolTab === 'skill' }" @click="activeToolTab = 'skill'; generateSkills()" class="acu-tool-tab">
             <i class="fa-solid fa-wand-magic-sparkles"></i> 技能
           </button>
-        </div>
-
-        <div v-if="activeToolTab === 'save'" class="acu-tool-content">
-          <div class="acu-save-slots">
-            <div v-for="slot in [1, 2, 3]" :key="slot" class="acu-save-slot">
-              <div class="acu-save-slot-header">
-                <span>存档位 {{ slot }}</span>
-                <span v-if="findSaveSlot(slot)" class="acu-save-time">{{ findSaveSlot(slot)?.timestamp }}</span>
-                <span v-else class="acu-save-empty">空</span>
-              </div>
-              <div class="acu-save-slot-actions">
-                <button class="acu-tiny-btn accent" @click="saveGame(slot)">💾 存档</button>
-                <button class="acu-tiny-btn" @click="loadGame(slot); alert('读档成功！')">📂 读档</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="acu-export-import" style="margin-top:6px;">
-            <div class="acu-dice-form-row cols-2">
-              <button class="acu-full-btn accent" @click="exportSave()" style="font-size:11px;">📤 导出存档</button>
-              <button class="acu-full-btn" @click="importSave()" style="font-size:11px;">📥 导入存档</button>
-            </div>
-            <textarea v-if="exportText" v-model="exportText" class="acu-export-textarea" readonly rows="8"></textarea>
-            <textarea v-if="activeToolTab === 'save'" v-model="importText" class="acu-export-textarea" rows="3" placeholder="粘贴存档内容..."></textarea>
-          </div>
         </div>
 
         <div v-if="activeToolTab === 'world'" class="acu-tool-content">
@@ -2719,55 +2698,6 @@ onMounted(() => {
 
 .acu-tool-content {
   min-height: 40px;
-}
-
-.acu-save-slots {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-
-.acu-save-slot {
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid var(--acu-border);
-  background: rgba(255, 255, 255, 0.03);
-
-  .acu-save-slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    color: var(--acu-text-main);
-    margin-bottom: 3px;
-  }
-
-  .acu-save-time { font-size: 8px; color: var(--acu-accent); }
-  .acu-save-empty { font-size: 8px; color: var(--acu-text-sub); opacity: 0.5; }
-}
-
-.acu-save-slot-actions {
-  display: flex;
-  gap: 3px;
-}
-
-.acu-export-import {
-  .cols-2 { grid-template-columns: 1fr 1fr; gap: 4px; }
-}
-
-.acu-export-textarea {
-  width: 100%;
-  margin-top: 4px;
-  padding: 5px;
-  border: 1px solid var(--acu-border);
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--acu-text-main);
-  font-size: 9px;
-  font-family: monospace;
-  resize: vertical;
-  line-height: 1.4;
 }
 
 .acu-world-list {

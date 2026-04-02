@@ -10,6 +10,7 @@ import FavoritesPanel from './FavoritesPanel.vue';
 import MvuPanel from './MvuPanel.vue';
 import RelationGraph from './RelationGraph.vue';
 import SettingsPanel from './SettingsPanel.vue';
+import SavePanel from './SavePanel.vue';
 import TableBrowser from './TableBrowser.vue';
 
 const { getTableData } = useDashboard();
@@ -25,6 +26,7 @@ const showChanges = ref(false);
 const showMvu = ref(false);
 const showFavorites = ref(false);
 const showSettings = ref(false);
+const showSave = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
@@ -37,6 +39,7 @@ const SPECIAL_NAV_ITEMS = [
   { key: '__changes__', icon: 'fa-code-compare', label: '审核', id: 'acu-btn-changes' },
   { key: '__mvu__', icon: 'fa-code-branch', label: '变量', id: 'acu-btn-mvu' },
   { key: '__favorites__', icon: 'fa-star', label: '收藏', id: 'acu-btn-favorites' },
+  { key: '__save__', icon: 'fa-floppy-disk', label: '存档', id: 'acu-btn-save-nav' },
 ];
 
 const ACTION_BUTTONS = [
@@ -79,6 +82,7 @@ function handleNavClick(key: string) {
   else if (key === '__changes__') showChanges.value = true;
   else if (key === '__mvu__') showMvu.value = true;
   else if (key === '__favorites__') showFavorites.value = true;
+  else if (key === '__save__') showSave.value = true;
   else activeTab.value = key;
 }
 
@@ -89,6 +93,7 @@ function closeAllPanels() {
   showMvu.value = false;
   showFavorites.value = false;
   showSettings.value = false;
+  showSave.value = false;
   showOpposedCheck.value = false;
 }
 
@@ -98,6 +103,7 @@ function isNavItemActive(item: any): boolean {
   if (item.key === '__changes__') return showChanges.value;
   if (item.key === '__mvu__') return showMvu.value;
   if (item.key === '__favorites__') return showFavorites.value;
+  if (item.key === '__save__') return showSave.value;
   if (item.key === '__dashboard__') return showDashboard.value;
   return false;
 }
@@ -213,6 +219,7 @@ const showDataDisplay = computed(
     showMvu.value ||
     showFavorites.value ||
     showSettings.value ||
+    showSave.value ||
     showOpposedCheck.value ||
     activeTab.value !== '',
 );
@@ -300,6 +307,7 @@ onUnmounted(() => {
       <MvuPanel v-else-if="showMvu" @close="showMvu = false" />
       <FavoritesPanel v-else-if="showFavorites" @close="showFavorites = false" />
       <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
+      <SavePanel v-else-if="showSave" @close="showSave = false" />
       <TableBrowser
         v-else-if="activeTab"
         :key="activeTab"
