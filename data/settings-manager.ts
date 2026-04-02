@@ -34,6 +34,7 @@ export interface LegacySettings {
   crazyMode: boolean;
   hiddenTableKeys: string[];
   tableOrderKeys: string[];
+  tableFontSize: number;
 }
 
 export interface GeneralSettings {
@@ -173,6 +174,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     crazyMode: false,
     hiddenTableKeys: [],
     tableOrderKeys: [],
+    tableFontSize: 13,
   },
   general: {
     defaultPresetId: 'aidm_standard_check',

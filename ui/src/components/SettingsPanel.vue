@@ -548,6 +548,17 @@ onMounted(() => {
               @change="updateLegacy({ optionFontSize: parseInt(($event.target as any).value) })"
             />
           </div>
+          <div class="acu-setting-row">
+            <label>表内文字大小</label>
+            <input
+              type="number"
+              min="10"
+              max="24"
+              step="1"
+              :value="settings.tableFontSize"
+              @change="updateLegacy({ tableFontSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
           <div class="acu-group-label">掷骰安全</div>
           <div class="acu-setting-row checkbox">
             <label>隐藏本地投骰结果</label>

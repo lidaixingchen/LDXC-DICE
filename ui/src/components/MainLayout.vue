@@ -116,6 +116,60 @@ function handleActionClick(id: string) {
   }
 }
 
+async function handleOptionClick(optionValue: string) {
+  const config = legacySettings.value;
+
+  if (!config.clickOptionToAutoSend) {
+    const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
+    if (textarea) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(textarea, textarea.value + (textarea.value ? ' ' : '') + optionValue);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        textarea.value += (textarea.value ? ' ' : '') + optionValue;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      textarea.focus();
+    }
+    return;
+  }
+
+  try {
+    const TavernHelper = (window as any).TavernHelper;
+    if (TavernHelper?.createChatMessages) {
+      await TavernHelper.createChatMessages(
+        [{ role: 'user', message: optionValue }],
+        { refresh: 'affected' },
+      );
+      if (TavernHelper.triggerSlash) {
+        await TavernHelper.triggerSlash('/trigger');
+      }
+      return;
+    }
+  } catch (err) {
+    console.warn('[DICE]ACU TavernHelper 发送失败，尝试备用方案', err);
+  }
+
+  try {
+    const sendButton = document.querySelector('#send_but') as HTMLElement | null;
+    const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
+    if (textarea && sendButton) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(textarea, optionValue);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        textarea.value = optionValue;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      sendButton.click();
+    }
+  } catch (fallbackErr) {
+    console.error('[DICE]ACU 备用发送方案也失败', fallbackErr);
+  }
+}
+
 const options = computed(() => {
   try {
     const rawData = getTableData();
@@ -219,6 +273,7 @@ onUnmounted(() => {
       '--acu-card-width': legacySettings.cardWidth + 'px',
       '--acu-font-size': legacySettings.fontSize + 'px',
       '--acu-opt-font-size': legacySettings.optionFontSize + 'px',
+      '--acu-table-font-size': legacySettings.tableFontSize + 'px',
       '--acu-bottom-offset': legacySettings.bottomOffset + 'px',
     }"
   >
@@ -233,7 +288,7 @@ onUnmounted(() => {
           showOpposedCheck = true;
         "
       />
-      <OpposedC-te-nkPanel
+      <OpposedCheckPanel
         v-else-if="showOpposedCheck"
         @close="showOpposedCheck = false"
         @switchToNormal="
@@ -266,7 +321,7 @@ onUnmounted(() => {
         <span> 行动选项 ({{ options.length }})</span>
       </div>
       <div v-if="!isOptionsCollapsed" class="acu-opt-body">
-        <button v-for="opt in options" :key="opt" class="acu-opt-btn" @click="() => {}">{{ opt }}</button>
+        <button v-for="opt in options" :key="opt" class="acu-opt-btn" @click="handleOptionClick(opt)">{{ opt }}</button>
       </div>
     </div>
 
@@ -295,6 +350,7 @@ onUnmounted(() => {
       </button>
 
       <button
+        v-for="(item, idx) in navItems"
         :key="item.key"
         class="acu-nav-btn"
         :class="[item.id || '', { active: isNavItemActive(item) }]"
