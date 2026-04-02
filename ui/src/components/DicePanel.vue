@@ -28,28 +28,92 @@ const attrValue = ref<number | string>('');
 const targetValue = ref<number | string>('');
 const modifier = ref<number | string>('');
 const difficulty = ref('normal');
-const successCriteria = ref('lte');
-const customDiceExpr = ref('1d100');
-const customJudgeMode = ref('<=');
+const successCriteria = ref('gte');
+const customDiceExpr = ref('1d20');
+const customJudgeMode = ref('>=');
 const customTargetValue = ref<number | string>('');
 const isCustomMode = ref(false);
-const activeQuickPresetId = ref('__default__');
+const activeQuickPresetId = ref('aidm_standard');
+const worldLevel = ref('F级');
+
+interface WorldLevelConfig {
+  baseDC: number;
+  masteryBonus: number;
+  hpBase: number;
+  singleAttrMax: number;
+  description: string;
+}
+
+const WORLD_LEVEL_CONFIG: Record<string, WorldLevelConfig> = {
+  'F级': { baseDC: 10, masteryBonus: 0, hpBase: 25, singleAttrMax: 30, description: '普通武侠、现代国术' },
+  'E级': { baseDC: 13, masteryBonus: 1, hpBase: 50, singleAttrMax: 45, description: '低武、现代异能' },
+  'D级': { baseDC: 16, masteryBonus: 2, hpBase: 75, singleAttrMax: 60, description: '武侠、低等恐怖' },
+  'C级': { baseDC: 19, masteryBonus: 3, hpBase: 100, singleAttrMax: 80, description: '低等修真、现代灭世' },
+  'B级': { baseDC: 22, masteryBonus: 4, hpBase: 125, singleAttrMax: 100, description: '中等修真、奇幻' },
+  'A级': { baseDC: 25, masteryBonus: 5, hpBase: 175, singleAttrMax: 125, description: '高等仙侠、星球战争' },
+  'S级': { baseDC: 28, masteryBonus: 6, hpBase: 250, singleAttrMax: 150, description: '神话仙侠、克苏鲁' },
+  'SS级': { baseDC: 31, masteryBonus: 6, hpBase: 350, singleAttrMax: 180, description: '多元宇宙、概念战争' },
+  'SSS级': { baseDC: 34, masteryBonus: 8, hpBase: 500, singleAttrMax: 9999, description: '全能领域、超越者' },
+};
+
+const WORLD_LEVELS = Object.keys(WORLD_LEVEL_CONFIG);
+
+const DIFFICULTY_MOD: Record<string, number> = {
+  normal: 0,
+  hard: 3,
+  extreme: 6,
+};
+
+function computeAIDMAttrMod(attr: number): number {
+  if (attr <= 15) return 0;
+  if (attr <= 25) return 1;
+  if (attr <= 35) return 2;
+  if (attr <= 45) return 3;
+  if (attr <= 55) return 4;
+  if (attr <= 65) return 5;
+  if (attr <= 75) return 6;
+  if (attr <= 85) return 7;
+  if (attr <= 95) return 8;
+  if (attr <= 105) return 9;
+  if (attr <= 120) return 10;
+  if (attr <= 140) return 11;
+  if (attr <= 160) return 12;
+  if (attr <= 185) return 13;
+  if (attr <= 210) return 14;
+  if (attr <= 240) return 15;
+  if (attr <= 270) return 16;
+  if (attr <= 305) return 17;
+  if (attr <= 340) return 18;
+  if (attr <= 380) return 19;
+  return 19 + Math.floor((attr - 381) / 40);
+}
+
+function getMasteryBonus(level: string): number {
+  return WORLD_LEVEL_CONFIG[level]?.masteryBonus ?? 0;
+}
+
+function getBaseDC(level: string): number {
+  return WORLD_LEVEL_CONFIG[level]?.baseDC ?? 10;
+}
 
 const QUICK_PRESETS = computed(() => {
   const list = presets.value.filter(p => p.visible !== false).map(p => ({ id: p.id!, name: p.name }));
-  return [{ id: '__default__', name: 'COC' }, { id: '__custom__', name: '自定义' }, ...list];
+  return [
+    { id: 'aidm_standard', name: 'AIDM标准' },
+    { id: '__custom__', name: '自定义' },
+    ...list,
+  ];
 });
 
 const DIFFICULTY_OPTIONS = [
-  { value: 'normal', label: '普通' },
-  { value: 'hard', label: '困难' },
-  { value: 'extreme', label: '极难' },
-  { value: 'critical', label: '大成功' },
+  { value: 'normal', label: '常规 (+0)' },
+  { value: 'hard', label: '困难 (+3)' },
+  { value: 'extreme', label: '极难 (+6)' },
 ];
 
 const SUCCESS_CRITERIA_OPTIONS = [
+  { id: 'gte', name: '≥ (AIDM)' },
   { id: 'lte', name: '≤ (COC)' },
-  { id: 'gte', name: '≥ (DND)' },
 ];
 
 const JUDGE_MODE_OPTIONS = [
@@ -60,17 +124,18 @@ const JUDGE_MODE_OPTIONS = [
   { id: 'none', name: '无判定' },
 ];
 
+const isAIDM = computed(() => activeQuickPresetId.value === 'aidm_standard');
 const isDND = computed(() => successCriteria.value === 'gte');
 
 function selectQuickPreset(id: string): void {
   activeQuickPresetId.value = id;
   isCustomMode.value = id === '__custom__';
 
-  if (id === '__default__') {
-    successCriteria.value = 'lte';
-    customDiceExpr.value = '1d100';
+  if (id === 'aidm_standard') {
+    successCriteria.value = 'gte';
+    customDiceExpr.value = '1d20';
   } else if (id === '__custom__') {
-    customDiceExpr.value = '1d100';
+    customDiceExpr.value = '1d20';
   } else {
     selectPreset(id);
     const p = presets.value.find(x => x.id === id);
@@ -80,7 +145,7 @@ function selectQuickPreset(id: string): void {
       } else if (p.diceExpression === '1d100') {
         successCriteria.value = 'lte';
       }
-      customDiceExpr.value = p.diceExpression || '1d100';
+      customDiceExpr.value = p.diceExpression || '1d20';
     }
   }
 }
@@ -111,28 +176,13 @@ function randomSkill(): void {
   }
 }
 
-function getDiceConfig() {
-  try {
-    const stored = localStorage.getItem('acu_dice_config');
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return {
-    critSuccessMax: 5,
-    critFailMin: 96,
-    difficultSuccessDiv: 2,
-    hardSuccessDiv: 5,
-  };
-}
-
 async function handleRoll(): Promise<void> {
   if (isRolling.value) return;
   isRolling.value = true;
 
   try {
-    const diceCfg = getDiceConfig();
-
     if (isCustomMode.value) {
-      const expr = customDiceExpr.value || '1d100';
+      const expr = customDiceExpr.value || '1d20';
       const result = roll(expr);
       const total = result.total;
       const judgeMode = customJudgeMode.value;
@@ -179,69 +229,33 @@ async function handleRoll(): Promise<void> {
       return;
     }
 
-    const formula = isDND.value ? '1d20' : '1d100';
+    const formula = '1d20';
     const mod = modifier.value !== '' ? Number(modifier.value) : 0;
     const attr = attrName.value || '自由检定';
     const diff = difficulty.value;
+    const level = worldLevel.value;
 
-    const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 0;
-    let target = targetValue.value !== '' ? Number(targetValue.value) : 0;
+    const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
+    const attrMod = computeAIDMAttrMod(attrVal);
+    const masteryBonus = getMasteryBonus(level);
+    const baseDC = getBaseDC(level);
+    const diffMod = DIFFICULTY_MOD[diff] || 0;
+    const finalDC = baseDC + diffMod;
+
+    let target = targetValue.value !== '' ? Number(targetValue.value) : finalDC;
 
     if (target === 0) {
-      if (isDND.value) {
-        target = 10;
-      } else if (attrVal > 0) {
-        target = attrVal;
-      } else {
-        target = 50;
-      }
+      target = finalDC;
     }
 
     const result = roll(formula);
-    const total = result.total + mod;
+    const rollTotal = result.total;
+    const finalValue = rollTotal + attrMod + masteryBonus + mod;
 
-    const critSuccessMax = isDND.value ? 20 : diceCfg.critSuccessMax || 5;
-    const critFailMin = isDND.value ? 1 : diceCfg.critFailMin || 96;
-    const hardDiv = diceCfg.difficultSuccessDiv || 2;
-    const extremeDiv = diceCfg.hardSuccessDiv || 5;
-
-    let requiredTarget = target;
-    let difficultyLabel = '';
-    let difficultyDiv = 1;
-
-    if (!isDND.value) {
-      switch (diff) {
-        case 'hard':
-          requiredTarget = Math.floor(target / hardDiv);
-          difficultyLabel = '困难';
-          difficultyDiv = hardDiv;
-          break;
-        case 'extreme':
-          requiredTarget = Math.floor(target / extremeDiv);
-          difficultyLabel = '极难';
-          difficultyDiv = extremeDiv;
-          break;
-        case 'critical':
-          requiredTarget = critSuccessMax;
-          difficultyLabel = '大成功';
-          break;
-      }
-    }
-
-    let isCritSuccess = false;
-    let isCritFailure = false;
-    let isSuccess = false;
+    let isCritSuccess = rollTotal === 20;
+    let isCritFailure = rollTotal === 1;
+    let isSuccess = finalValue >= target;
     let outcomeText = '';
-
-    if (isDND.value) {
-      isCritSuccess = result.total >= 20;
-      isCritFailure = result.total <= 1;
-      isSuccess = total >= requiredTarget;
-    } else {
-      isCritSuccess = total <= critSuccessMax;
-      isCritFailure = total >= critFailMin;
-      isSuccess = total <= requiredTarget;
-    }
 
     if (isCritSuccess) {
       outcomeText = '大成功！';
@@ -250,75 +264,48 @@ async function handleRoll(): Promise<void> {
       outcomeText = '大失败！';
       isSuccess = false;
     } else if (isSuccess) {
-      if (isDND.value) {
-        outcomeText = '成功';
-      } else if (diff === 'hard') {
-        outcomeText = '困难成功';
-      } else if (diff === 'extreme') {
-        outcomeText = '极难成功';
-      } else {
-        const extremeTarget = Math.floor(target / extremeDiv);
-        const hardTarget = Math.floor(target / hardDiv);
-        if (total <= extremeTarget) {
-          outcomeText = '极难成功';
-        } else if (total <= hardTarget) {
-          outcomeText = '困难成功';
-        } else {
-          outcomeText = '成功';
-        }
-      }
+      outcomeText = '成功';
     } else {
       outcomeText = '失败';
     }
 
-    let judgeExpr = '';
-    const criteriaSymbol = isDND.value ? '≥' : '≤';
-    if (isCritSuccess) {
-      judgeExpr = isDND.value ? `${total}≥20` : `${total}≤${critSuccessMax}`;
-    } else if (isCritFailure) {
-      judgeExpr = isDND.value ? `${total}≤1` : `${total}≥${critFailMin}`;
-    } else if (isDND.value) {
-      judgeExpr = isSuccess
-        ? `需${criteriaSymbol}${requiredTarget}，${total}≥${requiredTarget}`
-        : `需${criteriaSymbol}${requiredTarget}，${total}<${requiredTarget}`;
-    } else if (diff === 'critical') {
-      judgeExpr = `需≤${critSuccessMax}，${total}>${critSuccessMax}`;
-    } else if (diff !== 'normal') {
-      judgeExpr = isSuccess
-        ? `需≤${target}/${difficultyDiv}，${total}≤${requiredTarget}`
-        : `需≤${target}/${difficultyDiv}，${total}>${requiredTarget}`;
-    } else if (isSuccess) {
-      const extremeTarget = Math.floor(target / extremeDiv);
-      const hardTarget = Math.floor(target / hardDiv);
-      if (total <= extremeTarget) {
-        judgeExpr = `需≤${target}，${total}≤${target}/${extremeDiv}`;
-      } else if (total <= hardTarget) {
-        judgeExpr = `需≤${target}，${total}≤${target}/${hardDiv}`;
-      } else {
-        judgeExpr = `需≤${target}，${total}≤${target}`;
-      }
-    } else {
-      judgeExpr = `需≤${target}，${total}>${target}`;
-    }
+    const judgeResult = isSuccess ? '≥' : '<';
+    const judgeExpr = isSuccess
+      ? `${finalValue}${judgeResult}${target}`
+      : `${finalValue}${judgeResult}${target}`;
+
+    const diffLabel = diff === 'normal' ? '常规' : (diff === 'hard' ? '困难' : '极难');
 
     lastResult.value = {
       success: isSuccess,
-      roll: result.total,
-      total: total,
+      roll: rollTotal,
+      total: finalValue,
       target: target,
-      margin: isDND.value ? total - requiredTarget : requiredTarget - total,
+      margin: finalValue - target,
       criticalSuccess: isCritSuccess,
       criticalFailure: isCritFailure,
       outcome: outcomeText,
-      message: `${formula} = ${result.breakdown}${mod !== 0 ? ` ${mod >= 0 ? '+' : ''}${mod}` : ''} = ${total}`,
+      message: `D20(${rollTotal}) + 属性加成(${attrMod}) + 掌握加成(${masteryBonus})${mod !== 0 ? ` + 修正(${mod >= 0 ? '+' : ''}${mod})` : ''} = ${finalValue}`,
       diceType: formula,
       presetId: activeQuickPresetId.value,
     };
     showResult.value = true;
 
     const initiator = initiatorName.value || '<user>';
-    const metaContent = `元叙事：${initiator}发起了【${attr}】检定，掷出${total}，${judgeExpr}，【${outcomeText}】`;
-    const content = `<meta:检定结果>\n${metaContent}\n</meta:检定结果>`;
+    const content = `<meta:检定结果>
+【AIDM标准检定】
+
+🎲 判定过程：
+・D20投骰：${rollTotal}
+・属性加成：${attrMod}（${attr}: ${attrVal}）
+・掌握加成：${masteryBonus}
+・额外修正：${mod}
+・最终值：${finalValue}
+
+📊 DC对比：${finalValue} ${judgeResult} ${target}
+（世界等级${level}，基础DC ${baseDC}，难度调整${diffLabel} ${diffMod > 0 ? '+' : ''}${diffMod}）
+${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : '❌ 失败'))}
+</meta:检定结果>`;
     await sendToTextarea(content);
   } catch (e) {
     console.error('[DicePanel] 掷骰失败:', e);
@@ -342,18 +329,28 @@ async function sendToTextarea(content: string) {
     const textarea = $('#send_textarea');
     if (textarea.length === 0) return;
 
-    const currentText = textarea.val() || '';
-    const newText = currentText ? `${currentText}\n${content}` : content;
-    textarea.val(newText);
-    textarea.trigger('input');
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
 
-    const sendBtn = $('#send_but');
-    if (sendBtn.length > 0) {
-      sendBtn.trigger('click');
+    if (nativeInputValueSetter) {
+      const currentText = textarea.val() || '';
+      const newText = currentText ? `${currentText}\n${content}` : content;
+      nativeInputValueSetter.call(textarea[0], newText);
+      textarea[0].dispatchEvent(new Event('input', { bubbles: true }));
+    } else {
+      const currentText = textarea.val() || '';
+      const newText = currentText ? `${currentText}\n${content}` : content;
+      textarea.val(newText);
+      textarea.trigger('input');
     }
+
+    textarea.focus();
   } catch (e) {
     console.warn('[DicePanel] 发送到输入框失败:', e);
   }
+}
+
+function handleRetry() {
+  handleRoll();
 }
 
 function showHistory() {
@@ -368,20 +365,26 @@ function openSettings() {
   window.dispatchEvent(new CustomEvent('acu-open-settings-section', { detail: { section: 'general' } }));
 }
 
-watch(successCriteria, val => {
-  if (val === 'gte') {
-    if (targetValue.value === '' && attrValue.value !== '') {
-      targetValue.value = 10;
-    }
-  } else if (targetValue.value === '' && attrValue.value !== '') {
-    targetValue.value = attrValue.value;
+watch(worldLevel, () => {
+  if (targetValue.value === '' || targetValue.value === String(getBaseDC('F级')) || 
+      targetValue.value === String(getBaseDC('E级')) || targetValue.value === String(getBaseDC('D级')) ||
+      targetValue.value === String(getBaseDC('C级')) || targetValue.value === String(getBaseDC('B级')) ||
+      targetValue.value === String(getBaseDC('A级')) || targetValue.value === String(getBaseDC('S级')) ||
+      targetValue.value === String(getBaseDC('SS级')) || targetValue.value === String(getBaseDC('SSS级'))) {
+    targetValue.value = '';
+  }
+});
+
+watch(difficulty, () => {
+  if (targetValue.value === '') {
+    targetValue.value = '';
   }
 });
 
 onMounted(() => {
   initDiceSystem();
   loadPresets();
-  selectQuickPreset('__default__');
+  selectQuickPreset('aidm_standard');
 });
 </script>
 
@@ -439,7 +442,6 @@ onMounted(() => {
           <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
         </div>
         <div class="acu-dice-field">
-          " title="随机技能
           <div class="acu-dice-form-label">
             <span>属性名</span>
             <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
@@ -453,28 +455,30 @@ onMounted(() => {
       <div class="acu-dice-form-row cols-2">
         <div class="acu-dice-field">
           <div class="acu-dice-form-label">属性值</div>
-          <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=50" />
+          <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
         </div>
         <div class="acu-dice-field">
-          <div class="acu-dice-form-label">{{ isDND ? 'DC' : '目标值' }}</div>
+          <div class="acu-dice-form-label">目标DC</div>
           <input
             v-model="targetValue"
             type="text"
             class="acu-dice-input"
-            :placeholder="isDND ? '留空=10' : '留空=属性值'"
+            :placeholder="`留空=${getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0)}`"
           />
         </div>
       </div>
 
       <div v-if="!isCustomMode" class="acu-dice-form-row cols-3">
         <div>
-          <div class="acu-dice-form-label centered">成功标准</div>
-          <select v-model="successCriteria" class="acu-dice-select">
-            <option v-for="opt in SUCCESS_CRITERIA_OPTIONS" :key="opt.id" :value="opt.id">{{ opt.name }}</option>
+          <div class="acu-dice-form-label centered">世界等级</div>
+          <select v-model="worldLevel" class="acu-dice-select">
+            <option v-for="level in WORLD_LEVELS" :key="level" :value="level">
+              {{ level }} (DC {{ WORLD_LEVEL_CONFIG[level].baseDC }})
+            </option>
           </select>
         </div>
-        <div v-if="!isDND">
-          <div class="acu-dice-form-label centered">难度等级</div>
+        <div>
+          <div class="acu-dice-form-label centered">难度调整</div>
           <select v-model="difficulty" class="acu-dice-select">
             <option v-for="o in DIFFICULTY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
           </select>
@@ -482,6 +486,21 @@ onMounted(() => {
         <div>
           <div class="acu-dice-form-label">修正值</div>
           <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+        </div>
+      </div>
+
+      <div v-if="isAIDM && !isCustomMode" class="acu-dice-info-bar">
+        <div class="acu-dice-info-item">
+          <span class="acu-dice-info-label">属性加成:</span>
+          <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        </div>
+        <div class="acu-dice-info-item">
+          <span class="acu-dice-info-label">掌握加成:</span>
+          <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+        </div>
+        <div class="acu-dice-info-item">
+          <span class="acu-dice-info-label">最终DC:</span>
+          <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
         </div>
       </div>
 
@@ -525,7 +544,7 @@ onMounted(() => {
           <span class="acu-dice-result-badge" :class="{ success: lastResult.success, failure: !lastResult.success }">{{
             lastResult.outcome
           }}</span>
-          <button class="acu-dice-retry-btn" @click.stop="showResult = false">
+          <button class="acu-dice-retry-btn" title="重新投骰" @click.stop="handleRetry">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
         </template>
@@ -749,6 +768,35 @@ onMounted(() => {
   background: var(--acu-bg-panel);
   border: 1px dashed var(--acu-border);
   border-radius: 6px;
+}
+
+.acu-dice-info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--acu-accent-light);
+  border-radius: 6px;
+  border: 1px solid var(--acu-accent);
+  margin-top: 2px;
+}
+
+.acu-dice-info-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.acu-dice-info-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--acu-text-sub);
+}
+
+.acu-dice-info-value {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--acu-accent);
 }
 
 .acu-dice-quick-compact {

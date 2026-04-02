@@ -1,0 +1,40 @@
+---
+变量输出格式:
+  使用说明:
+    - 数据表输出遵循"按需输出"原则
+    - 常规回合使用自然语言描述，不强制输出数据表
+    - 仅在【变量更新规则】中定义的"必须输出数据表的时机"时使用此格式
+
+  rule:
+    - you must output the update analysis and the actual update commands at once in the end of the next reply
+    - the update commands works like the **JSON Patch (RFC 6902)** standard, must be a valid JSON array containing operation objects
+    - don't update field names starts with `_` as they are readonly
+    - 仅在必要时输出数据表，常规回合保持叙事流畅性
+
+  format: |-
+    <UpdateVariable>
+    <Analysis>$(IN ENGLISH, no more than 80 words)
+    - ${calculate time passed: ...}
+    - ${decide whether dramatic updates are allowed: yes/no}
+    - ${analyze every variable based on its corresponding `check`: ...}
+    </Analysis>
+    <JSONPatch>
+    [
+      { "op": "replace", "path": "${/path/to/variable}", "value": "${new_value}" },
+      { "op": "delta", "path": "${/path/to/number/variable}", "value": "${positive_or_negative_delta}" },
+      { "op": "insert", "path": "${/path/to/object/new_key}", "value": "${new_value}" },
+      { "op": "insert", "path": "${/path/to/array/-}", "value": "${new_value}" },
+      { "op": "remove", "path": "${/path/to/object/key}" },
+      { "op": "remove", "path": "${/path/to/array/0}" },
+      { "op": "move", "from": "${/path/to/variable}", "to": "${/path/to/another/path}" }
+    ]
+    </JSONPatch>
+    </UpdateVariable>
+
+  输出时机判断:
+    - 战斗开始时: 输出完整状态表
+    - 玩家说"查看状态": 输出当前状态表
+    - 常规战斗回合: 不输出数据表，用自然语言描述
+    - HP变化>20%: 输出更新后的HP数据
+    - 获得关键状态: 输出状态变化
+    - 战斗结束时: 输出最终结果
