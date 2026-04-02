@@ -61,6 +61,56 @@ const enemyAtkMod = ref<number | string>('');
 const enemyAttackPower = ref<number | string>('');
 const playerDefense = ref<number | string>('');
 
+const ATTR_MAPPING: Record<string, string[]> = {
+  attackPower: ['攻击力', '攻击', 'ATK', 'Atk', 'atk', '物攻', '物理攻击', '法攻', '法术攻击', '武力', '力量'],
+  defense: ['防御力', '防御', 'DEF', 'Def', 'def', '物防', '物理防御', '法防', '法术防御', '护甲', '防御值'],
+  charisma: ['魅力', 'CHA', 'Cha', 'cha', '魅力值', '魅力属性', 'CHR', 'Chr'],
+  agility: ['敏捷', 'AGI', 'Agi', 'agi', '敏捷值', '速度', 'SPD', 'Spd'],
+  strength: ['力量', 'STR', 'Str', 'str', '力量值', '体力', '体质'],
+  intelligence: ['智力', 'INT', 'Int', 'int', '智力值', '智慧', '魔力'],
+  endurance: ['耐力', 'END', 'End', 'end', '耐力值', '体力上限', 'HP', 'Hp', 'hp', '生命值', '血量'],
+};
+
+function findAttrValue(attrs: Record<string, number>, keys: string[]): number | null {
+  for (const key of keys) {
+    if (attrs[key] !== undefined) return attrs[key];
+  }
+  return null;
+}
+
+function autoFillFromCharacter(charName: string): void {
+  const char = characters.value.find(c => c.name === charName);
+  if (!char) return;
+
+  const attrs = char.attributes;
+
+  const atkPower = findAttrValue(attrs, ATTR_MAPPING.attackPower);
+  if (atkPower !== null) attackPower.value = atkPower;
+
+  const def = findAttrValue(attrs, ATTR_MAPPING.defense);
+  if (def !== null) playerDefense.value = def;
+
+  const cha = findAttrValue(attrs, ATTR_MAPPING.charisma);
+  if (cha !== null) charisma.value = cha;
+
+  initiatorName.value = charName;
+}
+
+watch(currentCharacter, (newVal) => {
+  if (newVal) {
+    autoFillFromCharacter(newVal);
+  }
+});
+
+watch(attrName, (newVal) => {
+  if (currentCharacter.value && newVal) {
+    const value = getAttributeValue(currentCharacter.value, newVal);
+    if (value !== null) {
+      attrValue.value = value;
+    }
+  }
+});
+
 interface WorldLevelConfig {
   baseDC: number;
   masteryBonus: number;
@@ -169,7 +219,7 @@ function selectQuickPreset(id: string): void {
 
 function handleSelectCharacter(name: string): void {
   selectCharacter(name);
-  initiatorName.value = name;
+  autoFillFromCharacter(name);
   nameDropdown.close();
 }
 
@@ -198,6 +248,77 @@ function computeDamageReduction(defense: number, attackPower: number): number {
 
 function computeCritRate(charismaVal: number): number {
   return Math.min(50, 5 + Math.floor(charismaVal / 2));
+}
+
+type CritLevel = 'none' | 'normal' | 'great' | 'fatal';
+
+function computeCritLevel(rollValue: number, critRate: number, isHit: boolean): CritLevel {
+  if (!isHit) return 'none';
+  const critThreshold = Math.floor(critRate / 5);
+  if (rollValue === 1) return 'fatal';
+  if (rollValue <= critThreshold) {
+    if (rollValue <= Math.max(1, critThreshold / 3)) return 'fatal';
+    if (rollValue <= Math.max(1, critThreshold / 2)) return 'great';
+    return 'normal';
+  }
+  return 'none';
+}
+
+function getCritMultiplier(critLevel: CritLevel): number {
+  switch (critLevel) {
+    case 'fatal': return 3;
+    case 'great': return 2.5;
+    case 'normal': return 2;
+    default: return 1;
+  }
+}
+
+function getCritName(critLevel: CritLevel): string {
+  switch (critLevel) {
+    case 'fatal': return '致命暴击！';
+    case 'great': return '大暴击！';
+    case 'normal': return '暴击！';
+    default: return '';
+  }
+}
+
+function getCritEmoji(critLevel: CritLevel): string {
+  switch (critLevel) {
+    case 'fatal': return '💀💥';
+    case 'great': return '💥';
+    case 'normal': return '⚡';
+    default: return '';
+  }
+}
+
+function rollWithAdvantage(formula: string, advantageCount: number, disadvantageCount: number): { total: number; breakdown: string; rolls: number[] } {
+  const netAdv = advantageCount - disadvantageCount;
+  
+  if (netAdv === 0) {
+    const result = roll(formula);
+    return { total: result.total, breakdown: result.breakdown, rolls: [result.total] };
+  }
+  
+  const rollCount = Math.min(Math.abs(netAdv) + 1, 5);
+  const rolls: number[] = [];
+  
+  for (let i = 0; i < rollCount; i++) {
+    const result = roll(formula);
+    rolls.push(result.total);
+  }
+  
+  let finalRoll: number;
+  let breakdown: string;
+  
+  if (netAdv > 0) {
+    finalRoll = Math.max(...rolls);
+    breakdown = `优势(${rolls.join(', ')})取最高→${finalRoll}`;
+  } else {
+    finalRoll = Math.min(...rolls);
+    breakdown = `劣势(${rolls.join(', ')})取最低→${finalRoll}`;
+  }
+  
+  return { total: finalRoll, breakdown, rolls };
 }
 
 async function handleStandardCheck(): Promise<void> {
@@ -298,15 +419,25 @@ async function handleContestCheck(): Promise<void> {
   const totalDis = envDis + statDis;
   const netAdv = totalAdv - totalDis;
 
-  const result = roll(formula);
-  const rollTotal = result.total;
+  const rollResult = rollWithAdvantage(formula, totalAdv, totalDis);
+  const rollTotal = rollResult.total;
+  
+  const isCritSuccess = rollTotal === 20;
+  const isCritFailure = rollTotal === 1;
+  
   const myTotal = rollTotal + myAttrMod + myMasteryBonus;
   const oppTotal = oppRollVal + oppAttrMod;
 
   let isSuccess = myTotal > oppTotal;
   let outcomeText = '';
 
-  if (myTotal > oppTotal) {
+  if (isCritSuccess) {
+    outcomeText = '大成功获胜！';
+    isSuccess = true;
+  } else if (isCritFailure) {
+    outcomeText = '大失败落败！';
+    isSuccess = false;
+  } else if (myTotal > oppTotal) {
     outcomeText = '获胜！';
   } else if (myTotal < oppTotal) {
     outcomeText = '落败！';
@@ -322,16 +453,17 @@ async function handleContestCheck(): Promise<void> {
     total: myTotal,
     target: oppTotal,
     margin: myTotal - oppTotal,
-    criticalSuccess: false,
-    criticalFailure: false,
+    criticalSuccess: isCritSuccess,
+    criticalFailure: isCritFailure,
     outcome: outcomeText,
-    message: `己方: D20(${rollTotal}) + 属性(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal} | 对方: D20(${oppRollVal}) + 属性(${oppAttrMod}) = ${oppTotal}`,
+    message: `己方: ${rollResult.breakdown} + 属性(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal} | 对方: D20(${oppRollVal}) + 属性(${oppAttrMod}) = ${oppTotal}`,
     diceType: formula,
     presetId: 'contest',
   };
   showResult.value = true;
 
   const initiator = initiatorName.value || '<user>';
+  const advText = netAdv > 0 ? `优势(+${netAdv})` : (netAdv < 0 ? `劣势(${netAdv})` : '无调整');
   const content = `<meta:检定结果>
 【AIDM对抗检定】
 
@@ -343,13 +475,13 @@ async function handleContestCheck(): Promise<void> {
 🎲 骰子池计算：
 ・优势骰：${totalAdv}个（属性${attrAdvDice} + 环境${envAdv} + 状态${statAdv}）
 ・劣势骰：${totalDis}个（环境${envDis} + 状态${statDis}）
-・净优势：${netAdv}
+・净调整：${advText}
 
 🎯 投骰结果：
-・己方：D20(${rollTotal}) + 属性加成(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal}
-・对方：D20(${oppRollVal}) + 属性加成(${oppAttrMod}) = ${oppTotal}
+・己方：${rollResult.breakdown} + 属性(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${myTotal}
+・对方：D20(${oppRollVal}) + 属性(${oppAttrMod}) = ${oppTotal}
 
-${myTotal > oppTotal ? '✅ 获胜！' : (myTotal < oppTotal ? '❌ 落败！' : '⚖️ 平局！')}
+${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (myTotal > oppTotal ? '✅ 获胜！' : (myTotal < oppTotal ? '❌ 落败！' : '⚖️ 平局！')))}
 </meta:检定结果>`;
   await sendToTextarea(content);
 }
@@ -377,19 +509,19 @@ async function handleCombatCheck(): Promise<void> {
   const rollTotal = result.total;
   const finalValue = rollTotal + attrMod + masteryBonus + mod;
 
-  const isCrit = rollTotal <= Math.floor(critRate / 5);
   const isHit = finalValue >= finalDC;
-  const isCritHit = isCrit && isHit;
+  const critLevel = computeCritLevel(rollTotal, critRate, isHit);
+  const critMultiplier = getCritMultiplier(critLevel);
 
   const damageReduction = computeDamageReduction(tgtDefense, atkPower);
   const baseDamage = Math.max(1, Math.floor(atkPower * (1 - damageReduction)));
-  const finalDamage = isCritHit ? baseDamage * 2 : baseDamage;
+  const finalDamage = Math.floor(baseDamage * critMultiplier);
 
   let outcomeText = '';
   let isSuccess = false;
 
-  if (isCritHit) {
-    outcomeText = '暴击命中！';
+  if (critLevel !== 'none') {
+    outcomeText = getCritName(critLevel);
     isSuccess = true;
   } else if (isHit) {
     outcomeText = '命中！';
@@ -399,6 +531,7 @@ async function handleCombatCheck(): Promise<void> {
   }
 
   const levelName = level.replace('级', '');
+  const atkTypeLabel = attackType.value;
 
   lastResult.value = {
     success: isSuccess,
@@ -406,18 +539,19 @@ async function handleCombatCheck(): Promise<void> {
     total: finalValue,
     target: finalDC,
     margin: finalValue - finalDC,
-    criticalSuccess: isCritHit,
+    criticalSuccess: critLevel !== 'none',
     criticalFailure: false,
     outcome: outcomeText,
-    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | 伤害: ${finalDamage}${isCritHit ? ' (暴击x2)' : ''}`,
+    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${atkTypeLabel}伤害: ${finalDamage}${critLevel !== 'none' ? ` (${getCritName(critLevel)}x${critMultiplier})` : ''}`,
     diceType: formula,
     presetId: 'combat',
   };
   showResult.value = true;
 
   const initiator = initiatorName.value || '<user>';
+  const critEmoji = getCritEmoji(critLevel);
   const content = `<meta:检定结果>
-【AIDM战斗检定】
+【AIDM战斗检定 - ${atkTypeLabel}】
 
 🎲 判定过程：
 ・D20投骰：${rollTotal}
@@ -428,14 +562,15 @@ async function handleCombatCheck(): Promise<void> {
 
 📊 DDC对比：${finalValue} ${isHit ? '≥' : '<'} ${finalDC}
 （目标等级${levelName}级，基础DDC ${baseDDC}，闪避加值${dodgeMod}）
-${isCritHit ? '💥 暴击命中！' : (isHit ? '✅ 命中！' : '❌ 未命中！')}
+${critLevel !== 'none' ? `${critEmoji} ${getCritName(critLevel)}` : (isHit ? '✅ 命中！' : '❌ 未命中！')}
 
 ⚔️ 伤害计算：
 ・攻击力：${atkPower}
 ・目标防御：${tgtDefense}
 ・伤害减免：${Math.round(damageReduction * 100)}%
 ・基础伤害：${baseDamage}
-最终伤害：${finalDamage}${isCritHit ? '（暴击双倍）' : ''}
+${critLevel !== 'none' ? `・暴击倍率：x${critMultiplier}` : ''}
+最终伤害：${finalDamage}${critLevel !== 'none' ? '（暴击）' : ''}
 </meta:检定结果>`;
   await sendToTextarea(content);
 }
