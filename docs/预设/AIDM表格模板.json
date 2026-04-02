@@ -1,0 +1,762 @@
+{
+  "sheet_global_data": {
+    "uid": "sheet_global_data",
+    "name": "全局数据表",
+    "sourceData": {
+      "note": "记录当前世界的核心宏观状态。此表有且仅有一行。禁止增删行\n\n【层级定义】\n层级: 主要地区 > 次要地区 > 详细地点\n示例: 东京都 > 新宿区 > 御苑\n\n【详细地点格式】\n仅填写地点名称本身，不包含层级结构\n正确: \"{{user}}公寓\" | \"御苑\" | \"学校\"\n错误: \"东京-{{user}}公寓-卫生间\" | \"新宿区-御苑\"\n当前详细地点必须等于世界地图点表中某个\"详细地点\"的值\n\n【时间格式】\n当前时间格式: \"YYYY-MM-DD HH:MM\"\n经过的时间格式: \"{数值}{单位}\"，多单位用空格连接\n单位: [纪元,千年,百年,年,月,周,天,小时,分]\n示例: \"3小时20分\" | \"2天\" | \"3年6月\" | \"2纪元\"\n约束: 当前时间 = 上轮场景时间 + 经过的时间\n\n【世界等级规则】\n当前世界等级决定该世界内角色的属性上限和总属性范围\n等级: [F级, E级, D级, C级, B级, A级, S级, SS级, SSS级]\n世界等级变更时: 需同步更新主角和重要角色的等级与属性\n\n【等级-世界类型对照】\nF级: 普通武侠、现代国术\nE级: 低武、现代异能\nD级: 武侠、低等恐怖\nC级: 低等修真、现代灭世\nB级: 中等修真、奇幻\nA级: 高等仙侠、星球战争\nS级: 神话仙侠、克苏鲁\nSS级: 多元宇宙、概念战争\nSSS级: 全能领域、超越者\n\n【DC难度等级】\n基础DC: F级10 | E级13 | D级16 | C级19 | B级22 | A级25 | S级28\n困难DC: 基础DC + 3\n极难DC: 基础DC + 6\n\n【主要地区切换流程】\n触发: 当前主要地区变更时\n步骤: ①更新本表\"当前主要地区\"→ ②清空世界地图点表 → ③填入新主要地区的次要地区 → ④更新\"当前次要地区\"→ ⑤更新 \"当前详细地点\" → ⑥清空地图元素表 → ⑦更新主角\"所在地点\" → ⑧填充新地图元素 → ⑨更新重要角色表\"在场状态\"\n\n【一致性校验】\n- 当前详细地点 = 世界地图点表.详细地点（精准匹配地图点表任一行的详细地点）\n- 当前主要地区 ∈ 世界地图点表.所有行.主要地区",
+      "initNode": "插入一条记录，设定初始时间、位置和世界等级。",
+      "deleteNode": "禁止。",
+      "updateNode": "- 每轮必须更新: 上轮场景时间,经过的时间,当前时间。\n- 位置变化时更新对应字段。\n- 世界等级变化时更新等级字段。",
+      "insertNode": "禁止。"
+    },
+    "content": [
+      [null, "当前世界等级", "当前主要地区", "当前次要地区", "当前详细地点", "上轮场景时间", "经过的时间", "当前时间"]
+    ],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": 4,
+      "updateFrequency": -1,
+      "batchSize": 4,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "全局数据表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "全局数据表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "before_char",
+        "depth": 2,
+        "order": 99981
+      },
+      "fixedIndexPlacement": {
+        "position": "before_char",
+        "depth": 2,
+        "order": 99982
+      }
+    },
+    "orderNo": 0
+  },
+  "sheet_world_map": {
+    "uid": "sheet_world_map",
+    "name": "世界地图点",
+    "sourceData": {
+      "note": "记录当前主要地区内的次要地区及详细地点。\n\n【详细地点格式】\n仅填写地点名称本身，不包含层级结构\n正确: \"{{user}}公寓\" | \"御苑\" | \"学校\"\n错误: \"东京-{{user}}公寓-卫生间\" | \"新宿区-御苑\" | \"{{user}}公寓-客厅\"\n\n【约束】\n- 主要地区引用自全局数据表.当前主要地区\n- 主要地区切换时清空本表并重新填充\n- 详细地点总数≤20条，详细地点要满足MECE\n- 详细地点值必须唯一，作为其他表\"所在地点\"的匹配依据\n- 必须保证重要角色表中所有角色的\"所在地点\"都在本表中存在（精准匹配）\n- 必须保证主角信息表中的\"所在地点\"在本表中存在（精准匹配）\n- 必须保证地图元素表中所有元素的\"所在地点\"都在本表中存在（精准匹配）\n\n【字段说明】\n地点类型: [住宅,学校,遗迹,地牢,交通,特殊]\n重要度: [核心,重要,普通]\n探索状态: [未探索,部分探索,已探索]\n环境描述: ≤30字",
+      "initNode": "为当前主要地区插入至少3个详细地点条目。必须包含：①主角信息表中的\"所在地点\" ②重要角色表中所有角色的\"所在地点\"（如果这些地点属于当前主要地区） ③地图元素表中所有元素的\"所在地点\"（如果这些元素属于当前主要地区）。",
+      "deleteNode": "触发条件: ①主要地区切换时清空本表 ②条数超过20条时删除重要度最低的（但必须保留重要角色表、主角信息表、地图元素表中正在使用的地点）",
+      "updateNode": "触发条件: ①探索状态变化 ②重要度变化 ③环境变化 ④发现现有条目存在空白字段时",
+      "insertNode": "触发条件: ①主角到达新地点 ②NPC提及新地点 ③剧情揭示新区域 ④地图或文献发现 ⑤重要角色表新增角色且其\"所在地点\"不在本表中 ⑥地图元素表新增元素且其\"所在地点\"不在本表中"
+    },
+    "content": [[null, "详细地点", "次要地区", "地点类型", "环境描述", "重要度", "探索状态"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": 4,
+      "updateFrequency": -1,
+      "batchSize": 4,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "世界地图点",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "世界地图点-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 1
+  },
+  "sheet_map_elements": {
+    "uid": "sheet_map_elements",
+    "name": "地图元素表",
+    "sourceData": {
+      "note": "记录当前次要地区内可交互的非重要角色的实体。\n\n【核心原则】仅录入[剧情物品, 威胁, 龙套, 地标]四类。除此之外一律不录入。\n\n【类型定义】\n1) [剧情物品]: 必须是直接推动剧情的关键信物、线索、文件或钥匙。能回答\"这东西对谁重要？\"\n2) [威胁]: 必须是阻碍行动的敌对生物、陷阱或危险地形。能造成伤害或阻碍。\n3) [龙套]: 必须是有交互功能的一次性无名NPC（如警卫/店员）。若在后续剧情中多次出现，获取名字，变得重要则移入重要角色表。\n4) [地标]: 必须是该地点独一无二的视觉锚点或核心机制（如巨大的雕像、控制台）。每地点限1个。\n\n【硬性上限】每个详细地点最多5条；全表最多30条。新增前若会超限，必须先删除再新增。\n\n【两问筛选】录入前必须确认：\n1) 离开此地后，这东西是否仍有剧情价值？\n2) 现在是否必须通过它进行交互？\n(若两问皆否，禁止录入)\n\n【所在地点规则】所在地点必须等于世界地图点表中某个\"详细地点\"的值。\n\n【字段说明】\n元素描述: ≤20字\n状态: 当前状态描述\n交互选项格式: 英文逗号分隔，每选项≤4字，选项数≤3个",
+      "initNode": "按四类定义生成地图元素：每个地点0-5条，全表≤30。严格过滤[剧情物品, 威胁, 龙套, 地标]以外的杂物。",
+      "deleteNode": "触发条件: ①实体被销毁/拾取/无效化 ②离开当前次要地区 ③龙套升格为重要角色 ④单个地点超过5条或全表超过30条时：先删不满足四类定义的，再删重复/可替代的",
+      "updateNode": "触发条件: 状态改变或发现新细节（如果元素位置变化且新地点不在世界地图点表中，需先在世界地图点表中添加该地点）",
+      "insertNode": "触发条件: 发现新实体、线索或环境特色元素（如果新实体的所在地点不在世界地图点表中，需先在世界地图点表中添加该地点）"
+    },
+    "content": [[null, "元素名称", "元素类型", "所在地点", "元素描述", "状态", "交互选项"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": 4,
+      "updateFrequency": -1,
+      "batchSize": 4,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "地图元素表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "地图元素表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 2
+  },
+  "sheet_factions": {
+    "uid": "sheet_factions",
+    "name": "势力",
+    "sourceData": {
+      "note": "记录对剧情有实质影响的势力/组织/阵营。\n\n【准入规则】\n录入条件(OR): [与主线相关,与主角互动,拥有多成员或控制区域,会多次出现]\n禁入: [一次性提及的背景组织,无影响力的小团体]\n\n【约束】\n- 势力总数≤8条\n\n【字段说明】\n描述: ≤30字\n关系格式: \"{势力名称或角色名}:{关系词}\"\n- 同一对象的多个关系词用逗号分隔\n- 不同对象之间用分号分隔\n关系词: [同盟,敌对,中立,竞争,合作]\n示例: \"主角:敌对; 商会:同盟\" | \"主角:敌对,竞争; 商会:同盟\"\n据点: 势力总部或主要驻地",
+      "initNode": "为已登场的重要势力插入条目。",
+      "deleteNode": "触发条件: ①势力覆灭/解散/彻底退出剧情 ②超过8条时删除最不相关的",
+      "updateNode": "触发条件: 描述/领袖/关系/据点发生变化",
+      "insertNode": "触发条件: 剧情中出现新的重要势力"
+    },
+    "content": [[null, "名称", "描述", "领袖", "关系", "据点"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "势力",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "势力-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 3
+  },
+  "sheet_protagonist": {
+    "uid": "sheet_protagonist",
+    "name": "主角信息",
+    "sourceData": {
+      "note": "记录主角的核心身份信息。此表必须保证有一行。禁止增删行\n\n【所在地点规则】\n所在地点必须等于世界地图点表中某个\"详细地点\"的值（精准匹配）\n仅填写地点名称本身，不包含层级结构\n正确: \"{{user}}公寓\" | \"御苑\"\n错误: \"东京-{{user}}公寓-卫生间\" | \"新宿区-御苑\"\n\n【位置同步规则】\n- 跨次要地区移动 → 同时更新全局数据表和本表\n- 同次要地区内移动 → 仅更新本表\n\n【等级规则】\n等级由总基础属性点决定（技能、装备加成不计入）\n等级对照表:\n- F级: 总属性30-119, 单项上限30\n- E级: 总属性120-209, 单项上限45\n- D级: 总属性210-329, 单项上限60\n- C级: 总属性330-479, 单项上限80\n- B级: 总属性480-659, 单项上限100\n- A级: 总属性660-869, 单项上限125\n- S级: 总属性870-1109, 单项上限150\n- SS级: 总属性1110-1379, 单项上限180\n- SSS级: 总属性1380+, 无上限\n\n【字段格式】\n外貌特征: ≤30字，含身高体型等关键外观。普通服装在此描述，仅特殊装备入装备表。\n\n身份: 逗号分隔，≤20字\n示例: \"学生,魔法少女\"\n\n自身状态: 逗号分隔的状态标签\n状态类型: [生理,负面,正面,情绪,伤病]\n默认值: \"正常\"\n示例: \"正常\" | \"饥饿,疲劳\" | \"中毒,轻伤\"\n约束: 无异常时填\"正常\"；有异常时去掉\"正常\"\n\n<AIDM属性规则>\n基础属性: \"{基础属性}:{数值}\"，六维属性\n示例: \"力量:15; 敏捷:12; 体质:14; 智力:11; 感知:10; 魅力:8\"\n\n属性范围约束:\n- 单项属性下限: 5\n- 单项属性上限: 由等级决定（见等级对照表）\n- 总属性范围: 由等级决定（见等级对照表）\n\n特有属性: 角色的特殊能力与技能，体现世界观特色与个体差异。\n格式: \"{特有属性}:{数值}\"，数值范围[0,100]，数值代表成功概率\n示例: \"爆裂魔法:85; 时间回溯:70; 超电磁炮:90\"\n\n战斗属性: 由基础属性自动计算\n- HP = 体质 × 5 + 等级HP基础值\n- 物理防御 = 体质\n- 法术防御 = 感知\n- DDC = 10（基础难度等级）\n- 暴击率 = 5 + floor(魅力/2)，上限50%\n\n等级HP基础值:\nF级:25 | E级:50 | D级:75 | C级:100 | B级:125 | A级:175 | S级:250 | SS级:350 | SSS级:500\n</AIDM属性规则>\n\n资源数据: \"{资源名}:{数值}\"，多组用分号分隔\n示例: \"金币:250; 行动点:3\"\n\n沉淀点: 属性达上限后溢出转化的储备点\n获取规则: 3属性点溢出 → 1点沉淀点\n使用规则: 仅在乾坤界晋级时释放，1:1转化为可分配属性点\"",
+      "initNode": "插入主角唯一条目，根据全局数据表的当前世界等级设定等级和属性。初始总属性点=60，单项属性5-15，等级为F级，沉淀点=0。",
+      "deleteNode": "禁止",
+      "updateNode": "触发条件: 年龄、外貌、身份、状态、位置、属性、资源、沉淀点变化时（位置变化时，如果新地点不在世界地图点表中，需先在世界地图点表中添加该地点）\n等级提升: 当总基础属性点达到下一等级阈值时，自动更新等级字段\n沉淀点更新: 属性达上限后继续获得该属性奖励时，3属性点溢出 → 1点沉淀点",
+      "insertNode": "禁止"
+    },
+    "content": [
+      [
+        null,
+        "姓名",
+        "等级",
+        "性别",
+        "年龄",
+        "外貌特征",
+        "身份",
+        "自身状态",
+        "所在地点",
+        "基础属性",
+        "特有属性",
+        "战斗属性",
+        "资源数据",
+        "沉淀点"
+      ]
+    ],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": 4,
+      "updateFrequency": -1,
+      "batchSize": 4,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "主角信息",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "主角信息-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 4
+  },
+  "sheet_important_npc": {
+    "uid": "sheet_important_npc",
+    "name": "重要角色表",
+    "sourceData": {
+      "note": "记录对剧情有重要影响的关键NPC。\n\n【准入规则】\n录入条件(OR): [与主线直接相关,与主角深度互动,拥有独特能力,会多次出现,有明确姓名]\n【禁入】: [一次性路人,龙套,纯功能性NPC]\n\n【行数约束】\n上限: 20条\n超限处理: 删除最久未互动且非核心剧情的NPC\n\n【禁止事项】\n不生成好感度、亲密度、信任值等任何量化情感数值\n\n【等级规则】\n等级由总基础属性点决定（技能、装备加成不计入）\n等级对照表:\n- F级: 总属性30-119, 单项上限30\n- E级: 总属性120-209, 单项上限45\n- D级: 总属性210-329, 单项上限60\n- C级: 总属性330-479, 单项上限80\n- B级: 总属性480-659, 单项上限100\n- A级: 总属性660-869, 单项上限125\n- S级: 总属性870-1109, 单项上限150\n- SS级: 总属性1110-1379, 单项上限180\n- SSS级: 总属性1380+, 无上限\n\n【字段格式】\n- 外貌特征: ≤30字，含身高体型等关键外观。普通服装在此描述，仅特殊装备入装备表。\n- 身份: ≤20字，职业或头衔\n- 一句话介绍: 用不超过15字概括角色身份背景，不含主观评价。\n- 过往经历: 记录角色背景与关键事件，随剧情增量更新，不超过300字。超过时请重新压缩。\n\n【所在地点规则】\n所在地点必须等于世界地图点表中某个\"详细地点\"的值（精准匹配）\n仅填写地点名称本身，不包含层级结构\n正确: \"{{user}}公寓\" | \"御苑\"\n错误: \"东京-{{user}}公寓-卫生间\" | \"新宿区-御苑\"\n\n【在场状态规则】\n在场: 所在地点 = 全局数据表.当前详细地点\n离场: 所在地点 ≠ 全局数据表.当前详细地点\n次要地区切换时: 不在新地图点范围内的NPC → 在场状态设为\"离场\"\n\n【人际关系格式】\n格式: \"{角色名}:{关系词}\"\n- 同一角色的多个关系词用逗号分隔\n- 不同角色之间用分号分隔\n- 关系词字数≤4，不使用括号\n关系词示例: [恋人,挚友,师徒,敌对,队友]\n仅记录对剧情有重大影响的核心关系\n示例: \"主角:挚友; 艾莉丝:恋人\" | \"高松灯:同学,队友; 角色B:仇人\"\n\n【交互选项格式】\n格式: 英文逗号分隔，每选项≤4字\n内容: 当前可对该角色执行的主要交互动作\n示例: \"告别,邀约\"\n约束: 选项数≤3个，仅限在场状态的NPC填写，离场时留空\n\n<AIDM属性规则>\n基础属性: \"{基础属性}:{数值}\"，六维属性\n示例: \"力量:15; 敏捷:12; 体质:14; 智力:11; 感知:10; 魅力:8\"\n\n属性范围约束:\n- 单项属性下限: 5\n- 单项属性上限: 由等级决定（见等级对照表）\n- 总属性范围: 由等级决定（见等级对照表）\n\n特有属性: 角色的特殊能力与技能，体现世界观特色与个体差异。\n格式: \"{特有属性}:{数值}\"，数值范围[0,100]，数值代表成功概率\n示例: \"爆裂魔法:85; 时间回溯:70; 超电磁炮:90\"\n\n战斗属性: 由基础属性自动计算\n- HP = 体质 × 5 + 等级HP基础值\n- 物理防御 = 体质\n- 法术防御 = 感知\n- DDC = 10（基础难度等级）\n- 暴击率 = 5 + floor(魅力/2)，上限50%\n\n等级HP基础值:\nF级:25 | E级:50 | D级:75 | C级:100 | B级:125 | A级:175 | S级:250 | SS级:350 | SSS级:500\n</AIDM属性规则>",
+      "initNode": "为符合准入条件的重要角色插入条目。\n\n【等级设定规则】\n1. 读取全局数据表.当前世界等级作为NPC等级上限\n2. NPC等级 = 世界等级 或 世界等级-1（随机决定）\n3. 根据等级确定总属性范围和单项上限（见等级对照表）\n\n【属性生成规则】\nF级: 总属性30-119, 单项5-30, 平均单项10\nE级: 总属性120-209, 单项5-45, 平均单项28\nD级: 总属性210-329, 单项5-60, 平均单项45\nC级: 总属性330-479, 单项5-80, 平均单项68\nB级: 总属性480-659, 单项5-100, 平均单项95\nA级: 总属性660-869, 单项5-125, 平均单项128\nS级: 总属性870-1109, 单项5-150, 平均单项165\nSS级: 总属性1110-1379, 单项5-180, 平均单项208\nSSS级: 总属性1380+, 单项无上限\n\n【生成流程】\n1. 确定NPC等级（≤世界等级）\n2. 根据等级随机分配总属性点到六维\n3. 确保单项属性在范围内\n4. 计算战斗属性（HP=体质×5+等级HP基础值）\n5. 填写其他字段",
+      "deleteNode": "触发条件: ①超过20条时删除最久未互动且非核心的NPC ②NPC死亡且无后续剧情影响",
+      "updateNode": "触发条件: ①外貌/身份/势力变化 ②属性变化 ③位置变化（位置变化时，如果新地点不在世界地图点表中，需先在世界地图点表中添加该地点） ④次要地区切换时更新在场状态 ⑤人际关系变化⑥角色经历重大事件时⑦过往经历列的字数将要超过300字时触发压缩\n等级提升: 当总基础属性点达到下一等级阈值时，自动更新等级字段",
+      "insertNode": "触发条件: 新重要角色登场"
+    },
+    "content": [
+      [
+        null,
+        "姓名",
+        "等级",
+        "性别",
+        "年龄",
+        "一句话介绍",
+        "外貌特征",
+        "身份",
+        "基础属性",
+        "特有属性",
+        "战斗属性",
+        "所在地点",
+        "在场状态",
+        "人际关系",
+        "交互选项",
+        "过往经历"
+      ]
+    ],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": 4,
+      "updateFrequency": -1,
+      "batchSize": 4,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": true,
+      "splitByRow": false,
+      "entryName": "重要角色表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "重要角色表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 5
+  },
+  "sheet_skills": {
+    "uid": "sheet_skills",
+    "name": "技能表",
+    "sourceData": {
+      "note": "记录主角的主动技能和被动技能。\n\n【技能分类】\n主动技能: 战斗中使用，有冷却时间\n被动技能: 持续生效，无需激活\n\n【技能数量限制】\nF级: 主动1项 + 被动1项\nE级: 主动2项 + 被动2项\nD级及以上: 主动3项 + 被动3项\n\n【词条数量】（每个技能的词条数）\nF级: 1项词条\nE级: 2项词条\nD级及以上: 3项词条\n\n【字段说明】\n技能名称: 技能的名称\n技能类型: [主动,被动]\n效果描述: 技能的具体效果\n数值加成: 基于SPV体系计算\n冷却回合: 主动技能1-3回合，被动技能填\"-\"\n\n【数值体系】\n主动技能: 数值 = 1.0 × SPV\n被动技能: 数值 = 0.4 × SPV\n\n【SPV对照表】\nF级:5 | E级:10 | D级:15 | C级:20 | B级:25 | A级:35 | S级:50 | SS级:70 | SSS级:95",
+      "initNode": "根据主角等级插入对应数量的技能。F级初始: 主动1项+被动1项。",
+      "deleteNode": "触发条件: 技能被遗忘或替换",
+      "updateNode": "触发条件: 技能效果变化或冷却状态变化",
+      "insertNode": "触发条件: 获得新技能或等级提升解锁新技能槽"
+    },
+    "content": [[null, "技能名称", "技能类型", "效果描述", "数值加成", "冷却回合"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "技能表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "技能表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 6
+  },
+  "sheet_inventory": {
+    "uid": "sheet_inventory",
+    "name": "物品栏",
+    "sourceData": {
+      "note": "记录主角持有的物品。\n\n【物品分类】\n战斗装备(50%): 攻击装备、防御装备\n其他装备(20%): 钥匙、翻译耳塞、夜视仪等功能性装备\n道具(30%): 肾上腺素、治疗药剂等消耗品\n\n【准入规则】\n录入条件(OR): [剧情关键物品,有实际功能的道具,有价值的资源,战斗装备]\n禁入: [普通日用品,无意义杂物]\n\n【约束】\n- 物品总数≤30条\n\n【字段说明】\n类型: [武器,防具,消耗品,材料,钥匙,任务物品,特殊,道具]\n品级: [F级,E级,D级,C级,B级,A级,S级]\n效果: 物品的功能或属性加成\n数量: 物品数量\n\n【品级规则】\n品级决定物品的基础数值强度\n品级分布(世界内宝箱/掉落):\n- 50%: 同阶位物品\n- 40%: 低1级物品\n- 10%: 低2级物品（最低F级）\n\n敌人掉落品级:\n- 普通敌人: 30%同阶, 40%低1级, 30%低2级\n- 精英敌人: 70%同阶, 25%低1级, 5%高1级\n- 关键NPC: 与相关任务奖励品级一致\n\n【装备数值体系】\n公式: 数值 = 0.6 × SPV\nF级: 属性+1, 伤害+3\nE级: 属性+2, 伤害+6\nD级: 属性+3, 伤害+9\nC级: 属性+4, 伤害+12\nB级: 属性+5, 伤害+15\nA级: 属性+7, 伤害+21\nS级: 属性+10, 伤害+30",
+      "initNode": "插入主角初始持有的物品。",
+      "deleteNode": "触发条件: ①物品用尽/丢失/损坏 ②超过30条时删除品级最低且最不重要的",
+      "updateNode": "触发条件: 数量变化或效果变化",
+      "insertNode": "触发条件: 获得新物品"
+    },
+    "content": [[null, "物品名称", "类型", "品级", "效果", "数量"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "物品栏",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "物品栏-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 7
+  },
+  "sheet_equipment": {
+    "uid": "sheet_equipment",
+    "name": "装备表",
+    "sourceData": {
+      "note": "记录主角已装备的物品。\n\n【装备槽位】\n主手: 武器（物理攻击/法术攻击）\n副手: 盾牌/副武器/法器\n头部: 头盔/帽子\n身体: 铠甲/法袍\n手部: 手套/护腕\n脚部: 靴子/护腿\n饰品1: 戒指/项链/耳环\n饰品2: 戒指/项链/耳环\n\n【约束】\n- 每个装备槽位只能有一件装备\n- 装备必须来自物品栏\n\n【装备词条数量】\nF级: 1项词条\nE级: 2项词条\nD级: 3项词条\nC级: 4项词条\nB级及以上: 5项词条\n\n【装备数值体系】\n攻击装备: 数值 = 0.6 × SPV\n防御装备: 数值 = 0.6 × SPV\n\n【字段说明】\n槽位: [主手,副手,头部,身体,手部,脚部,饰品1,饰品2]\n效果: 装备提供的属性加成和词条效果",
+      "initNode": "插入主角初始装备。",
+      "deleteNode": "触发条件: 装备卸下",
+      "updateNode": "触发条件: 装备更换",
+      "insertNode": "触发条件: 装备新物品"
+    },
+    "content": [[null, "槽位", "装备名称", "效果"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "装备表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "装备表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 8
+  },
+  "sheet_summary": {
+    "uid": "sheet_summary",
+    "name": "纪要表",
+    "sourceData": {
+      "note": "轮次日志，每轮交互后必须立即插入一条新记录。\n\n【编码索引】\n- 格式为 AMXXXX，XX从0001递增\n- 编码索引必须从AM0001开始严格递增，不可跳号或重复\n\n【时间跨度】\n- 本轮事件发生的精确时间范围。格式: \"{起始时间} ~ {结束时间}\"。示例: YYYY-MM-DD HH:MM。\n\n【概览】\n- 30字以内，一句话概括纪要内容，不加入主观判断或推测，不能包含纪要中没有的信息。\n\n【纪要】\n- 以第三方视角客观记录本轮事件，不得加入推测、情绪化语言、负面解读或主观判断。内容必须基于正文明确发生的事实，不得补充未出现的情节，不少于300字，结尾部分禁止进行总结或者升华。\n- 行文生活化，用词直白露骨，文字基调积极向上。避免使用'A与B就某某话题达成协议''A确立了某某计划'一类的正式措辞或官样文章。\n- 保留角色情感细节并摒弃其中的任何支配欲、占有欲描写。\n- 如果上下文包含多轮交互，将其总结为一条记录。\n- 允许内容:[主要事件,涉及角色,角色动作,物品交互,物品全名,物品得失,位置变化,地点全名,状态变化,新发现,伏笔,暗号,重要情报,任务目标]\n- 禁止内容:[极端情绪,夸张,比喻,升华,支配欲,掌控欲]",
+      "initNode": "插入AM0001记录，记录初始场景和角色状态。",
+      "deleteNode": "禁止。",
+      "updateNode": "禁止。",
+      "insertNode": "每轮交互结束后插入新记录，编码索引递增。"
+    },
+    "content": [[null, "编码索引", "时间跨度", "概览", "纪要"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": true,
+      "splitByRow": true,
+      "entryName": "纪要",
+      "entryType": "keyword",
+      "keywords": "编码索引",
+      "preventRecursion": true,
+      "injectionTemplate": "<记忆回溯>\n$1\n</记忆回溯>",
+      "extraIndexEnabled": true,
+      "extraIndexEntryName": "纪要-索引",
+      "extraIndexColumns": ["概览", "编码索引"],
+      "extraIndexColumnModes": {
+        "概览": "index_only",
+        "编码索引": "both"
+      },
+      "extraIndexInjectionTemplate": "<已发生的事件概览>\n$1\n</已发生的事件概览>",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 999,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 1000,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 9999,
+        "order": 99987
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 9999,
+        "order": 99988
+      }
+    },
+    "orderNo": 9
+  },
+  "sheet_options": {
+    "uid": "sheet_options",
+    "name": "选项表",
+    "sourceData": {
+      "note": "基于当前剧情生成下一步行动建议。此表有且仅有一行，每轮完全覆写。禁止增删行\n\n【生成规范】\n视角: 第三人称\n格式: 行为描述 + 对白/心理(用引号包裹)\n篇幅: 每项约30字，至少2句话\n词汇: 客观、中性、无夸张修饰\n\n【四策略分支】\n- 选项一[逻辑最优]: 顺势推进，符合角色性格与情境的自然发展\n- 选项二[时间跳跃]: 快速推进至下一关键节点，必须明确跳跃时长\n- 选项三[引入变数]: 意料之外但仍合理的行动，引入新变数，令人眼前一亮\n- 选项四[亲密互动]: 推动主角与女性角色的亲密互动或增进感情的暧昧发展\n\n【约束】\n- 每轮必须根据最新剧情完全重写\n- 四个选项必须体现不同策略方向\n- 禁止与上轮选项重复",
+      "initNode": "根据初始剧情生成四个初始选项。",
+      "deleteNode": "禁止。",
+      "updateNode": "每轮交互后必须重新生成新的选项，完全覆盖原有内容。",
+      "insertNode": "禁止。"
+    },
+    "content": [[null, "选项一", "选项二", "选项三", "选项四"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "选项表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "选项表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 10
+  },
+  "sheet_intel": {
+    "uid": "sheet_intel",
+    "name": "重要情报",
+    "sourceData": {
+      "note": "记录对剧情有重要影响的关键情报信息。\n\n【准入规则】\n录入条件(OR): [与主线相关,与任务相关,揭示世界秘密,重要人物信息,关键线索]\n禁入: [普通常识,无关琐事,已公开信息]\n\n【约束】\n- 情报总数≤15条\n\n【字段说明】\n情报内容: ≤50字\n来源: 情报的获取途径\n重要度: [核心,重要,普通]\n相关任务: 与该情报相关的任务名称",
+      "initNode": "插入已获取的重要情报。",
+      "deleteNode": "触发条件: ①情报过时或被证伪 ②超过15条时删除重要度最低的",
+      "updateNode": "触发条件: 情报内容有新发现或重要度变化",
+      "insertNode": "触发条件: 发现新的重要情报"
+    },
+    "content": [[null, "情报内容", "来源", "重要度", "相关任务"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "重要情报",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "重要情报-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 11
+  },
+  "sheet_quests": {
+    "uid": "sheet_quests",
+    "name": "任务表",
+    "sourceData": {
+      "note": "记录主角当前承接的所有任务。\n\n【任务类型】\n主线任务: 推进核心剧情\n支线任务: 世界探索与角色发展\n隐藏任务: 通过线索发现，不直接展示\n\n【任务评价体系】\n完美评价: 无伤完成/特殊战术/超额目标/零失误 → 追加一件同阶位物品\n优秀评价: 轻伤完成(HP损失≤20%)/高效完成/关键贡献 → 追加50%兑换点\n基础评价: 正常完成 → 仅获得基础奖励\n\n【约束】\n- 任务总数≤10条\n- 终态任务(已完成/已失败/已放弃)仅保留最近2条\n\n【字段说明】\n类型: [主线,支线,隐藏]\n目标: 一句话描述完成条件，≤50字\n进度(%): 必须是百分比数值格式，范围[0%,100%]\n状态: [进行中,已完成,已失败,已放弃]\n奖励: 完成任务可获得的奖励",
+      "initNode": "添加初始任务（如有）。世界生成时由【任务数量随机抽取】随机决定任务。",
+      "deleteNode": "触发条件: 每轮必须检查并执行以下清理流程。\n流程1(归档清理): 检查所有[已完成/已失败/已放弃]的终态任务，仅保留最近结束的2条作为记录，其余终态任务必须全部删除。\n流程2(容量控制): 完成流程1后，如果任务总数仍超过10条，则在[进行中]的任务中，删除最旧的低优先级任务，直到总数≤10。",
+      "updateNode": "触发条件: ①进度变化 ②状态变化",
+      "insertNode": "触发条件: 接受新任务"
+    },
+    "content": [[null, "任务名称", "类型", "目标", "进度(%)", "状态", "奖励"]],
+    "updateConfig": {
+      "uiSentinel": -1,
+      "contextDepth": -1,
+      "updateFrequency": -1,
+      "batchSize": -1,
+      "skipFloors": -1
+    },
+    "exportConfig": {
+      "enabled": false,
+      "splitByRow": false,
+      "entryName": "任务表",
+      "entryType": "constant",
+      "keywords": "",
+      "preventRecursion": true,
+      "injectionTemplate": "",
+      "extraIndexEnabled": false,
+      "extraIndexEntryName": "任务表-索引",
+      "extraIndexColumns": [],
+      "extraIndexColumnModes": {},
+      "extraIndexInjectionTemplate": "",
+      "entryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10000
+      },
+      "extraIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 10010
+      },
+      "fixedEntryPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99990
+      },
+      "fixedIndexPlacement": {
+        "position": "at_depth_as_system",
+        "depth": 2,
+        "order": 99991
+      }
+    },
+    "orderNo": 12
+  },
+  "mate": {
+    "type": "chatSheets",
+    "version": 1,
+    "updateConfigUiSentinel": -1,
+    "globalInjectionConfig": {
+      "readableEntryPlacement": {
+        "position": "before_char",
+        "depth": 2,
+        "order": 99981
+      },
+      "wrapperPlacement": {
+        "position": "before_char",
+        "depth": 2,
+        "order": 99982
+      }
+    }
+  }
+}

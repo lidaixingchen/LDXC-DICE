@@ -1,0 +1,129 @@
+{
+  "kind": "advanced",
+  "version": "1.7.0",
+  "id": "aidm_defense_check",
+  "name": "AIDM防守检定",
+  "description": "AIDM防守检定：用于敌方攻击时的闪避/招架判定。敌方攻击DC由敌方等级决定。",
+  "diceExpression": "1d20",
+  "attribute": {
+    "label": "敏捷/感知值",
+    "placeholder": "取较高值",
+    "defaultValue": 10,
+    "key": "属性值",
+    "computeModifier": "max(0, floor(($attr - 6) / 10))"
+  },
+  "dc": {
+    "label": "敌方攻击DC",
+    "placeholder": "留空=10",
+    "defaultValue": 10
+  },
+  "mod": {
+    "label": "闪避加值",
+    "placeholder": "装备闪避加值",
+    "defaultValue": 0
+  },
+  "skillMod": {
+    "label": "掌握加成",
+    "placeholder": "等级加成",
+    "defaultValue": 0
+  },
+  "attrTargetMapping": {
+    "attribute": ["敏捷", "感知"]
+  },
+  "customFields": [
+    {
+      "id": "baseDc",
+      "type": "select",
+      "label": "敌方等级(基础DC)",
+      "defaultValue": 10,
+      "options": [
+        { "label": "F级", "value": 10 },
+        { "label": "E级", "value": 13 },
+        { "label": "D级", "value": 16 },
+        { "label": "C级", "value": 19 },
+        { "label": "B级", "value": 22 },
+        { "label": "A级", "value": 25 },
+        { "label": "S级", "value": 28 },
+        { "label": "SS级", "value": 31 },
+        { "label": "SSS级", "value": 34 }
+      ]
+    },
+    {
+      "id": "enemyAtkMod",
+      "type": "number",
+      "label": "敌方攻击加成",
+      "defaultValue": 0,
+      "placeholder": "敌方攻击属性加成+掌握加成"
+    },
+    {
+      "id": "attackType",
+      "type": "select",
+      "label": "攻击类型",
+      "defaultValue": "物理",
+      "options": [
+        { "label": "物理攻击", "value": "物理" },
+        { "label": "法术攻击", "value": "法术" }
+      ]
+    },
+    {
+      "id": "enemyAttackPower",
+      "type": "number",
+      "label": "敌方攻击力",
+      "defaultValue": 10,
+      "placeholder": "敌方物理/法术攻击力"
+    },
+    {
+      "id": "playerDefense",
+      "type": "number",
+      "label": "我方防御",
+      "defaultValue": 5,
+      "placeholder": "我方物理/法术防御"
+    }
+  ],
+  "derivedVars": [
+    {
+      "id": "finalDc",
+      "expr": "$baseDc + $enemyAtkMod"
+    },
+    {
+      "id": "enemyLevelName",
+      "expr": "$baseDc == 10 ? 'F' : ($baseDc == 13 ? 'E' : ($baseDc == 16 ? 'D' : ($baseDc == 19 ? 'C' : ($baseDc == 22 ? 'B' : ($baseDc == 25 ? 'A' : ($baseDc == 28 ? 'S' : ($baseDc == 31 ? 'SS' : 'SSS')))))))"
+    },
+    {
+      "id": "defRatio",
+      "expr": "$playerDefense / $enemyAttackPower"
+    },
+    {
+      "id": "damageReduction",
+      "expr": "$defRatio < 0.5 ? 0 : ($defRatio < 0.8 ? 0.2 : ($defRatio < 1 ? 0.4 : ($defRatio < 1.5 ? 0.6 : 0.8)))"
+    },
+    {
+      "id": "baseDamage",
+      "expr": "max(1, floor($enemyAttackPower * (1 - $damageReduction)))"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "dodge_success",
+      "name": "闪避成功",
+      "condition": "$roll.total + $attrMod + $skillMod + $mod >= $finalDc",
+      "priority": 10,
+      "rank": 2,
+      "outputText": "AIDM防守检定: 闪避成功！成功躲避敌方攻击。"
+    },
+    {
+      "id": "hit",
+      "name": "被击中",
+      "condition": "$roll.total + $attrMod + $skillMod + $mod < $finalDc",
+      "priority": 20,
+      "rank": 0,
+      "outputText": "AIDM防守检定: 被击中！承受敌方伤害。"
+    }
+  ],
+  "contestRule": {
+    "disabled": true
+  },
+  "outputTemplate": "<meta:检定结果>\n【AIDM防守检定】\n\n🎲 判定过程：\n・D20投骰：$roll.total\n・属性加成：$attrMod（敏捷/感知取高）\n・掌握加成：$skillMod\n・闪避加值：$mod\n・最终值：$roll.total + $attrMod + $skillMod + $mod\n\n📊 DC对比：$roll.total + $attrMod + $skillMod + $mod $judgeResult $finalDc\n（敌方等级$enemyLevelName级，基础DC $baseDc，攻击加成$enemyAtkMod）\n$outcomeText\n\n⚔️ 被击中伤害：\n・敌方攻击力：$enemyAttackPower\n・我方防御：$playerDefense\n・伤害减免：${damageReduction * 100}%\n・承受伤害：$baseDamage\n</meta:检定结果>",
+  "visible": true,
+  "order": 2
+}

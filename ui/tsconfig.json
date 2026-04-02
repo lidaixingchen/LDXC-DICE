@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@core/*": ["../core/*"],
+      "@index": ["../index.ts"],
+      "@adapters/*": ["../adapters/*"],
+      "@data/*": ["../data/*"],
+      "@presets/*": ["../presets/*"],
+      "@utils/*": ["../utils/*"],
+      "@map": ["../map"],
+      "@map/*": ["../map/*"]
+    },
+    "types": ["vite/client"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "../core/**/*.ts",
+    "../adapters/**/*.ts",
+    "../data/**/*.ts",
+    "../presets/**/*.ts",
+    "../utils/**/*.ts",
+    "../index.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

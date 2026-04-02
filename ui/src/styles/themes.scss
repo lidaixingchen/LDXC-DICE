@@ -1,0 +1,184 @@
+/* 基础通用变量 */
+:root {
+  --acu-accent: #89b4fa;
+  --acu-accent-rgb: 137, 180, 250;
+  --acu-success: #a6e3a1;
+  --acu-danger: #f38ba8;
+  --acu-text-main: #cdd6f4;
+  --acu-text-sub: #a6adc8;
+  --acu-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* 1. 复古羊皮 (Retro) - 亮色 */
+.acu-theme-retro {
+  --acu-bg-panel: #f5ecd9;
+  --acu-bg-header: #ebdfc6;
+  --acu-bg-card: #f8f0df;
+  --acu-bg-nav: #efe4cf;
+  --acu-border: #cdbb9f;
+  --acu-text-main: #5f503c;
+  --acu-text-sub: #7b6a54;
+  --acu-accent: #8b7355;
+  --acu-accent-rgb: 139, 115, 85;
+  --acu-accent-light: rgba(139, 115, 85, 0.15);
+  --acu-shadow: rgba(0, 0, 0, 0.15);
+}
+
+/* 2. 极夜深空 (Dark) - 深色 */
+.acu-theme-dark {
+  --acu-bg-panel: #1e1e2e;
+  --acu-bg-header: #11111b;
+  --acu-bg-card: #181825;
+  --acu-bg-nav: #11111b;
+  --acu-border: #313244;
+  --acu-text-main: #cdd6f4;
+  --acu-text-sub: #a6adc8;
+  --acu-accent: #89b4fa;
+  --acu-accent-rgb: 137, 180, 250;
+  --acu-accent-light: rgba(137, 180, 250, 0.2);
+  --acu-shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* 3. 现代清爽 (Modern) - 亮色 */
+.acu-theme-modern {
+  --acu-bg-panel: #ffffff;
+  --acu-bg-header: #f8fafc;
+  --acu-bg-card: #ffffff;
+  --acu-bg-nav: #f1f5f9;
+  --acu-border: #e2e8f0;
+  --acu-text-main: #1e293b;
+  --acu-text-sub: #64748b;
+  --acu-accent: #3b82f6;
+  --acu-accent-rgb: 59, 130, 246;
+  --acu-accent-light: rgba(59, 130, 246, 0.1);
+  --acu-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* 4. 暖粉手账 (Warm Pink / Sakura) - 亮色 */
+.acu-theme-sakura {
+  --acu-bg-panel: #fff0f5;
+  --acu-bg-header: #ffe4e9;
+  --acu-bg-card: #ffffff;
+  --acu-bg-nav: #ffe4e9;
+  --acu-border: #ffb6c1;
+  --acu-text-main: #8b4557;
+  --acu-text-sub: #a06070;
+  --acu-accent: #ff69b4;
+  --acu-accent-rgb: 255, 105, 180;
+  --acu-accent-light: rgba(255, 105, 180, 0.15);
+  --acu-shadow: rgba(255, 105, 180, 0.1);
+}
+
+/* 5. 极光幻境 (Aurora) - 深色 */
+.acu-theme-aurora {
+  --acu-bg-panel: #0b1221;
+  --acu-bg-header: #070b14;
+  --acu-bg-card: #111b2d;
+  --acu-bg-nav: #070b14;
+  --acu-border: #1e293b;
+  --acu-text-main: #d1d5db;
+  --acu-text-sub: #9ca3af;
+  --acu-accent: #10b981;
+  --acu-accent-rgb: 16, 185, 129;
+  --acu-accent-light: rgba(16, 185, 129, 0.2);
+  --acu-shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* 6. 幻夜霓虹 (Chouten) - 深色 */
+.acu-theme-chouten {
+  --acu-bg-panel: #1a0a2e;
+  --acu-bg-header: #11071f;
+  --acu-bg-card: #251042;
+  --acu-bg-nav: #11071f;
+  --acu-border: #ff6b9d;
+  --acu-text-main: #ffe4f0;
+  --acu-text-sub: #ff6b9d;
+  --acu-accent: #ff6b9d;
+  --acu-accent-rgb: 255, 107, 157;
+  --acu-accent-light: rgba(255, 107, 157, 0.2);
+  --acu-shadow: rgba(255, 107, 157, 0.3);
+}
+
+/* 7. 深蓝磨砂 (Night Owl) - 深色 */
+.acu-theme-nightowl {
+  --acu-bg-panel: #011627;
+  --acu-bg-header: #010e1b;
+  --acu-bg-card: #0b2942;
+  --acu-bg-nav: #010e1b;
+  --acu-border: #1d3b53;
+  --acu-text-main: #d6deeb;
+  --acu-text-sub: #7fdbca;
+  --acu-accent: #82aaff;
+  --acu-accent-rgb: 130, 170, 255;
+  --acu-accent-light: rgba(130, 170, 255, 0.2);
+  --acu-shadow: rgba(0, 0, 0, 0.6);
+}
+
+/* 8. 绿色泡泡 (Wechat) - 亮色 */
+.acu-theme-wechat {
+  --acu-bg-panel: #f7f7f7;
+  --acu-bg-header: #ededed;
+  --acu-bg-card: #ffffff;
+  --acu-bg-nav: #ededed;
+  --acu-border: #e0e0e0;
+  --acu-text-main: #191919;
+  --acu-text-sub: #7f7f7f;
+  --acu-accent: #07c160;
+  --acu-accent-rgb: 7, 193, 96;
+  --acu-accent-light: rgba(7, 193, 96, 0.15);
+  --acu-shadow: rgba(0, 0, 0, 0.05);
+}
+
+/* 9. 赛博霓虹 (Cyber) - 深色 */
+.acu-theme-cyber {
+  --acu-bg-panel: #050505;
+  --acu-bg-header: #000000;
+  --acu-bg-card: #0a0a0a;
+  --acu-bg-nav: #000000;
+  --acu-border: #00ffcc;
+  --acu-text-main: #00ffcc;
+  --acu-text-sub: #ff00ff;
+  --acu-accent: #ff00ff;
+  --acu-accent-rgb: 255, 0, 255;
+  --acu-accent-light: rgba(255, 0, 255, 0.25);
+  --acu-shadow: 0 0 10px #00ffcc;
+}
+
+/* 10. 量产地雷 (Mine Pink) - 深色/暗粉 */
+.acu-theme-minepink {
+  --acu-bg-panel: #2a1f2c;
+  --acu-bg-header: #211722;
+  --acu-bg-card: #332737;
+  --acu-bg-nav: #211722;
+  --acu-border: #68456f;
+  --acu-text-main: #ffd6eb;
+  --acu-text-sub: #d6a8c6;
+  --acu-accent: #ff70a6;
+  --acu-accent-rgb: 255, 112, 166;
+  --acu-accent-light: rgba(255, 112, 166, 0.2);
+  --acu-shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* 11. 透明 (Transparent) */
+.acu-theme-transparent {
+  --acu-bg-panel: rgba(0, 0, 0, 0.3);
+  --acu-bg-header: rgba(0, 0, 0, 0.4);
+  --acu-bg-card: rgba(0, 0, 0, 0.2);
+  --acu-bg-nav: rgba(0, 0, 0, 0.4);
+  --acu-border: rgba(255, 255, 255, 0.2);
+  --acu-text-main: #ffffff;
+  --acu-text-sub: #cccccc;
+  --acu-accent: #89b4fa;
+  --acu-accent-rgb: 137, 180, 250;
+  --acu-accent-light: rgba(137, 180, 250, 0.2);
+  --acu-shadow: none;
+}
+
+/* 通用衍生变量映射 */
+[class*='acu-theme-'] {
+  --acu-table-head: var(--acu-bg-header);
+  --acu-table-hover: var(--acu-bg-card);
+  --acu-input-bg: var(--acu-bg-header);
+  --acu-btn-bg: var(--acu-bg-header);
+  --acu-btn-hover: var(--acu-bg-card);
+}

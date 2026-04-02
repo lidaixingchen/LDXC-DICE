@@ -1,0 +1,142 @@
+{
+  "kind": "advanced",
+  "version": "1.7.0",
+  "id": "aidm_contest",
+  "name": "AIDM对抗检定",
+  "description": "AIDM对抗检定: 优势骰与劣势骰系统，双方各投D20比较",
+  "diceExpression": "1d20",
+  "attribute": {
+    "label": "己方属性值",
+    "placeholder": "留空=10",
+    "defaultValue": 10,
+    "key": "属性值",
+    "computeModifier": "max(0, floor(($attr - 6) / 10))"
+  },
+  "dc": {
+    "hidden": true,
+    "defaultValue": 0
+  },
+  "mod": {
+    "hidden": true,
+    "defaultValue": 0
+  },
+  "skillMod": {
+    "hidden": true,
+    "defaultValue": 0
+  },
+  "attrTargetMapping": {
+    "attribute": ["力量", "敏捷", "体质", "智力", "感知", "魅力"]
+  },
+  "customFields": [
+    {
+      "id": "oppAttr",
+      "type": "number",
+      "label": "对方属性值",
+      "defaultValue": 10,
+      "placeholder": "对方属性数值"
+    },
+    {
+      "id": "oppRoll",
+      "type": "number",
+      "label": "对方D20结果",
+      "defaultValue": 10,
+      "placeholder": "对方投骰结果(1-20)"
+    },
+    {
+      "id": "envAdvantage",
+      "type": "number",
+      "label": "环境优势骰",
+      "defaultValue": 0,
+      "placeholder": "有利地形等"
+    },
+    {
+      "id": "envDisadvantage",
+      "type": "number",
+      "label": "环境劣势骰",
+      "defaultValue": 0,
+      "placeholder": "不利地形等"
+    },
+    {
+      "id": "statusAdvantage",
+      "type": "number",
+      "label": "状态优势骰",
+      "defaultValue": 0,
+      "placeholder": "增益状态"
+    },
+    {
+      "id": "statusDisadvantage",
+      "type": "number",
+      "label": "状态劣势骰",
+      "defaultValue": 0,
+      "placeholder": "减益状态"
+    }
+  ],
+  "derivedVars": [
+    {
+      "id": "oppAttrMod",
+      "expr": "max(0, floor(($oppAttr - 6) / 10))"
+    },
+    {
+      "id": "attrDiff",
+      "expr": "$attrMod - $oppAttrMod"
+    },
+    {
+      "id": "attrAdvDice",
+      "expr": "$attrDiff > 0 ? min(3, $attrDiff) : 0"
+    },
+    {
+      "id": "totalAdvantage",
+      "expr": "$attrAdvDice + $envAdvantage + $statusAdvantage"
+    },
+    {
+      "id": "totalDisadvantage",
+      "expr": "$envDisadvantage + $statusDisadvantage"
+    },
+    {
+      "id": "netAdvantage",
+      "expr": "$totalAdvantage - $totalDisadvantage"
+    },
+    {
+      "id": "myTotal",
+      "expr": "$roll.total + $attrMod"
+    },
+    {
+      "id": "oppTotal",
+      "expr": "$oppRoll + $oppAttrMod"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "win",
+      "name": "获胜",
+      "condition": "$myTotal > $oppTotal",
+      "priority": 1,
+      "rank": 1,
+      "outputText": "AIDM对抗检定: 获胜！"
+    },
+    {
+      "id": "tie",
+      "name": "平局",
+      "condition": "$myTotal == $oppTotal",
+      "priority": 10,
+      "rank": 0,
+      "outputText": "AIDM对抗检定: 平局！"
+    },
+    {
+      "id": "lose",
+      "name": "落败",
+      "condition": "$myTotal < $oppTotal",
+      "priority": 20,
+      "rank": -1,
+      "outputText": "AIDM对抗检定: 落败！"
+    }
+  ],
+  "contestRule": {
+    "mode": "value",
+    "tieBreakers": ["higher_attr", "status_quo"],
+    "hideDc": true
+  },
+  "outputTemplate": "<meta:检定结果>\n【AIDM对抗检定】\n\n📊 属性对比：\n・己方属性加成：$attrMod（属性$attrValue）\n・对方属性加成：$oppAttrMod（属性$oppAttr）\n・属性差：$attrDiff → 属性优势骰：$attrAdvDice个\n\n🎲 骰子池计算：\n・优势骰：$totalAdvantage个（属性$attrAdvDice + 环境$envAdvantage + 状态$statusAdvantage）\n・劣势骰：$totalDisadvantage个（环境$envDisadvantage + 状态$statusDisadvantage）\n・净优势：$netAdvantage\n\n🎯 投骰结果：\n・己方：D20($roll.total) + 属性加成($attrMod) = $myTotal\n・对方：D20($oppRoll) + 属性加成($oppAttrMod) = $oppTotal\n\n$outcomeText\n</meta:检定结果>",
+  "visible": true,
+  "order": 3
+}

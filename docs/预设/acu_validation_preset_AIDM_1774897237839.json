@@ -1,0 +1,555 @@
+{
+  "format": "acu_preset_v1",
+  "version": "1.7.0",
+  "preset": {
+    "name": "AIDM验证预设",
+    "rules": [
+      {
+        "id": "global_world_level_enum",
+        "name": "世界等级枚举",
+        "description": "当前世界等级必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "全局数据表",
+        "targetColumn": "当前世界等级",
+        "ruleType": "enum",
+        "config": {
+          "values": ["F级", "E级", "D级", "C级", "B级", "A级", "S级", "SS级", "SSS级"]
+        },
+        "errorMessage": "世界等级必须为：F级、E级、D级、C级、B级、A级、S级、SS级、SSS级"
+      },
+      {
+        "id": "global_detail_location_relation",
+        "name": "全局详细地点关联",
+        "description": "当前详细地点必须存在于世界地图点表",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "全局数据表",
+        "targetColumn": "当前详细地点",
+        "ruleType": "relation",
+        "config": {
+          "refTable": "世界地图点",
+          "refColumn": "详细地点"
+        },
+        "errorMessage": "当前详细地点必须是世界地图点表中已存在的详细地点"
+      },
+      {
+        "id": "map_explore_enum",
+        "name": "地图点探索状态",
+        "description": "探索状态必须为指定值之一",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "世界地图点",
+        "targetColumn": "探索状态",
+        "ruleType": "enum",
+        "config": {
+          "values": ["未探索", "部分探索", "已探索"]
+        },
+        "errorMessage": "探索状态必须为：未探索、部分探索、已探索"
+      },
+      {
+        "id": "map_importance_enum",
+        "name": "地图点重要度",
+        "description": "重要度必须为指定值之一",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "世界地图点",
+        "targetColumn": "重要度",
+        "ruleType": "enum",
+        "config": {
+          "values": ["核心", "重要", "普通"]
+        },
+        "errorMessage": "重要度必须为：核心、重要、普通"
+      },
+      {
+        "id": "map_location_type_enum",
+        "name": "地图点类型",
+        "description": "地点类型必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "世界地图点",
+        "targetColumn": "地点类型",
+        "ruleType": "enum",
+        "config": {
+          "values": ["住宅", "学校", "遗迹", "地牢", "交通", "特殊"]
+        },
+        "errorMessage": "地点类型必须为：住宅、学校、遗迹、地牢、交通、特殊"
+      },
+      {
+        "id": "element_type_enum",
+        "name": "地图元素类型",
+        "description": "元素类型必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "地图元素表",
+        "targetColumn": "元素类型",
+        "ruleType": "enum",
+        "config": {
+          "values": ["剧情物品", "威胁", "龙套", "地标"]
+        },
+        "errorMessage": "元素类型必须为：剧情物品、威胁、龙套、地标"
+      },
+      {
+        "id": "element_location_relation",
+        "name": "元素地点关联",
+        "description": "元素所在地点必须存在于世界地图点表",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "地图元素表",
+        "targetColumn": "所在地点",
+        "ruleType": "relation",
+        "config": {
+          "refTable": "世界地图点",
+          "refColumn": "详细地点"
+        },
+        "errorMessage": "所在地点必须是世界地图点表中已存在的详细地点"
+      },
+      {
+        "id": "faction_relation_format",
+        "name": "势力关系格式",
+        "description": "关系必须为键值对格式",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "势力",
+        "targetColumn": "关系",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "text"
+        },
+        "errorMessage": "关系格式必须为\"对象名:关系词;对象名:关系词\""
+      },
+      {
+        "id": "player_location_relation",
+        "name": "主角地点关联",
+        "description": "主角所在地点必须存在于世界地图点表",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "所在地点",
+        "ruleType": "relation",
+        "config": {
+          "refTable": "世界地图点",
+          "refColumn": "详细地点"
+        },
+        "errorMessage": "所在地点必须是世界地图点表中已存在的详细地点"
+      },
+      {
+        "id": "player_level_enum",
+        "name": "主角等级枚举",
+        "description": "主角等级必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "等级",
+        "ruleType": "enum",
+        "config": {
+          "values": ["F级", "E级", "D级", "C级", "B级", "A级", "S级", "SS级", "SSS级"]
+        },
+        "errorMessage": "等级必须为：F级、E级、D级、C级、B级、A级、S级、SS级、SSS级"
+      },
+      {
+        "id": "player_base_attributes_keyvalue",
+        "name": "主角基础属性",
+        "description": "基础属性必须为键值对格式，数值范围[5,等级上限]",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "基础属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 5,
+          "valueMax": 1000
+        },
+        "errorMessage": "基础属性格式必须为\"属性名:数值;属性名:数值\"，数值范围[5,等级上限]"
+      },
+      {
+        "id": "player_special_attributes_keyvalue",
+        "name": "主角特有属性",
+        "description": "特有属性必须为键值对格式，数值范围[0,100]",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "特有属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 0,
+          "valueMax": 100
+        },
+        "errorMessage": "特有属性格式必须为\"属性名:数值;属性名:数值\"，数值范围[0,100]"
+      },
+      {
+        "id": "player_combat_attributes_keyvalue",
+        "name": "主角战斗属性",
+        "description": "战斗属性必须为键值对格式",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "战斗属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 0,
+          "valueMax": 99999
+        },
+        "errorMessage": "战斗属性格式必须为\"属性名:数值;属性名:数值\""
+      },
+      {
+        "id": "player_resource_keyvalue",
+        "name": "主角资源数据",
+        "description": "资源数据必须为键值对格式",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "资源数据",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 0,
+          "valueMax": 999999
+        },
+        "errorMessage": "资源数据格式必须为\"资源名:数值;资源名:数值\""
+      },
+      {
+        "id": "player_precipitation_point_numeric",
+        "name": "主角沉淀点",
+        "description": "沉淀点必须为非负整数",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": "沉淀点",
+        "ruleType": "numeric",
+        "config": {
+          "min": 0,
+          "max": 9999
+        },
+        "errorMessage": "沉淀点必须为非负整数"
+      },
+      {
+        "id": "npc_location_relation",
+        "name": "重要角色地点关联",
+        "description": "重要角色所在地点必须存在于世界地图点表",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "所在地点",
+        "ruleType": "relation",
+        "config": {
+          "refTable": "世界地图点",
+          "refColumn": "详细地点"
+        },
+        "errorMessage": "所在地点必须是世界地图点表中已存在的详细地点"
+      },
+      {
+        "id": "npc_presence_enum",
+        "name": "重要角色在场状态",
+        "description": "在场状态必须为指定值之一",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "在场状态",
+        "ruleType": "enum",
+        "config": {
+          "values": ["在场", "离场"]
+        },
+        "errorMessage": "在场状态必须为：在场、离场"
+      },
+      {
+        "id": "npc_level_enum",
+        "name": "重要角色等级枚举",
+        "description": "重要角色等级必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "等级",
+        "ruleType": "enum",
+        "config": {
+          "values": ["F级", "E级", "D级", "C级", "B级", "A级", "S级", "SS级", "SSS级"]
+        },
+        "errorMessage": "等级必须为：F级、E级、D级、C级、B级、A级、S级、SS级、SSS级"
+      },
+      {
+        "id": "npc_base_attributes_keyvalue",
+        "name": "重要角色基础属性",
+        "description": "基础属性必须为键值对格式，数值范围[5,等级上限]",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "基础属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 5,
+          "valueMax": 1000
+        },
+        "errorMessage": "基础属性格式必须为\"属性名:数值;属性名:数值\"，数值范围[5,等级上限]"
+      },
+      {
+        "id": "npc_special_attributes_keyvalue",
+        "name": "重要角色特有属性",
+        "description": "特有属性必须为键值对格式，数值范围[0,100]",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "特有属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 0,
+          "valueMax": 100
+        },
+        "errorMessage": "特有属性格式必须为\"属性名:数值;属性名:数值\"，数值范围[0,100]"
+      },
+      {
+        "id": "npc_combat_attributes_keyvalue",
+        "name": "重要角色战斗属性",
+        "description": "战斗属性必须为键值对格式",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "战斗属性",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "numeric",
+          "valueMin": 0,
+          "valueMax": 99999
+        },
+        "errorMessage": "战斗属性格式必须为\"属性名:数值;属性名:数值\""
+      },
+      {
+        "id": "npc_relationships_keyvalue",
+        "name": "重要角色人际关系",
+        "description": "人际关系必须为键值对格式",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "重要角色表",
+        "targetColumn": "人际关系",
+        "ruleType": "keyValue",
+        "config": {
+          "valueType": "text"
+        },
+        "errorMessage": "人际关系格式必须为\"角色名:关系词;角色名:关系词\""
+      },
+      {
+        "id": "skill_type_enum",
+        "name": "技能类型",
+        "description": "技能类型必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "技能表",
+        "targetColumn": "技能类型",
+        "ruleType": "enum",
+        "config": {
+          "values": ["主动", "被动"]
+        },
+        "errorMessage": "技能类型必须为：主动、被动"
+      },
+      {
+        "id": "inventory_type_enum",
+        "name": "物品类型",
+        "description": "物品类型必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "物品栏",
+        "targetColumn": "类型",
+        "ruleType": "enum",
+        "config": {
+          "values": ["武器", "防具", "消耗品", "材料", "钥匙", "任务物品", "特殊", "道具"]
+        },
+        "errorMessage": "类型必须为：武器、防具、消耗品、材料、钥匙、任务物品、特殊、道具"
+      },
+      {
+        "id": "equipment_slot_enum",
+        "name": "装备槽位",
+        "description": "装备槽位必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "装备表",
+        "targetColumn": "槽位",
+        "ruleType": "enum",
+        "config": {
+          "values": ["主手", "副手", "头部", "身体", "手部", "脚部", "饰品1", "饰品2"]
+        },
+        "errorMessage": "槽位必须为：主手、副手、头部、身体、手部、脚部、饰品1、饰品2"
+      },
+      {
+        "id": "global_table_single_row",
+        "name": "全局数据表单行限制",
+        "description": "全局数据表必须有且仅有一行数据",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "全局数据表",
+        "targetColumn": null,
+        "ruleType": "rowLimit",
+        "config": {
+          "min": 1,
+          "max": 1
+        },
+        "errorMessage": "全局数据表必须有且仅有一行数据"
+      },
+      {
+        "id": "protagonist_table_single_row",
+        "name": "主角信息表单行限制",
+        "description": "主角信息表必须有且仅有一行数据",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "主角信息",
+        "targetColumn": null,
+        "ruleType": "rowLimit",
+        "config": {
+          "min": 1,
+          "max": 1
+        },
+        "errorMessage": "主角信息表必须有且仅有一行数据"
+      },
+      {
+        "id": "inventory_level_enum",
+        "name": "物品品级枚举",
+        "description": "物品品级必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "物品栏",
+        "targetColumn": "品级",
+        "ruleType": "enum",
+        "config": {
+          "values": ["F级", "E级", "D级", "C级", "B级", "A级", "S级"]
+        },
+        "errorMessage": "品级必须为：F级、E级、D级、C级、B级、A级、S级"
+      },
+      {
+        "id": "quest_type_enum",
+        "name": "任务类型枚举",
+        "description": "任务类型必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "任务表",
+        "targetColumn": "类型",
+        "ruleType": "enum",
+        "config": {
+          "values": ["主线", "支线", "隐藏"]
+        },
+        "errorMessage": "类型必须为：主线、支线、隐藏"
+      },
+      {
+        "id": "quest_status_enum",
+        "name": "任务状态枚举",
+        "description": "任务状态必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "任务表",
+        "targetColumn": "状态",
+        "ruleType": "enum",
+        "config": {
+          "values": ["进行中", "已完成", "已失败", "已放弃"]
+        },
+        "errorMessage": "状态必须为：进行中、已完成、已失败、已放弃"
+      },
+      {
+        "id": "quest_progress_format",
+        "name": "任务进度格式",
+        "description": "进度必须为0%~100%格式",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "任务表",
+        "targetColumn": "进度(%)",
+        "ruleType": "format",
+        "config": {
+          "pattern": "^(100|[1-9]?\\d)%$"
+        },
+        "errorMessage": "进度必须为0%~100%格式（如：0%、50%、100%）"
+      },
+      {
+        "id": "summary_code_sequence",
+        "name": "纪要表编码递增",
+        "description": "编码索引必须从AM0001开始严格递增，不可跳号或重复",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "纪要表",
+        "targetColumn": "编码索引",
+        "ruleType": "sequence",
+        "config": {
+          "prefix": "AM",
+          "startFrom": 1
+        },
+        "errorMessage": "编码索引必须从AM0001开始严格递增，发现跳号或重复"
+      },
+      {
+        "id": "summary_code_required",
+        "name": "纪要表编码索引必填",
+        "description": "编码索引不能为空",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "纪要表",
+        "targetColumn": "编码索引",
+        "ruleType": "required",
+        "config": {},
+        "errorMessage": "编码索引不能为空"
+      },
+      {
+        "id": "intel_importance_enum",
+        "name": "重要情报重要度",
+        "description": "重要度必须为指定值之一",
+        "enabled": true,
+        "builtin": false,
+        "intercept": false,
+        "targetTable": "重要情报",
+        "targetColumn": "重要度",
+        "ruleType": "enum",
+        "config": {
+          "values": ["核心", "重要", "普通"]
+        },
+        "errorMessage": "重要度必须为：核心、重要、普通"
+      },
+      {
+        "id": "options_table_single_row",
+        "name": "选项表单行限制",
+        "description": "选项表必须有且仅有一行数据",
+        "enabled": true,
+        "builtin": true,
+        "intercept": false,
+        "targetTable": "选项表",
+        "targetColumn": null,
+        "ruleType": "rowLimit",
+        "config": {
+          "min": 1,
+          "max": 1
+        },
+        "errorMessage": "选项表必须有且仅有一行数据"
+      }
+    ]
+  }
+}

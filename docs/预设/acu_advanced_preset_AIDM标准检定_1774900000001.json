@@ -1,0 +1,99 @@
+{
+  "kind": "advanced",
+  "version": "1.7.0",
+  "id": "aidm_standard_check",
+  "name": "AIDM标准检定",
+  "description": "AIDM标准检定：用于非战斗场景的技能检定，如探索、交涉、解谜等。世界等级决定基础DC。",
+  "diceExpression": "1d20",
+  "attribute": {
+    "label": "属性值",
+    "placeholder": "留空=10",
+    "defaultValue": 10,
+    "key": "属性值",
+    "computeModifier": "$attr <= 15 ? 0 : ($attr <= 25 ? 1 : ($attr <= 35 ? 2 : ($attr <= 45 ? 3 : ($attr <= 55 ? 4 : ($attr <= 65 ? 5 : ($attr <= 75 ? 6 : ($attr <= 85 ? 7 : ($attr <= 95 ? 8 : ($attr <= 105 ? 9 : ($attr <= 120 ? 10 : ($attr <= 140 ? 11 : ($attr <= 160 ? 12 : ($attr <= 185 ? 13 : ($attr <= 210 ? 14 : ($attr <= 240 ? 15 : ($attr <= 270 ? 16 : ($attr <= 305 ? 17 : ($attr <= 340 ? 18 : ($attr <= 380 ? 19 : 19 + floor(($attr - 381) / 40)))))))))))))))))))))"
+  },
+  "dc": {
+    "label": "难度等级(DC)",
+    "placeholder": "留空=10",
+    "defaultValue": 10
+  },
+  "mod": {
+    "label": "额外修正",
+    "placeholder": "装备/技能/环境等",
+    "defaultValue": 0
+  },
+  "skillMod": {
+    "label": "掌握加成",
+    "placeholder": "等级加成(F=0,E=1,D=2,C=3,B=4,A=5,S/SS=6,SSS=8)",
+    "defaultValue": 0
+  },
+  "attrTargetMapping": {
+    "attribute": ["力量", "敏捷", "体质", "智力", "感知", "魅力"]
+  },
+  "customFields": [
+    {
+      "id": "baseDc",
+      "type": "select",
+      "label": "世界等级(基础DC)",
+      "defaultValue": 10,
+      "options": [
+        { "label": "F级 (DC 10)", "value": 10 },
+        { "label": "E级 (DC 13)", "value": 13 },
+        { "label": "D级 (DC 16)", "value": 16 },
+        { "label": "C级 (DC 19)", "value": 19 },
+        { "label": "B级 (DC 22)", "value": 22 },
+        { "label": "A级 (DC 25)", "value": 25 },
+        { "label": "S级 (DC 28)", "value": 28 }
+      ]
+    },
+    {
+      "id": "difficulty",
+      "type": "select",
+      "label": "难度调整",
+      "defaultValue": 0,
+      "options": [
+        { "label": "常规 (+0)", "value": 0 },
+        { "label": "困难 (+3)", "value": 3 },
+        { "label": "极难 (+6)", "value": 6 }
+      ]
+    }
+  ],
+  "derivedVars": [
+    {
+      "id": "finalDc",
+      "expr": "$baseDc + $difficulty"
+    },
+    {
+      "id": "worldLevelName",
+      "expr": "$baseDc == 10 ? 'F' : ($baseDc == 13 ? 'E' : ($baseDc == 16 ? 'D' : ($baseDc == 19 ? 'C' : ($baseDc == 22 ? 'B' : ($baseDc == 25 ? 'A' : 'S')))))"
+    },
+    {
+      "id": "attrMod",
+      "expr": "$attr <= 15 ? 0 : ($attr <= 25 ? 1 : ($attr <= 35 ? 2 : ($attr <= 45 ? 3 : ($attr <= 55 ? 4 : ($attr <= 65 ? 5 : ($attr <= 75 ? 6 : ($attr <= 85 ? 7 : ($attr <= 95 ? 8 : ($attr <= 105 ? 9 : ($attr <= 120 ? 10 : ($attr <= 140 ? 11 : ($attr <= 160 ? 12 : ($attr <= 185 ? 13 : ($attr <= 210 ? 14 : ($attr <= 240 ? 15 : ($attr <= 270 ? 16 : ($attr <= 305 ? 17 : ($attr <= 340 ? 18 : ($attr <= 380 ? 19 : 19 + floor(($attr - 381) / 40)))))))))))))))))))))"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "success",
+      "name": "成功",
+      "condition": "$roll.total + $attrMod + $skillMod + $mod >= $finalDc",
+      "priority": 10,
+      "rank": 1,
+      "outputText": "AIDM标准检定: 成功！行动达成目标。"
+    },
+    {
+      "id": "failure",
+      "name": "失败",
+      "condition": "$roll.total + $attrMod + $skillMod + $mod < $finalDc",
+      "priority": 20,
+      "rank": 0,
+      "outputText": "AIDM标准检定: 失败！进入失败剧情线。"
+    }
+  ],
+  "contestRule": {
+    "disabled": true
+  },
+  "outputTemplate": "<meta:检定结果>\n【AIDM标准检定】\n\n🎲 判定过程：\n・D20投骰：$roll.total\n・属性加成：$attrMod（$attrName: $attrValue）\n・掌握加成：$skillMod\n・额外修正：$mod\n・最终值：$roll.total + $attrMod + $skillMod + $mod\n\n📊 DC对比：$roll.total + $attrMod + $skillMod + $mod $judgeResult $finalDc\n（世界等级$worldLevelName级，基础DC $baseDc，难度调整$difficulty）\n$outcomeText\n</meta:检定结果>",
+  "visible": true,
+  "order": 0
+}

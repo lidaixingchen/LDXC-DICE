@@ -1,0 +1,314 @@
+/**
+ * AIDM NPC 属性生成预设
+ *
+ * 根据世界等级生成对应等级的 NPC 属性
+ */
+
+export interface BaseAttributeConfig {
+  name: string;
+  formula: string;
+  range: [number, number];
+}
+
+export interface LevelPresetConfig {
+  description: string;
+  totalAttrRange: [number, number];
+  singleAttrRange: [number, number];
+  avgTotal: number;
+  spv: number;
+  hpBase: number;
+  masteryBonus: number;
+  baseAttributes: BaseAttributeConfig[];
+}
+
+export interface AttributePreset {
+  format: string;
+  version: string;
+  id: string;
+  name: string;
+  description: string;
+  levelPresets: Record<string, LevelPresetConfig>;
+  baseAttributes: BaseAttributeConfig[];
+  specialAttributes: string[];
+  attrModifierFormula: string;
+  masteryBonusTable: Record<string, number>;
+  usageNote: string;
+}
+
+export const AIDM_ATTRIBUTE_PRESET: AttributePreset = {
+  format: 'acu_attr_preset_v1',
+  version: '1.7.0',
+  id: 'aidm_npc_generator',
+  name: 'AIDM-NPC属性生成器',
+  description: '根据世界等级生成对应等级的NPC属性。选择等级后自动调整属性范围和总属性点。',
+  levelPresets: {
+    'F级': {
+      description: '普通武侠、现代国术',
+      totalAttrRange: [30, 119],
+      singleAttrRange: [5, 30],
+      avgTotal: 60,
+      spv: 5,
+      hpBase: 25,
+      masteryBonus: 0,
+      baseAttributes: [
+        { name: '力量', formula: '2d6+3', range: [5, 15] },
+        { name: '敏捷', formula: '2d6+3', range: [5, 15] },
+        { name: '体质', formula: '2d6+3', range: [5, 15] },
+        { name: '智力', formula: '2d6+3', range: [5, 15] },
+        { name: '感知', formula: '2d6+3', range: [5, 15] },
+        { name: '魅力', formula: '2d6+3', range: [5, 15] },
+      ],
+    },
+    'E级': {
+      description: '低武、现代异能',
+      totalAttrRange: [120, 209],
+      singleAttrRange: [5, 45],
+      avgTotal: 165,
+      spv: 10,
+      hpBase: 50,
+      masteryBonus: 1,
+      baseAttributes: [
+        { name: '力量', formula: '4d6+15', range: [19, 39] },
+        { name: '敏捷', formula: '4d6+15', range: [19, 39] },
+        { name: '体质', formula: '4d6+15', range: [19, 39] },
+        { name: '智力', formula: '4d6+15', range: [19, 39] },
+        { name: '感知', formula: '4d6+15', range: [19, 39] },
+        { name: '魅力', formula: '4d6+15', range: [19, 39] },
+      ],
+    },
+    'D级': {
+      description: '武侠、低等恐怖',
+      totalAttrRange: [210, 329],
+      singleAttrRange: [5, 60],
+      avgTotal: 270,
+      spv: 15,
+      hpBase: 75,
+      masteryBonus: 2,
+      baseAttributes: [
+        { name: '力量', formula: '6d6+30', range: [36, 66] },
+        { name: '敏捷', formula: '6d6+30', range: [36, 66] },
+        { name: '体质', formula: '6d6+30', range: [36, 66] },
+        { name: '智力', formula: '6d6+30', range: [36, 66] },
+        { name: '感知', formula: '6d6+30', range: [36, 66] },
+        { name: '魅力', formula: '6d6+30', range: [36, 66] },
+      ],
+    },
+    'C级': {
+      description: '低等修真、现代灭世',
+      totalAttrRange: [330, 479],
+      singleAttrRange: [5, 80],
+      avgTotal: 405,
+      spv: 20,
+      hpBase: 100,
+      masteryBonus: 3,
+      baseAttributes: [
+        { name: '力量', formula: '8d6+50', range: [58, 98] },
+        { name: '敏捷', formula: '8d6+50', range: [58, 98] },
+        { name: '体质', formula: '8d6+50', range: [58, 98] },
+        { name: '智力', formula: '8d6+50', range: [58, 98] },
+        { name: '感知', formula: '8d6+50', range: [58, 98] },
+        { name: '魅力', formula: '8d6+50', range: [58, 98] },
+      ],
+    },
+    'B级': {
+      description: '中等修真、奇幻',
+      totalAttrRange: [480, 659],
+      singleAttrRange: [5, 100],
+      avgTotal: 570,
+      spv: 25,
+      hpBase: 125,
+      masteryBonus: 4,
+      baseAttributes: [
+        { name: '力量', formula: '10d6+70', range: [80, 130] },
+        { name: '敏捷', formula: '10d6+70', range: [80, 130] },
+        { name: '体质', formula: '10d6+70', range: [80, 130] },
+        { name: '智力', formula: '10d6+70', range: [80, 130] },
+        { name: '感知', formula: '10d6+70', range: [80, 130] },
+        { name: '魅力', formula: '10d6+70', range: [80, 130] },
+      ],
+    },
+    'A级': {
+      description: '高等仙侠、星球战争',
+      totalAttrRange: [660, 869],
+      singleAttrRange: [5, 125],
+      avgTotal: 765,
+      spv: 35,
+      hpBase: 175,
+      masteryBonus: 5,
+      baseAttributes: [
+        { name: '力量', formula: '12d6+95', range: [107, 167] },
+        { name: '敏捷', formula: '12d6+95', range: [107, 167] },
+        { name: '体质', formula: '12d6+95', range: [107, 167] },
+        { name: '智力', formula: '12d6+95', range: [107, 167] },
+        { name: '感知', formula: '12d6+95', range: [107, 167] },
+        { name: '魅力', formula: '12d6+95', range: [107, 167] },
+      ],
+    },
+    'S级': {
+      description: '神话仙侠、克苏鲁',
+      totalAttrRange: [870, 1109],
+      singleAttrRange: [5, 150],
+      avgTotal: 990,
+      spv: 50,
+      hpBase: 250,
+      masteryBonus: 6,
+      baseAttributes: [
+        { name: '力量', formula: '15d6+125', range: [140, 215] },
+        { name: '敏捷', formula: '15d6+125', range: [140, 215] },
+        { name: '体质', formula: '15d6+125', range: [140, 215] },
+        { name: '智力', formula: '15d6+125', range: [140, 215] },
+        { name: '感知', formula: '15d6+125', range: [140, 215] },
+        { name: '魅力', formula: '15d6+125', range: [140, 215] },
+      ],
+    },
+    'SS级': {
+      description: '多元宇宙、概念战争',
+      totalAttrRange: [1110, 1379],
+      singleAttrRange: [5, 180],
+      avgTotal: 1245,
+      spv: 70,
+      hpBase: 350,
+      masteryBonus: 6,
+      baseAttributes: [
+        { name: '力量', formula: '18d6+160', range: [178, 268] },
+        { name: '敏捷', formula: '18d6+160', range: [178, 268] },
+        { name: '体质', formula: '18d6+160', range: [178, 268] },
+        { name: '智力', formula: '18d6+160', range: [178, 268] },
+        { name: '感知', formula: '18d6+160', range: [178, 268] },
+        { name: '魅力', formula: '18d6+160', range: [178, 268] },
+      ],
+    },
+    'SSS级': {
+      description: '全能领域、超越者',
+      totalAttrRange: [1380, 9999],
+      singleAttrRange: [5, 9999],
+      avgTotal: 1500,
+      spv: 95,
+      hpBase: 500,
+      masteryBonus: 8,
+      baseAttributes: [
+        { name: '力量', formula: '20d6+200', range: [220, 320] },
+        { name: '敏捷', formula: '20d6+200', range: [220, 320] },
+        { name: '体质', formula: '20d6+200', range: [220, 320] },
+        { name: '智力', formula: '20d6+200', range: [220, 320] },
+        { name: '感知', formula: '20d6+200', range: [220, 320] },
+        { name: '魅力', formula: '20d6+200', range: [220, 320] },
+      ],
+    },
+  },
+  baseAttributes: [
+    { name: '力量', formula: '2d6+3', range: [5, 15] },
+    { name: '敏捷', formula: '2d6+3', range: [5, 15] },
+    { name: '体质', formula: '2d6+3', range: [5, 15] },
+    { name: '智力', formula: '2d6+3', range: [5, 15] },
+    { name: '感知', formula: '2d6+3', range: [5, 15] },
+    { name: '魅力', formula: '2d6+3', range: [5, 15] },
+  ],
+  specialAttributes: [],
+  attrModifierFormula:
+    '$attr <= 15 ? 0 : ($attr <= 25 ? 1 : ($attr <= 35 ? 2 : ($attr <= 45 ? 3 : ($attr <= 55 ? 4 : ($attr <= 65 ? 5 : ($attr <= 75 ? 6 : ($attr <= 85 ? 7 : ($attr <= 95 ? 8 : ($attr <= 105 ? 9 : ($attr <= 120 ? 10 : ($attr <= 140 ? 11 : ($attr <= 160 ? 12 : ($attr <= 185 ? 13 : ($attr <= 210 ? 14 : ($attr <= 240 ? 15 : ($attr <= 270 ? 16 : ($attr <= 305 ? 17 : ($attr <= 340 ? 18 : ($attr <= 380 ? 19 : 19 + floor(($attr - 381) / 40)))))))))))))))))))))',
+  masteryBonusTable: {
+    F: 0,
+    E: 1,
+    D: 2,
+    C: 3,
+    B: 4,
+    A: 5,
+    S: 6,
+    SS: 6,
+    SSS: 8,
+  },
+  usageNote: '使用时根据世界等级选择对应的levelPresets配置。默认为F级。属性加成采用非线性对照表计算。',
+};
+
+export const LEVEL_ORDER = ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] as const;
+export type LevelName = (typeof LEVEL_ORDER)[number];
+
+export function getLevelPreset(level: LevelName): LevelPresetConfig | undefined {
+  return AIDM_ATTRIBUTE_PRESET.levelPresets[level];
+}
+
+export function getMasteryBonus(level: string): number {
+  const key = level.replace('级', '') as keyof typeof AIDM_ATTRIBUTE_PRESET.masteryBonusTable;
+  return AIDM_ATTRIBUTE_PRESET.masteryBonusTable[key] ?? 0;
+}
+
+export function getAttrModifier(attr: number): number {
+  if (attr <= 15) return 0;
+  if (attr <= 25) return 1;
+  if (attr <= 35) return 2;
+  if (attr <= 45) return 3;
+  if (attr <= 55) return 4;
+  if (attr <= 65) return 5;
+  if (attr <= 75) return 6;
+  if (attr <= 85) return 7;
+  if (attr <= 95) return 8;
+  if (attr <= 105) return 9;
+  if (attr <= 120) return 10;
+  if (attr <= 140) return 11;
+  if (attr <= 160) return 12;
+  if (attr <= 185) return 13;
+  if (attr <= 210) return 14;
+  if (attr <= 240) return 15;
+  if (attr <= 270) return 16;
+  if (attr <= 305) return 17;
+  if (attr <= 340) return 18;
+  if (attr <= 380) return 19;
+  return 19 + Math.floor((attr - 381) / 40);
+}
+
+export function getSpv(level: LevelName): number {
+  const preset = getLevelPreset(level);
+  return preset?.spv ?? 5;
+}
+
+export function getHpBase(level: LevelName): number {
+  const preset = getLevelPreset(level);
+  return preset?.hpBase ?? 25;
+}
+
+export function getBaseDc(level: LevelName): number {
+  const dcMap: Record<LevelName, number> = {
+    'F级': 10,
+    'E级': 13,
+    'D级': 16,
+    'C级': 19,
+    'B级': 22,
+    'A级': 25,
+    'S级': 28,
+    'SS级': 31,
+    'SSS级': 35,
+  };
+  return dcMap[level] ?? 10;
+}
+
+export function generateAttributesForLevel(
+  level: LevelName,
+  rollFn: (formula: string) => number,
+): Record<string, number> {
+  const preset = getLevelPreset(level);
+  if (!preset) {
+    throw new Error(`Unknown level: ${level}`);
+  }
+
+  const attributes: Record<string, number> = {};
+  let total = 0;
+
+  for (const attrConfig of preset.baseAttributes) {
+    let value = rollFn(attrConfig.formula);
+    value = Math.max(attrConfig.range[0], Math.min(attrConfig.range[1], value));
+    attributes[attrConfig.name] = value;
+    total += value;
+  }
+
+  const [minTotal, maxTotal] = preset.totalAttrRange;
+  if (total < minTotal || total > maxTotal) {
+    const scale = total < minTotal ? minTotal / total : maxTotal / total;
+    for (const attrConfig of preset.baseAttributes) {
+      const scaledValue = Math.round(attributes[attrConfig.name] * scale);
+      attributes[attrConfig.name] = Math.max(attrConfig.range[0], Math.min(attrConfig.range[1], scaledValue));
+    }
+  }
+
+  return attributes;
+}
