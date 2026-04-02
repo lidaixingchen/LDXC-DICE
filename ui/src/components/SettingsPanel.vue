@@ -744,14 +744,6 @@ onMounted(() => {
           <button class="acu-full-btn danger" @click="clearSystemCache">
             <i class="fa-solid fa-bomb"></i> 彻底重置系统缓存
           </button>
-          <div class="acu-setting-row checkbox acu-mt-4">
-            <label>狂暴模式控制</label>
-            <input
-              type="checkbox"
-              :checked="settings.crazyMode"
-              @change="updateLegacy({ crazyMode: ($event.target as any).checked })"
-            />
-          </div>
         </div>
 
         <!-- 验证规则编辑器弹窗 -->
