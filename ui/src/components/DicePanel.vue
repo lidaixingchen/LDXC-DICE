@@ -1118,6 +1118,252 @@ watch(difficulty, () => {
   }
 });
 
+const SAVE_KEY = 'aidm_save_slots';
+
+interface SaveSlot {
+  id: number;
+  timestamp: string;
+  data: SaveData;
+}
+
+interface SaveData {
+  playerName: string;
+  level: string;
+  attrs: Record<string, number>;
+  combat: CombatState;
+  equipment: EquipmentSlot;
+  statuses: StatusEffect[];
+  worldName: string;
+  location: string;
+}
+
+const saveSlots = ref<SaveSlot[]>([]);
+const exportText = ref('');
+const importText = ref('');
+const activeToolTab = ref('save');
+
+function findSaveSlot(id: number): SaveSlot | undefined {
+  return saveSlots.value.find(s => s.id === id);
+}
+
+function loadSaveSlots(): void {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      saveSlots.value = JSON.parse(raw);
+    } else {
+      saveSlots.value = [];
+    }
+  } catch {
+    saveSlots.value = [];
+  }
+}
+
+function persistSaveSlots(): void {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(saveSlots.value));
+}
+
+function saveGame(slotId: number): void {
+  if (saveSlots.value.length >= 3) {
+    if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return;
+  }
+
+  const char = currentCharacter.value;
+  const attrs: Record<string, number> = {};
+  if (char) {
+    Object.entries(char.attributes).forEach(([k, v]) => { attrs[k] = v; });
+  }
+
+  const saveData: SaveData = {
+    playerName: initiatorName.value || '冒险者',
+    level: worldLevel.value,
+    attrs,
+    combat: { ...combat.value },
+    equipment: { ...equipment.value },
+    statuses: activeStatuses.value.map(s => ({ ...s })),
+    worldName: combat.value.enemyName || '',
+    location: '未知',
+  };
+
+  const existingIdx = saveSlots.value.findIndex(s => s.id === slotId);
+  const slot: SaveSlot = {
+    id: slotId,
+    timestamp: new Date().toLocaleString(),
+    data: saveData,
+  };
+
+  if (existingIdx >= 0) {
+    saveSlots.value[existingIdx] = slot;
+  } else {
+    saveSlots.value.push(slot);
+  }
+
+  persistSaveSlots();
+}
+
+function loadGame(slotId: number): boolean {
+  const slot = saveSlots.value.find(s => s.id === slotId);
+  if (!slot) return false;
+
+  const d = slot.data;
+  initiatorName.value = d.playerName;
+  worldLevel.value = d.level;
+  combat.value = { ...d.combat };
+  equipment.value = { ...d.equipment };
+  activeStatuses.value = d.statuses.map(s => ({ ...s }));
+
+  return true;
+}
+
+function exportSave(): void {
+  const spv = getSPV(worldLevel.value);
+  const stats = currentCharacter.value
+    ? deriveCombatStats(currentCharacter.value.attributes, worldLevel.value)
+    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 10 };
+
+  exportText.value = `═════════════════════════════════
+【轮回者存档】
+═════════════════════════════════
+
+【角色信息】
+名称：${initiatorName.value || '冒险者'}
+等级：${worldLevel.value} | SPV：${spv}
+
+【战斗属性】
+HP：${combat.value.playerCurrentHP}/${combat.value.playerMaxHP}
+护盾：${combat.value.playerShield}
+物攻：${stats.physAtk + equipment.value.physDmg} | 法攻：${stats.magicAtk + equipment.value.magicDmg}
+物防：${stats.physDef + equipment.value.physDef} | 法防：${stats.magicDef + equipment.value.magicDef}
+DDC：${stats.ddc} | 暴击率：${stats.critRate}%
+
+${activeStatuses.value.length > 0 ? `【状态效果】\n${activeStatuses.value.map(s => `・${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}
+
+${combat.value.active ? `【战斗中】第${combat.value.round}回合 | 敌人:${combat.value.enemyName} HP:${combat.value.enemyCurrentHP}/${combat.value.enemyMaxHP}` : ''}
+═════════════════════════════════`;
+}
+
+function importSave(): boolean {
+  const text = importText.value.trim();
+  if (!text.includes('轮回者存档')) {
+    alert('存档格式无效：未检测到存档标识');
+    return false;
+  }
+  alert('存档导入成功！（演示模式：请手动恢复各项数值）');
+  return true;
+}
+
+const WORLD_TYPES = ['恐怖', '科幻', '奇幻', '武侠', '仙侠', '末世', '其他'];
+const WORLD_TIER_ROLL_MAP: [number, string][] = [
+  [14, '同等级'], [16, '低1级'], [18, '高1级'], [19, '低2级'], [20, '高2级'],
+];
+
+interface GeneratedWorld {
+  name: string;
+  tier: string;
+  type: string;
+  difficulty: number;
+  description: string;
+}
+
+const generatedWorlds = ref<GeneratedWorld[]>([]);
+
+function generateWorlds(): void {
+  const count = roll('1d3+2').total;
+  const worlds: GeneratedWorld[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const tierRoll = roll('1d20').total;
+    let tierOffset = '同等级';
+    for (const [threshold, label] of WORLD_TIER_ROLL_MAP) {
+      if (tierRoll <= threshold) { tierOffset = label; break; }
+    }
+
+    const type = WORLD_TYPES[Math.floor(Math.random() * WORLD_TYPES.length)];
+    const difficulty = Math.ceil(Math.random() * 5);
+
+    const descriptions: Record<string, string[]> = {
+      恐怖: ['生化危机爆发', '诅咒之地', '寂静岭迷雾', '丧尸围城'],
+      科幻: ['赛博朋克都市', '星际殖民地', '时间裂缝', 'AI叛乱'],
+      奇幻: ['魔法学院', '龙之巢穴', '精灵森林', '地下城迷宫'],
+      武侠: ['江湖门派纷争', '武林大会', '秘境寻宝', '魔教崛起'],
+      仙侠: ['修仙宗门', '天劫降临', '仙界试炼', '妖兽横行'],
+      末世: ['废土求生', '辐射废墟', '变异生物巢穴', '资源争夺战'],
+      其他: ['异世界穿越', '梦境维度', '虚空裂隙', '元素领域'],
+    };
+
+    const descPool = descriptions[type] || descriptions['其他'];
+    worlds.push({
+      name: `${type}世界-${i + 1}`,
+      tier: tierOffset,
+      type,
+      difficulty,
+      description: descPool[Math.floor(Math.random() * descPool.length)],
+    });
+  }
+
+  generatedWorlds.value = worlds;
+}
+
+const ACTIVE_SKILL_POOL = [
+  { name: '物伤增幅', effect: '造成物理伤害时额外附加固定伤害' },
+  { name: '法伤增幅', effect: '造成法术伤害时额外附加固定伤害' },
+  { name: '体质治疗', effect: '恢复固定HP' },
+  { name: '智力治疗', effect: '恢复固定HP（智力修正）' },
+  { name: '力量吸血', effect: '物理伤害时恢复HP' },
+  { name: '智力吸血', effect: '法术伤害时恢复HP' },
+  { name: '生命护盾', effect: '获得固定护盾值' },
+];
+
+const PASSIVE_SKILL_POOL = [
+  { name: '属性增强', effect: '固定增加某属性' },
+  { name: '物理伤害', effect: '固定增加物理伤害值' },
+  { name: '法术伤害', effect: '固定增加法术伤害值' },
+  { name: '物理防御', effect: '固定增加物理防御' },
+  { name: '法术防御', effect: '固定增加法术防御' },
+  { name: 'HP加成', effect: '固定增加最大HP' },
+];
+
+interface GeneratedSkill {
+  name: string;
+  type: '主动' | '被动';
+  effect: string;
+  spvValue: number;
+}
+
+const generatedSkills = ref<GeneratedSkill[]>([]);
+const skillGenLevel = ref<string>('C级');
+
+function generateSkills(): void {
+  const spv = getSPV(skillGenLevel.value);
+  const skills: GeneratedSkill[] = [];
+  const isCombat = Math.random() < 0.75;
+
+  if (isCombat) {
+    const activeCount = roll('1d2+1').total;
+    for (let i = 0; i < activeCount; i++) {
+      const entry = ACTIVE_SKILL_POOL[Math.floor(Math.random() * ACTIVE_SKILL_POOL.length)];
+      skills.push({ ...entry, type: '主动', spvValue: Math.floor(spv * (Math.random() * 0.5 + 0.8)) });
+    }
+
+    const passiveCount = roll('1d2').total;
+    for (let i = 0; i < passiveCount; i++) {
+      const entry = PASSIVE_SKILL_POOL[Math.floor(Math.random() * PASSIVE_SKILL_POOL.length)];
+      skills.push({ ...entry, type: '被动', spvValue: Math.floor(spv * (Math.random() * 0.3 + 0.3)) });
+    }
+  } else {
+    skills.push({
+      name: ['开锁精通', '快速阅读', '驯兽术', '伪装潜行'][Math.floor(Math.random() * 4)],
+      type: '主动',
+      effect: '特殊辅助技能',
+      spvValue: Math.floor(spv * 0.8),
+    });
+  }
+
+  generatedSkills.value = skills;
+}
+
+loadSaveSlots();
+
 onMounted(() => {
   initDiceSystem();
   loadPresets();
@@ -1630,6 +1876,84 @@ onMounted(() => {
             <input v-model="newStatusRounds" type="text" class="acu-dice-input" placeholder="回合" style="width:45px" />
           </div>
           <button class="acu-full-btn accent" @click="addStatus" style="margin-top:4px;font-size:11px;padding:4px 8px;">+ 添加状态</button>
+        </div>
+      </div>
+
+      <div class="acu-tools-section">
+        <div class="acu-tools-tabs">
+          <button :class="{ active: activeToolTab === 'save' }" @click="activeToolTab = 'save'" class="acu-tool-tab">
+            <i class="fa-solid fa-floppy-disk"></i> 存档
+          </button>
+          <button :class="{ active: activeToolTab === 'world' }" @click="activeToolTab = 'world'; generateWorlds()" class="acu-tool-tab">
+            <i class="fa-solid fa-globe"></i> 世界
+          </button>
+          <button :class="{ active: activeToolTab === 'skill' }" @click="activeToolTab = 'skill'; generateSkills()" class="acu-tool-tab">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 技能
+          </button>
+        </div>
+
+        <div v-if="activeToolTab === 'save'" class="acu-tool-content">
+          <div class="acu-save-slots">
+            <div v-for="slot in [1, 2, 3]" :key="slot" class="acu-save-slot">
+              <div class="acu-save-slot-header">
+                <span>存档位 {{ slot }}</span>
+                <span v-if="findSaveSlot(slot)" class="acu-save-time">{{ findSaveSlot(slot)?.timestamp }}</span>
+                <span v-else class="acu-save-empty">空</span>
+              </div>
+              <div class="acu-save-slot-actions">
+                <button class="acu-tiny-btn accent" @click="saveGame(slot)">💾 存档</button>
+                <button class="acu-tiny-btn" @click="loadGame(slot); alert('读档成功！')">📂 读档</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="acu-export-import" style="margin-top:6px;">
+            <div class="acu-dice-form-row cols-2">
+              <button class="acu-full-btn accent" @click="exportSave()" style="font-size:11px;">📤 导出存档</button>
+              <button class="acu-full-btn" @click="importSave()" style="font-size:11px;">📥 导入存档</button>
+            </div>
+            <textarea v-if="exportText" v-model="exportText" class="acu-export-textarea" readonly rows="8"></textarea>
+            <textarea v-if="activeToolTab === 'save'" v-model="importText" class="acu-export-textarea" rows="3" placeholder="粘贴存档内容..."></textarea>
+          </div>
+        </div>
+
+        <div v-if="activeToolTab === 'world'" class="acu-tool-content">
+          <div v-if="generatedWorlds.length > 0" class="acu-world-list">
+            <div v-for="(w, idx) in generatedWorlds" :key="idx" class="acu-world-item">
+              <div class="acu-world-header">
+                <span class="acu-world-name">{{ w.name }}</span>
+                <span class="acu-world-tier" :class="w.tier.includes('高') ? 'high' : (w.tier.includes('低') ? 'low' : '')">{{ w.tier }}</span>
+                <span class="acu-world-type">{{ w.type }}</span>
+                <span class="acu-world-diff">{'⭐'.repeat(w.difficulty)}{'☆'.repeat(5 - w.difficulty)}</span>
+              </div>
+              <div class="acu-world-desc">{{ w.description }}</div>
+            </div>
+            <button class="acu-full-btn accent" style="margin-top:6px;font-size:11px;" @click="generateWorlds()">🔄 重新生成</button>
+          </div>
+          <div v-else class="acu-empty-hint">点击上方「世界」标签生成候选世界列表</div>
+        </div>
+
+        <div v-if="activeToolTab === 'skill'" class="acu-tool-content">
+          <div class="acu-dice-form-row cols-2">
+            <div>
+              <div class="acu-dice-form-label">技能等级</div>
+              <select v-model="skillGenLevel" class="acu-dice-select" @change="generateSkills()">
+                <option v-for="l in WORLD_LEVELS" :key="l" :value="l">{{ l }}</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+              <button class="acu-full-btn accent" @click="generateSkills()" style="font-size:11px;height:29px;">🎲 生成技能</button>
+            </div>
+          </div>
+
+          <div v-if="generatedSkills.length > 0" class="acu-skill-list">
+            <div v-for="(s, idx) in generatedSkills" :key="idx" class="acu-skill-item" :class="s.type === '主动' ? 'active-skill' : 'passive-skill'">
+              <span class="acu-skill-badge">{{ s.type }}</span>
+              <span class="acu-skill-name">{{ s.name }}</span>
+              <span class="acu-skill-effect">{{ s.effect }} (SPV×{{ (s.spvValue / getSPV(skillGenLevel)).toFixed(1) }})</span>
+            </div>
+          </div>
+          <div v-else class="acu-empty-hint">选择等级后点击生成</div>
         </div>
       </div>
 
@@ -2360,4 +2684,170 @@ onMounted(() => {
   background: rgba(230, 126, 34, 0.1);
   border: 1px dashed rgba(230, 126, 34, 0.3);
 }
+
+.acu-tools-section {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 6px;
+  margin-top: 4px;
+  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.3);
+}
+
+.acu-tools-tabs {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.acu-tool-tab {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i { font-size: 11px; }
+
+  &:hover { border-color: var(--acu-accent); color: var(--acu-accent); }
+  &.active { background: var(--acu-accent); color: white; border-color: var(--acu-accent); }
+}
+
+.acu-tool-content {
+  min-height: 40px;
+}
+
+.acu-save-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.acu-save-slot {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid var(--acu-border);
+  background: rgba(255, 255, 255, 0.03);
+
+  .acu-save-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--acu-text-main);
+    margin-bottom: 3px;
+  }
+
+  .acu-save-time { font-size: 8px; color: var(--acu-accent); }
+  .acu-save-empty { font-size: 8px; color: var(--acu-text-sub); opacity: 0.5; }
+}
+
+.acu-save-slot-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.acu-export-import {
+  .cols-2 { grid-template-columns: 1fr 1fr; gap: 4px; }
+}
+
+.acu-export-textarea {
+  width: 100%;
+  margin-top: 4px;
+  padding: 5px;
+  border: 1px solid var(--acu-border);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--acu-text-main);
+  font-size: 9px;
+  font-family: monospace;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.acu-world-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.acu-world-item {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border-left: 3px solid #9b59b6;
+  background: rgba(155, 89, 182, 0.06);
+}
+
+.acu-world-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  font-size: 10px;
+}
+
+.acu-world-name { font-weight: 700; color: var(--acu-text-main); }
+
+.acu-world-tier {
+  font-size: 8px; padding: 1px 4px; border-radius: 3px;
+  background: #95a5a6; color: white;
+  &.high { background: #27ae60; }
+  &.low { background: #e74c3c; }
+}
+
+.acu-world-type {
+  font-size: 8px; padding: 1px 4px; border-radius: 3px;
+  background: rgba(52, 152, 219, 0.2); color: #3498db;
+}
+
+.acu-world-diff { font-size: 9px; letter-spacing: -1px; }
+
+.acu-world-desc {
+  font-size: 9px; color: var(--acu-text-sub); margin-top: 2px;
+  padding-left: 4px;
+}
+
+.acu-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.acu-skill-item {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  &.active-skill {
+    border-left: 3px solid #e67e22;
+    background: rgba(230, 126, 34, 0.06);
+  }
+
+  &.passive-skill {
+    border-left: 3px solid #3498db;
+    background: rgba(52, 152, 219, 0.06);
+  }
+}
+
+.acu-skill-badge {
+  font-size: 7px; padding: 1px 4px; border-radius: 3px;
+  font-weight: 700;
+
+  .active-skill & { background: #e67e22; color: white; }
+  .passive-skill & { background: #3498db; color: white; }
+}
+
+.acu-skill-name { font-weight: 700; color: var(--acu-text-main); }
+
+.acu-skill-effect { color: var(--acu-text-sub); font-size: 8px; }
 </style>
