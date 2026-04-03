@@ -35,6 +35,7 @@ const lastResult = ref<CheckResult | null>(null);
 const showResult = ref(false);
 
 const checkMode = ref<CheckMode>('standard');
+const showMoreModes = ref(false);
 const initiatorName = ref('');
 const attrName = ref('');
 const attrValue = ref<number | string>('');
@@ -1428,18 +1429,43 @@ onMounted(() => {
     </div>
 
     <div class="acu-dice-panel-body">
-      <div class="acu-dice-mode-tabs">
-        <button
-          v-for="m in CHECK_MODES"
-          :key="m.id"
-          class="acu-dice-mode-tab"
-          :class="{ active: checkMode === m.id }"
-          :title="m.description"
-          @click="selectCheckMode(m.id as CheckMode)"
-        >
-          <i :class="m.icon"></i>
-          <span>{{ m.name }}</span>
-        </button>
+      <div class="acu-mode-selector">
+        <div class="acu-primary-modes">
+          <button
+            v-for="m in CHECK_MODES.slice(0, 3)"
+            :key="m.id"
+            class="acu-mode-btn"
+            :class="{ active: checkMode === m.id }"
+            :title="m.description"
+            @click="selectCheckMode(m.id as CheckMode)"
+          >
+            <i :class="m.icon"></i>
+            <span>{{ m.name }}</span>
+          </button>
+        </div>
+        <div class="acu-more-modes">
+          <button 
+            class="acu-mode-btn more" 
+            :class="{ active: ['defense', 'initiative', 'escape'].includes(checkMode) }"
+            @click="showMoreModes = !showMoreModes"
+          >
+            <span>更多</span>
+            <i :class="showMoreModes ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+          </button>
+          <div v-if="showMoreModes" class="acu-mode-dropdown">
+            <button
+              v-for="m in CHECK_MODES.slice(3)"
+              :key="m.id"
+              class="acu-mode-dropdown-item"
+              :class="{ active: checkMode === m.id }"
+              :title="m.description"
+              @click="selectCheckMode(m.id as CheckMode); showMoreModes = false"
+            >
+              <i :class="m.icon"></i>
+              <span>{{ m.name }}</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="acu-dual-column">
@@ -1498,6 +1524,7 @@ onMounted(() => {
               >
                 <span class="label">{{ a.name }}</span>
                 <span class="val">{{ a.value }}</span>
+                <span class="mod">{{ computeAIDMAttrMod(a.value) >= 0 ? '+' : '' }}{{ computeAIDMAttrMod(a.value) }}</span>
               </button>
             </div>
           </div>
@@ -2263,14 +2290,20 @@ onMounted(() => {
   overflow-y: auto;
 }
 
-.acu-dice-mode-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.acu-mode-selector {
+  display: flex;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
-.acu-dice-mode-tab {
+.acu-primary-modes {
+  display: flex;
+  flex: 1;
+  gap: 4px;
+}
+
+.acu-mode-btn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2305,6 +2338,75 @@ onMounted(() => {
     background: var(--acu-accent);
     color: white;
     border-color: var(--acu-accent);
+  }
+
+  &.more {
+    flex: 0 0 auto;
+    min-width: 60px;
+    flex-direction: row;
+    gap: 4px;
+    padding: 8px 10px;
+
+    i {
+      font-size: 10px;
+    }
+  }
+}
+
+.acu-more-modes {
+  position: relative;
+}
+
+.acu-mode-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.acu-mode-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  color: var(--acu-text-main);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+
+  i {
+    font-size: 14px;
+    color: var(--acu-text-sub);
+  }
+
+  &:hover {
+    background: var(--acu-accent-light);
+    color: var(--acu-accent);
+
+    i {
+      color: var(--acu-accent);
+    }
+  }
+
+  &.active {
+    background: var(--acu-accent);
+    color: white;
+
+    i {
+      color: white;
+    }
   }
 }
 
@@ -2495,46 +2597,80 @@ onMounted(() => {
 
 .acu-dice-quick-compact {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
 .acu-stat-chip {
-  background: var(--acu-bg-header);
+  background: linear-gradient(135deg, var(--acu-bg-header), var(--acu-bg-panel));
   border: 1px solid var(--acu-border);
-  border-radius: 4px;
-  padding: 4px 2px;
+  border-radius: 8px;
+  padding: 8px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.2s ease;
+  }
 
   .label {
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 600;
     color: var(--acu-text-sub);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    margin-bottom: 2px;
   }
 
   .val {
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 900;
     color: var(--acu-accent);
+  }
+
+  .mod {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--acu-success);
+    margin-top: 1px;
   }
 
   &:hover {
     border-color: var(--acu-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+    &::before {
+      background: var(--acu-accent);
+    }
   }
 
   &.active {
-    background: var(--acu-accent);
+    background: linear-gradient(135deg, var(--acu-accent), color-mix(in srgb, var(--acu-accent) 80%, black));
     border-color: var(--acu-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+    &::before {
+      background: white;
+    }
 
     .label,
-    .val {
+    .val,
+    .mod {
       color: white;
     }
   }
@@ -2549,59 +2685,110 @@ onMounted(() => {
 
 .acu-dice-roll-btn {
   width: 100%;
-  height: 40px;
-  border-radius: 8px;
+  height: 48px;
+  border-radius: 12px;
   border: none;
-  background: var(--acu-accent);
+  background: linear-gradient(135deg, var(--acu-accent), color-mix(in srgb, var(--acu-accent) 85%, black));
   color: white;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
-  box-shadow: 0 4px 12px var(--acu-accent-light);
-  transition: all 0.15s;
+  gap: 10px;
+  margin-top: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
 
   &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px var(--acu-accent-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
   }
+
+  i {
+    font-size: 18px;
+
+    &.fa-spin {
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-success {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+}
+
+@keyframes pulse-failure {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
 }
 
 .acu-dice-result-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
 
   &.success {
-    color: var(--acu-success);
+    color: #2ecc71;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
   }
   &.failure {
-    color: var(--acu-danger);
+    color: #e74c3c;
+    text-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
   }
 }
 
 .acu-dice-result-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 
   &.success {
-    background: var(--acu-success);
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
     color: white;
+    box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4);
   }
 
   &.failure {
-    background: var(--acu-danger);
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
     color: white;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
   }
 }
 
