@@ -708,13 +708,13 @@ function addStatus(): void {
 }
 
 function removeStatus(id: number): void {
-  activeStatuses.value = activeStatuses.value.filter(s => s.id !== id);
+  activeStatuses.value = (activeStatuses.value as StatusEffect[]).filter((s: StatusEffect) => s.id !== id);
 }
 
 function decayStatuses(): void {
-  activeStatuses.value = activeStatuses.value
-    .map(s => ({ ...s, remainingRounds: s.remainingRounds - 1 }))
-    .filter(s => s.remainingRounds > 0);
+  activeStatuses.value = (activeStatuses.value as StatusEffect[])
+    .map((s: StatusEffect) => ({ ...s, remainingRounds: s.remainingRounds - 1 }))
+    .filter((s: StatusEffect) => s.remainingRounds > 0);
 }
 
 function clearAllStatuses(): void {
@@ -1216,7 +1216,7 @@ function saveGame(slotId: number): void {
     attrs,
     combat: { ...combat.value },
     equipment: { ...equipment.value },
-    statuses: activeStatuses.value.map(s => ({ ...s })),
+    statuses: (activeStatuses.value as StatusEffect[]).map((s: StatusEffect) => ({ ...s })),
     worldName: combat.value.enemyName || '',
     location: '未知',
   };
@@ -1274,7 +1274,7 @@ HP：${combat.value.playerCurrentHP}/${combat.value.playerMaxHP}
 物防：${stats.physDef + equipment.value.physDef} | 法防：${stats.magicDef + equipment.value.magicDef}
 DDC：${stats.ddc} | 暴击率：${stats.critRate}%
 
-${activeStatuses.value.length > 0 ? `【状态效果】\n${activeStatuses.value.map(s => `・${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}
+${(activeStatuses.value as StatusEffect[]).length > 0 ? `【状态效果】\n${(activeStatuses.value as StatusEffect[]).map((s: StatusEffect) => `・${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}
 
 ${combat.value.active ? `【战斗中】第${combat.value.round}回合 | 敌人:${combat.value.enemyName} HP:${combat.value.enemyCurrentHP}/${combat.value.enemyMaxHP}` : ''}
 ═════════════════════════════════`;
@@ -1472,7 +1472,7 @@ onMounted(() => {
         <div>
           <div class="acu-dice-form-label centered">难度</div>
           <select v-model="difficulty" class="acu-dice-select">
-            <option v-for="d in DIFFICULTY_OPTIONS" :key="d.id" :value="d.id">{{ d.name }}</option>
+            <option v-for="d in DIFFICULTY_OPTIONS" :key="d.value" :value="d.value">{{ d.label }}</option>
           </select>
         </div>
       </div>

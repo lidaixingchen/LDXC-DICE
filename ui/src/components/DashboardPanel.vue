@@ -180,7 +180,7 @@ const npcList = computed(() => {
       index: idx,
       isInScene
     };
-  }).sort((a, b) => (b.isInScene ? 1 : 0) - (a.isInScene ? 1 : 0));
+  }).sort((a: { isInScene: boolean }, b: { isInScene: boolean }) => (b.isInScene ? 1 : 0) - (a.isInScene ? 1 : 0));
 });
 
 const bagList = computed(() => {
