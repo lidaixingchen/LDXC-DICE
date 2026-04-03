@@ -1,130 +1,192 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import {
+  attributePresetManager,
+  type StoredAttributePreset,
+  type AttributePresetConfig,
+} from '@data/attribute-preset-manager';
+import { computed, onMounted, ref } from 'vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-interface AttributeRule {
-  id: string;
-  name: string;
-  attribute: string;
-  condition: 'equals' | 'greater' | 'less' | 'contains' | 'regex';
-  value: string;
-  action: 'highlight' | 'hide' | 'modify' | 'alert';
-  actionValue?: string;
-  enabled: boolean;
-  description: string;
-}
-
-const rules = ref<AttributeRule[]>([]);
-const editingRule = ref<AttributeRule | null>(null);
+const presets = ref<StoredAttributePreset[]>([]);
+const activePresetId = ref<string | null>(null);
+const editingPreset = ref<StoredAttributePreset | null>(null);
 const showEditor = ref(false);
+const editingAttribute = ref<AttributePresetConfig | null>(null);
+const editingAttributeType = ref<'base' | 'special'>('base');
+const showAttributeEditor = ref(false);
 
-function loadRules() {
-  const stored = localStorage.getItem('acu_attribute_rules');
-  if (stored) {
-    rules.value = JSON.parse(stored);
-  }
+function loadPresets() {
+  presets.value = attributePresetManager.getAllPresets();
+  activePresetId.value = attributePresetManager.getActivePreset()?.id || null;
 }
 
-function saveRules() {
-  localStorage.setItem('acu_attribute_rules', JSON.stringify(rules.value));
+function setActivePreset(id: string | null) {
+  attributePresetManager.setActivePreset(id);
+  activePresetId.value = id;
 }
 
-function createNewRule() {
-  editingRule.value = {
-    id: `attr_rule_${Date.now()}`,
-    name: '新属性规则',
-    attribute: '',
-    condition: 'equals',
-    value: '',
-    action: 'highlight',
-    enabled: true,
-    description: ''
-  };
+function createNewPreset() {
+  const newPreset = attributePresetManager.createPreset({
+    name: '新属性预设',
+    description: '自定义属性生成规则',
+    baseAttributes: [],
+    specialAttributes: [],
+  });
+  loadPresets();
+  editPreset(newPreset);
+}
+
+function editPreset(preset: StoredAttributePreset) {
+  editingPreset.value = JSON.parse(JSON.stringify(preset));
   showEditor.value = true;
 }
 
-function editRule(rule: AttributeRule) {
-  editingRule.value = { ...rule };
-  showEditor.value = true;
-}
+function savePreset() {
+  if (!editingPreset.value) return;
 
-function saveRule() {
-  if (!editingRule.value) return;
-  
-  const idx = rules.value.findIndex(r => r.id === editingRule.value!.id);
-  if (idx >= 0) {
-    rules.value[idx] = editingRule.value;
+  if (editingPreset.value.builtin) {
+    const newPreset = attributePresetManager.duplicatePreset(editingPreset.value.id);
+    if (newPreset) {
+      attributePresetManager.updatePreset(newPreset.id, {
+        name: editingPreset.value.name + ' (修改版)',
+        description: editingPreset.value.description,
+        baseAttributes: editingPreset.value.baseAttributes,
+        specialAttributes: editingPreset.value.specialAttributes,
+        levelPresets: editingPreset.value.levelPresets,
+      });
+    }
   } else {
-    rules.value.push(editingRule.value);
+    attributePresetManager.updatePreset(editingPreset.value.id, {
+      name: editingPreset.value.name,
+      description: editingPreset.value.description,
+      baseAttributes: editingPreset.value.baseAttributes,
+      specialAttributes: editingPreset.value.specialAttributes,
+      levelPresets: editingPreset.value.levelPresets,
+    });
   }
-  
-  saveRules();
+
+  loadPresets();
   showEditor.value = false;
-  editingRule.value = null;
+  editingPreset.value = null;
 }
 
-function deleteRule(ruleId: string) {
-  if (!confirm('确定要删除此属性规则吗？')) return;
-  rules.value = rules.value.filter(r => r.id !== ruleId);
-  saveRules();
+function deletePreset(id: string) {
+  if (!confirm('确定要删除此预设吗？')) return;
+  attributePresetManager.deletePreset(id);
+  loadPresets();
 }
 
-function toggleRule(ruleId: string) {
-  const rule = rules.value.find(r => r.id === ruleId);
-  if (rule) {
-    rule.enabled = !rule.enabled;
-    saveRules();
+function duplicatePreset(id: string) {
+  const newPreset = attributePresetManager.duplicatePreset(id);
+  if (newPreset) {
+    loadPresets();
+    editPreset(newPreset);
   }
 }
 
-function exportRules() {
-  const dataStr = JSON.stringify(rules.value, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
+function exportPreset(id: string) {
+  const json = attributePresetManager.exportPreset(id);
+  if (!json) return;
+
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `attribute_rules_${Date.now()}.json`;
+  a.download = `attribute_preset_${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function importRules(event: Event) {
+function importPreset(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
-  
+
   const reader = new FileReader();
   reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target?.result as string);
-      if (Array.isArray(data)) {
-        rules.value.push(...data);
-        saveRules();
-        alert(`成功导入 ${data.length} 条规则！`);
-      }
-    } catch (err) {
-      alert('导入失败：' + (err as Error).message);
+    const json = e.target?.result as string;
+    const imported = attributePresetManager.importPreset(json, true);
+    if (imported) {
+      loadPresets();
+      alert(`成功导入预设：${imported.name}`);
+    } else {
+      alert('导入失败：格式不正确');
     }
   };
   reader.readAsText(file);
 }
 
+function addAttribute(type: 'base' | 'special') {
+  editingAttribute.value = {
+    name: '',
+    formula: '3d6',
+    range: [3, 18],
+  };
+  editingAttributeType.value = type;
+  showAttributeEditor.value = true;
+}
+
+function editAttribute(attr: AttributePresetConfig, type: 'base' | 'special', index: number) {
+  editingAttribute.value = { ...attr, _index: index } as any;
+  editingAttributeType.value = type;
+  showAttributeEditor.value = true;
+}
+
+function saveAttribute() {
+  if (!editingAttribute.value || !editingPreset.value) return;
+
+  const index = (editingAttribute.value as any)._index;
+  const attr = { ...editingAttribute.value };
+  delete (attr as any)._index;
+
+  if (index !== undefined) {
+    if (editingAttributeType.value === 'base') {
+      editingPreset.value.baseAttributes[index] = attr;
+    } else {
+      editingPreset.value.specialAttributes[index] = attr;
+    }
+  } else {
+    if (editingAttributeType.value === 'base') {
+      editingPreset.value.baseAttributes.push(attr);
+    } else {
+      editingPreset.value.specialAttributes.push(attr);
+    }
+  }
+
+  showAttributeEditor.value = false;
+  editingAttribute.value = null;
+}
+
+function deleteAttribute(type: 'base' | 'special', index: number) {
+  if (!editingPreset.value) return;
+  if (!confirm('确定要删除此属性吗？')) return;
+
+  if (type === 'base') {
+    editingPreset.value.baseAttributes.splice(index, 1);
+  } else {
+    editingPreset.value.specialAttributes.splice(index, 1);
+  }
+}
+
+const builtinPresets = computed(() => presets.value.filter(p => p.builtin));
+const customPresets = computed(() => presets.value.filter(p => !p.builtin));
+
 onMounted(() => {
-  loadRules();
+  loadPresets();
 });
 </script>
 
 <template>
-  <div class="acu-attribute-manager">
+  <div class="acu-attribute-preset-manager">
     <div class="acu-panel-header">
       <div class="acu-panel-title">
         <div class="acu-title-main">
           <i class="fa-solid fa-atom"></i>
           <span class="acu-title-text">属性规则管理器</span>
         </div>
-        <div class="acu-title-sub">管理属性显示和计算规则</div>
+        <div class="acu-title-sub">管理属性生成预设（COC7、DND5e等）</div>
       </div>
       <div class="acu-header-actions">
         <button class="acu-close-btn" @click="emit('close')">
@@ -135,128 +197,237 @@ onMounted(() => {
 
     <div class="acu-panel-content acu-scroll-y">
       <div class="acu-manager-toolbar">
-        <button class="acu-half-btn primary" @click="createNewRule">
-          <i class="fa-solid fa-plus"></i> 新建规则
-        </button>
-        <button class="acu-half-btn" @click="exportRules">
-          <i class="fa-solid fa-download"></i> 导出
+        <button class="acu-half-btn primary" @click="createNewPreset">
+          <i class="fa-solid fa-plus"></i> 新建预设
         </button>
         <label class="acu-half-btn">
-          <i class="fa-solid fa-upload"></i> 导入
-          <input type="file" accept=".json" @change="importRules" style="display: none" />
+          <i class="fa-solid fa-upload"></i> 导入预设
+          <input type="file" accept=".json" @change="importPreset" style="display: none" />
         </label>
       </div>
 
-      <div v-if="rules.length === 0" class="acu-empty-state">
-        <i class="fa-solid fa-atom"></i>
-        <p>暂无属性规则</p>
-        <p class="hint">点击"新建规则"创建您的第一条属性规则</p>
-      </div>
-
-      <div v-else class="acu-rule-list">
-        <div
-          v-for="rule in rules"
-          :key="rule.id"
-          class="acu-rule-item"
-          :class="{ disabled: !rule.enabled }"
-        >
-          <div class="acu-rule-header">
-            <div class="acu-rule-info">
-              <span class="acu-rule-name">{{ rule.name }}</span>
-              <span class="acu-rule-badge" :class="rule.action">
-                {{ rule.action === 'highlight' ? '高亮' : 
-                   rule.action === 'hide' ? '隐藏' : 
-                   rule.action === 'modify' ? '修改' : '提醒' }}
-              </span>
+      <div class="acu-preset-section">
+        <h3 class="acu-section-title">
+          <i class="fa-solid fa-star"></i> 内置预设
+        </h3>
+        <div class="acu-preset-list">
+          <div
+            v-for="preset in builtinPresets"
+            :key="preset.id"
+            class="acu-preset-item"
+            :class="{ active: activePresetId === preset.id }"
+          >
+            <div class="acu-preset-header">
+              <div class="acu-preset-info">
+                <span class="acu-preset-name">{{ preset.name }}</span>
+                <span class="acu-preset-badge builtin">内置</span>
+              </div>
+              <div class="acu-preset-actions">
+                <button
+                  v-if="activePresetId !== preset.id"
+                  class="acu-icon-btn"
+                  @click="setActivePreset(preset.id)"
+                  title="激活"
+                >
+                  <i class="fa-solid fa-check"></i>
+                </button>
+                <button class="acu-icon-btn" @click="editPreset(preset)" title="查看">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="acu-icon-btn" @click="duplicatePreset(preset.id)" title="复制">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <button class="acu-icon-btn" @click="exportPreset(preset.id)" title="导出">
+                  <i class="fa-solid fa-download"></i>
+                </button>
+              </div>
             </div>
-            <div class="acu-rule-actions">
-              <button class="acu-icon-btn" @click="toggleRule(rule.id)" :title="rule.enabled ? '禁用' : '启用'">
-                <i :class="rule.enabled ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
-              </button>
-              <button class="acu-icon-btn" @click="editRule(rule)" title="编辑">
-                <i class="fa-solid fa-edit"></i>
-              </button>
-              <button class="acu-icon-btn danger" @click="deleteRule(rule.id)" title="删除">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div class="acu-rule-detail">
-            <div class="acu-detail-item">
-              <span class="label">属性:</span>
-              <span class="value">{{ rule.attribute || '未设置' }}</span>
-            </div>
-            <div class="acu-detail-item">
-              <span class="label">条件:</span>
-              <span class="value">
-                {{ rule.condition === 'equals' ? '等于' :
-                   rule.condition === 'greater' ? '大于' :
-                   rule.condition === 'less' ? '小于' :
-                   rule.condition === 'contains' ? '包含' : '正则匹配' }}
-                {{ rule.value }}
-              </span>
-            </div>
-            <div v-if="rule.description" class="acu-rule-desc">
-              {{ rule.description }}
+            <div class="acu-preset-desc">{{ preset.description }}</div>
+            <div class="acu-preset-stats">
+              <span><i class="fa-solid fa-dice"></i> {{ preset.baseAttributes.length }} 基础属性</span>
+              <span><i class="fa-solid fa-star"></i> {{ preset.specialAttributes.length }} 特殊属性</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="showEditor && editingRule" class="acu-modal-overlay" @click.self="showEditor = false">
-        <div class="acu-modal">
+      <div class="acu-preset-section">
+        <h3 class="acu-section-title">
+          <i class="fa-solid fa-user"></i> 自定义预设
+        </h3>
+        <div v-if="customPresets.length === 0" class="acu-empty-state">
+          <i class="fa-solid fa-folder-open"></i>
+          <p>暂无自定义预设</p>
+          <p class="hint">点击"新建预设"或复制内置预设来自定义属性规则</p>
+        </div>
+        <div v-else class="acu-preset-list">
+          <div
+            v-for="preset in customPresets"
+            :key="preset.id"
+            class="acu-preset-item"
+            :class="{ active: activePresetId === preset.id }"
+          >
+            <div class="acu-preset-header">
+              <div class="acu-preset-info">
+                <span class="acu-preset-name">{{ preset.name }}</span>
+                <span class="acu-preset-badge custom">自定义</span>
+              </div>
+              <div class="acu-preset-actions">
+                <button
+                  v-if="activePresetId !== preset.id"
+                  class="acu-icon-btn"
+                  @click="setActivePreset(preset.id)"
+                  title="激活"
+                >
+                  <i class="fa-solid fa-check"></i>
+                </button>
+                <button class="acu-icon-btn" @click="editPreset(preset)" title="编辑">
+                  <i class="fa-solid fa-edit"></i>
+                </button>
+                <button class="acu-icon-btn" @click="duplicatePreset(preset.id)" title="复制">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <button class="acu-icon-btn" @click="exportPreset(preset.id)" title="导出">
+                  <i class="fa-solid fa-download"></i>
+                </button>
+                <button class="acu-icon-btn danger" @click="deletePreset(preset.id)" title="删除">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div v-if="preset.description" class="acu-preset-desc">{{ preset.description }}</div>
+            <div class="acu-preset-stats">
+              <span><i class="fa-solid fa-dice"></i> {{ preset.baseAttributes.length }} 基础属性</span>
+              <span><i class="fa-solid fa-star"></i> {{ preset.specialAttributes.length }} 特殊属性</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="showEditor && editingPreset" class="acu-modal-overlay" @click.self="showEditor = false">
+        <div class="acu-modal large">
           <div class="acu-modal-header">
-            <span>{{ editingRule.id.startsWith('attr_rule_') && !rules.find(r => r.id === editingRule?.id) ? '新建' : '编辑' }}属性规则</span>
+            <span>{{ editingPreset.builtin ? '查看' : '编辑' }}预设：{{ editingPreset.name }}</span>
             <button @click="showEditor = false"><i class="fa-solid fa-times"></i></button>
           </div>
           <div class="acu-modal-body">
             <div class="acu-form-row">
-              <label>规则名称</label>
-              <input v-model="editingRule.name" type="text" placeholder="给规则起个名字" />
-            </div>
-            <div class="acu-form-row">
-              <label>目标属性</label>
-              <input v-model="editingRule.attribute" type="text" placeholder="如：力量、敏捷、HP" />
-            </div>
-            <div class="acu-form-row">
-              <label>匹配条件</label>
-              <select v-model="editingRule.condition">
-                <option value="equals">等于</option>
-                <option value="greater">大于</option>
-                <option value="less">小于</option>
-                <option value="contains">包含</option>
-                <option value="regex">正则匹配</option>
-              </select>
-            </div>
-            <div class="acu-form-row">
-              <label>匹配值</label>
-              <input v-model="editingRule.value" type="text" placeholder="匹配的值" />
-            </div>
-            <div class="acu-form-row">
-              <label>执行动作</label>
-              <select v-model="editingRule.action">
-                <option value="highlight">高亮显示</option>
-                <option value="hide">隐藏属性</option>
-                <option value="modify">修改属性</option>
-                <option value="alert">弹出提醒</option>
-              </select>
-            </div>
-            <div v-if="editingRule.action === 'modify'" class="acu-form-row">
-              <label>修改为</label>
-              <input v-model="editingRule.actionValue" type="text" placeholder="新的属性值" />
+              <label>预设名称</label>
+              <input v-model="editingPreset.name" type="text" :disabled="editingPreset.builtin" />
             </div>
             <div class="acu-form-row">
               <label>描述</label>
-              <textarea v-model="editingRule.description" placeholder="规则说明（可选）"></textarea>
+              <textarea v-model="editingPreset.description" :disabled="editingPreset.builtin"></textarea>
             </div>
-            <div class="acu-form-row checkbox">
-              <label>启用规则</label>
-              <input v-model="editingRule.enabled" type="checkbox" />
+
+            <div class="acu-attributes-section">
+              <div class="acu-attributes-header">
+                <h4><i class="fa-solid fa-dice"></i> 基础属性 ({{ editingPreset.baseAttributes.length }})</h4>
+                <button
+                  v-if="!editingPreset.builtin"
+                  class="acu-small-btn"
+                  @click="addAttribute('base')"
+                >
+                  <i class="fa-solid fa-plus"></i> 添加
+                </button>
+              </div>
+              <div class="acu-attributes-list">
+                <div
+                  v-for="(attr, idx) in editingPreset.baseAttributes"
+                  :key="idx"
+                  class="acu-attribute-item"
+                >
+                  <div class="acu-attr-info">
+                    <span class="name">{{ attr.name }}</span>
+                    <code class="formula">{{ attr.formula }}</code>
+                    <span class="range">[{{ attr.range[0] }}, {{ attr.range[1] }}]</span>
+                  </div>
+                  <div v-if="!editingPreset.builtin" class="acu-attr-actions">
+                    <button class="acu-icon-btn small" @click="editAttribute(attr, 'base', idx)">
+                      <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="acu-icon-btn small danger" @click="deleteAttribute('base', idx)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="acu-attributes-section">
+              <div class="acu-attributes-header">
+                <h4><i class="fa-solid fa-star"></i> 特殊属性 ({{ editingPreset.specialAttributes.length }})</h4>
+                <button
+                  v-if="!editingPreset.builtin"
+                  class="acu-small-btn"
+                  @click="addAttribute('special')"
+                >
+                  <i class="fa-solid fa-plus"></i> 添加
+                </button>
+              </div>
+              <div class="acu-attributes-list">
+                <div
+                  v-for="(attr, idx) in editingPreset.specialAttributes"
+                  :key="idx"
+                  class="acu-attribute-item"
+                >
+                  <div class="acu-attr-info">
+                    <span class="name">{{ attr.name }}</span>
+                    <code class="formula">{{ attr.formula }}</code>
+                    <span class="range">[{{ attr.range[0] }}, {{ attr.range[1] }}]</span>
+                  </div>
+                  <div v-if="!editingPreset.builtin" class="acu-attr-actions">
+                    <button class="acu-icon-btn small" @click="editAttribute(attr, 'special', idx)">
+                      <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="acu-icon-btn small danger" @click="deleteAttribute('special', idx)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="acu-modal-footer">
-            <button class="acu-half-btn" @click="showEditor = false">取消</button>
-            <button class="acu-half-btn primary" @click="saveRule">保存</button>
+            <button class="acu-half-btn" @click="showEditor = false">关闭</button>
+            <button v-if="!editingPreset.builtin" class="acu-half-btn primary" @click="savePreset">
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="showAttributeEditor && editingAttribute" class="acu-modal-overlay" @click.self="showAttributeEditor = false">
+        <div class="acu-modal">
+          <div class="acu-modal-header">
+            <span>{{ (editingAttribute as any)._index !== undefined ? '编辑' : '添加' }}属性</span>
+            <button @click="showAttributeEditor = false"><i class="fa-solid fa-times"></i></button>
+          </div>
+          <div class="acu-modal-body">
+            <div class="acu-form-row">
+              <label>属性名称</label>
+              <input v-model="editingAttribute.name" type="text" placeholder="如：力量、敏捷" />
+            </div>
+            <div class="acu-form-row">
+              <label>生成公式</label>
+              <input v-model="editingAttribute.formula" type="text" placeholder="如：3d6、4d6dl1" />
+            </div>
+            <div class="acu-form-row">
+              <label>数值范围</label>
+              <div class="acu-range-inputs">
+                <input v-model.number="editingAttribute.range[0]" type="number" placeholder="最小值" />
+                <span>-</span>
+                <input v-model.number="editingAttribute.range[1]" type="number" placeholder="最大值" />
+              </div>
+            </div>
+            <div class="acu-form-row">
+              <label>修正值（可选）</label>
+              <input v-model="editingAttribute.modifier" type="text" placeholder="如：1d4-2" />
+            </div>
+          </div>
+          <div class="acu-modal-footer">
+            <button class="acu-half-btn" @click="showAttributeEditor = false">取消</button>
+            <button class="acu-half-btn primary" @click="saveAttribute">保存</button>
           </div>
         </div>
       </div>
@@ -265,7 +436,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-.acu-attribute-manager {
+.acu-attribute-preset-manager {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -278,12 +449,26 @@ onMounted(() => {
   border-bottom: 1px solid var(--acu-border);
 }
 
+.acu-preset-section {
+  padding: 12px;
+}
+
+.acu-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--acu-accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .acu-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
   color: var(--acu-text-sub);
   
   i {
@@ -303,74 +488,66 @@ onMounted(() => {
   }
 }
 
-.acu-rule-list {
-  padding: 12px;
+.acu-preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.acu-rule-item {
+.acu-preset-item {
   background: var(--acu-card-bg);
   border: 1px solid var(--acu-border);
   border-radius: 8px;
   padding: 12px;
-  margin-bottom: 8px;
   transition: all 0.2s;
   
   &:hover {
     border-color: var(--acu-accent);
   }
   
-  &.disabled {
-    opacity: 0.5;
+  &.active {
+    border-color: var(--acu-accent);
+    background: var(--acu-accent-light);
   }
 }
 
-.acu-rule-header {
+.acu-preset-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.acu-rule-info {
+.acu-preset-info {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.acu-rule-name {
+.acu-preset-name {
   font-weight: bold;
   color: var(--acu-text-main);
   font-size: 14px;
 }
 
-.acu-rule-badge {
+.acu-preset-badge {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
   
-  &.highlight {
-    background: #fff3cd;
-    color: #856404;
-  }
-  
-  &.hide {
-    background: #f8d7da;
-    color: #721c24;
-  }
-  
-  &.modify {
+  &.builtin {
     background: #d1ecf1;
     color: #0c5460;
   }
   
-  &.alert {
+  &.custom {
     background: #d4edda;
     color: #155724;
   }
 }
 
-.acu-rule-actions {
+.acu-preset-actions {
   display: flex;
   gap: 4px;
 }
@@ -393,39 +570,34 @@ onMounted(() => {
     color: var(--acu-accent);
   }
   
+  &.small {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+  }
+  
   &.danger:hover {
     background: var(--acu-error-bg);
     color: var(--acu-error-text);
   }
 }
 
-.acu-rule-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.acu-detail-item {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  
-  .label {
-    color: var(--acu-text-sub);
-    min-width: 50px;
-  }
-  
-  .value {
-    color: var(--acu-text-main);
-  }
-}
-
-.acu-rule-desc {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--acu-border);
+.acu-preset-desc {
   font-size: 12px;
   color: var(--acu-text-sub);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.acu-preset-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--acu-text-sub);
+  
+  i {
+    margin-right: 4px;
+  }
 }
 
 .acu-modal-overlay {
@@ -450,6 +622,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  
+  &.large {
+    max-width: 700px;
+  }
 }
 
 .acu-modal-header {
@@ -492,7 +668,7 @@ onMounted(() => {
     color: var(--acu-text-sub);
   }
   
-  input, select, textarea {
+  input, textarea, select {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--acu-border);
@@ -500,26 +676,119 @@ onMounted(() => {
     background: var(--acu-input-bg);
     color: var(--acu-text-main);
     font-size: 13px;
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
   
   textarea {
     min-height: 60px;
     resize: vertical;
   }
+}
+
+.acu-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   
-  &.checkbox {
+  input {
+    flex: 1;
+  }
+  
+  span {
+    color: var(--acu-text-sub);
+  }
+}
+
+.acu-attributes-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--acu-border);
+}
+
+.acu-attributes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  
+  h4 {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--acu-text-main);
     display: flex;
     align-items: center;
-    gap: 8px;
-    
-    label {
-      margin-bottom: 0;
-    }
-    
-    input {
-      width: auto;
-    }
+    gap: 6px;
   }
+}
+
+.acu-small-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--acu-border);
+  border-radius: 4px;
+  background: var(--acu-btn-bg);
+  color: var(--acu-text-main);
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+  }
+}
+
+.acu-attributes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.acu-attribute-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+}
+
+.acu-attr-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  
+  .name {
+    font-weight: bold;
+    font-size: 12px;
+    color: var(--acu-text-main);
+  }
+  
+  .formula {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--acu-accent);
+    background: var(--acu-accent-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  
+  .range {
+    font-size: 11px;
+    color: var(--acu-text-sub);
+  }
+}
+
+.acu-attr-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .acu-modal-footer {
