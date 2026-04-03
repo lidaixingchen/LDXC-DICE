@@ -493,6 +493,16 @@ onMounted(() => {
             />
           </div>
           <div class="acu-setting-row">
+            <label>面板弹出方向</label>
+            <select
+              :value="settings.panelExpandDirection || 'up'"
+              @change="updateLegacy({ panelExpandDirection: ($event.target as any).value })"
+            >
+              <option value="up">向上弹出</option>
+              <option value="down">向下弹出</option>
+            </select>
+          </div>
+          <div class="acu-setting-row">
             <label>导航网格列数</label>
             <select :value="settings.gridColumns" @change="updateLegacy({ gridColumns: ($event.target as any).value })">
               <option value="auto">智能适配</option>

@@ -219,6 +219,7 @@ const wrapperClass = computed(() => [
   `acu-theme-${legacySettings.value.theme}`,
   `acu-mode-${legacySettings.value.positionMode || 'fixed'}`,
   `acu-layout-${legacySettings.value.layout || 'horizontal'}`,
+  `acu-panel-expand-${legacySettings.value.panelExpandDirection || 'up'}`,
   { 'acu-has-active-panel': showDataDisplay.value },
   { 'acu-collapsed-active': isCollapsed.value },
 ]);
@@ -465,9 +466,17 @@ onUnmounted(() => {
 .acu-data-display.visible {
   display: flex;
 }
+
+/* 向下弹出 */
+.acu-wrapper.acu-panel-expand-down .acu-data-display {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+
 .acu-wrapper.acu-mode-embedded .acu-data-display {
   position: relative !important;
   bottom: auto !important;
+  top: auto !important;
   margin-bottom: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }

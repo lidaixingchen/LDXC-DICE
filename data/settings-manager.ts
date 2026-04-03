@@ -9,18 +9,19 @@ export interface DiceSystemSettings {
 
 export interface LegacySettings {
   layout: 'horizontal' | 'vertical';
-  collapseStyle: 'bar' | 'dot' | 'icon'; // [补回] 折叠样式
-  collapseAlign: 'left' | 'right' | 'center'; // [补回] 折叠对齐
+  collapseStyle: 'bar' | 'dot' | 'icon';
+  collapseAlign: 'left' | 'right' | 'center';
   fontFamily: string;
   theme: string;
   cardWidth: number;
   fontSize: number;
   highlightNew: boolean;
   itemsPerPage: number;
-  actionsPosition: 'top' | 'bottom'; // [补回] 导航栏位置
-  gridColumns: 'auto' | '2' | '3' | '4'; // [补回] 导航网格列数
+  actionsPosition: 'top' | 'bottom';
+  gridColumns: 'auto' | '2' | '3' | '4';
   positionMode: 'fixed' | 'embedded';
-  bottomOffset: number; // [新增] 悬浮模式垂直偏移
+  bottomOffset: number;
+  panelExpandDirection: 'up' | 'down';
   showOptionPanel: boolean;
   clickOptionToAutoSend: boolean;
   optionFontSize: number;
@@ -160,7 +161,8 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     actionsPosition: 'bottom',
     gridColumns: 'auto',
     positionMode: 'fixed',
-    bottomOffset: 20, // [新增]
+    bottomOffset: 20,
+    panelExpandDirection: 'up',
     showOptionPanel: true,
     clickOptionToAutoSend: true,
     optionFontSize: 12,
