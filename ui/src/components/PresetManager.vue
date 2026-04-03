@@ -4,17 +4,24 @@ import type { AdvancedDicePreset } from '@core/types';
 import { presetManager } from '@data/preset-manager';
 import { presetFileLoader } from '@presets/preset-file-loader';
 
+type ViewMode = 'main' | 'preset-list' | 'preset-editor';
+
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'select', preset: AdvancedDicePreset): void;
 }>();
 
+const viewMode = ref<ViewMode>('main');
 const presets = ref<AdvancedDicePreset[]>([]);
-const selectedPresetId = ref<string>('');
+const editingPresetId = ref<string | null>(null);
+const editingPresetName = ref('');
+const editingPresetDesc = ref('');
+const editingPresetJson = ref('');
+const jsonError = ref('');
 const searchQuery = ref('');
-const showImportModal = ref(false);
-const importJson = ref('');
-const importError = ref('');
+const draggedId = ref<string | null>(null);
+
+const hideDiceResultFromUser = ref(false);
+const hideDiceResultInChat = ref(false);
 
 const filteredPresets = computed(() => {
   if (!searchQuery.value) return presets.value;
@@ -27,26 +34,215 @@ const filteredPresets = computed(() => {
   );
 });
 
-const builtinPresets = computed(() => filteredPresets.value.filter(p => p.builtin));
-const customPresets = computed(() => filteredPresets.value.filter(p => !p.builtin));
+const sortedPresets = computed(() => {
+  return [...filteredPresets.value].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+});
 
 function loadPresets() {
   presets.value = presetManager.getAllPresets();
 }
 
-function selectPreset(preset: AdvancedDicePreset) {
-  selectedPresetId.value = preset.id;
-  emit('select', preset);
+function togglePresetVisibility(preset: AdvancedDicePreset) {
+  const newVisible = preset.visible === false ? true : false;
+  presetManager.updatePreset(preset.id, { visible: newVisible });
+  loadPresets();
+}
+
+function startDrag(id: string) {
+  draggedId.value = id;
+}
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault();
+}
+
+function onDrop(targetId: string) {
+  if (!draggedId.value || draggedId.value === targetId) {
+    draggedId.value = null;
+    return;
+  }
+
+  const draggedIndex = presets.value.findIndex(p => p.id === draggedId.value);
+  const targetIndex = presets.value.findIndex(p => p.id === targetId);
+
+  if (draggedIndex === -1 || targetIndex === -1) {
+    draggedId.value = null;
+    return;
+  }
+
+  const newOrder = [...presets.value];
+  const [draggedItem] = newOrder.splice(draggedIndex, 1);
+  newOrder.splice(targetIndex, 0, draggedItem);
+
+  newOrder.forEach((p, idx) => {
+    presetManager.updatePreset(p.id, { order: idx });
+  });
+
+  loadPresets();
+  draggedId.value = null;
+}
+
+function openPresetEditor(presetId: string | null) {
+  editingPresetId.value = presetId;
+
+  if (presetId) {
+    const preset = presets.value.find(p => p.id === presetId);
+    if (preset) {
+      editingPresetName.value = preset.name;
+      editingPresetDesc.value = preset.description || '';
+      editingPresetJson.value = JSON.stringify(preset, null, 2);
+    }
+  } else {
+    editingPresetName.value = '新检定预设';
+    editingPresetDesc.value = '自定义检定规则';
+    editingPresetJson.value = JSON.stringify(getDefaultPreset(), null, 2);
+  }
+
+  jsonError.value = '';
+  viewMode.value = 'preset-editor';
+}
+
+function getDefaultPreset(): AdvancedDicePreset {
+  return {
+    name: '新检定预设',
+    description: '自定义检定规则示例',
+    diceExpression: '1d20',
+    attribute: {
+      label: '属性值',
+      placeholder: '留空=10',
+      defaultValue: 10,
+      key: '属性值',
+    },
+    dc: {
+      label: '难度等级(DC)',
+      placeholder: '留空=10',
+      defaultValue: 10,
+    },
+    mod: {
+      label: '修正值',
+      placeholder: '留空=0',
+      defaultValue: 0,
+    },
+    customFields: [
+      {
+        id: 'advantage',
+        type: 'select',
+        label: '优势/劣势',
+        defaultValue: 0,
+        options: [
+          { label: '正常', value: 0 },
+          { label: '优势', value: 1 },
+          { label: '劣势', value: -1 },
+        ],
+      },
+    ],
+    derivedVars: [{ id: 'attrMod', expr: 'floor(($attr - 10) / 2)' }],
+    dicePatches: [
+      { when: '$advantage > 0', op: 'replace', template: '2d20kh1' },
+      { when: '$advantage < 0', op: 'replace', template: '2d20kl1' },
+    ],
+    outcomes: [
+      {
+        id: 'crit_success',
+        name: '大成功',
+        condition: "$roll.hasTag('nat20')",
+        priority: 1,
+        rank: 3,
+        contestRank: 100,
+      },
+      {
+        id: 'success',
+        name: '成功',
+        condition: '$roll.total + $attrMod + $mod >= $dc',
+        priority: 10,
+        rank: 1,
+        contestRank: 60,
+      },
+      {
+        id: 'failure',
+        name: '失败',
+        condition: '$roll.total + $attrMod + $mod < $dc',
+        priority: 50,
+        rank: 0,
+        contestRank: 40,
+      },
+      {
+        id: 'crit_failure',
+        name: '大失败',
+        condition: "$roll.hasTag('nat1')",
+        priority: 2,
+        rank: -1,
+        contestRank: 20,
+      },
+    ],
+    contestRule: {
+      mode: 'rank',
+      tieBreakers: ['higher_roll', 'initiator_wins'],
+    },
+    outputTemplate:
+      '<meta:检定结果>\n$outcomeText\n元叙事：$initiator 发起了 $attrName 检定，$formula=$roll，判定 $conditionExpr？$judgeResult，判定为【$outcomeName】\n</meta:检定结果>',
+    builtin: false,
+    visible: true,
+  };
+}
+
+function savePreset() {
+  if (!editingPresetName.value.trim()) {
+    jsonError.value = '请输入预设名称';
+    return;
+  }
+
+  try {
+    const jsonData = JSON.parse(editingPresetJson.value);
+
+    if (!jsonData.diceExpression || !jsonData.outcomes || !Array.isArray(jsonData.outcomes) || jsonData.outcomes.length === 0) {
+      jsonError.value = '骰子表达式和判定结果列表(outcomes)不能为空';
+      return;
+    }
+
+    for (const outcome of jsonData.outcomes) {
+      if (!outcome.id || !outcome.name || outcome.condition === undefined || outcome.priority === undefined) {
+        jsonError.value = `判定结果 "${outcome.name || outcome.id || '未知'}" 缺少必填字段(id, name, condition, priority)`;
+        return;
+      }
+    }
+
+    const preset: AdvancedDicePreset = {
+      ...(editingPresetId.value ? presets.value.find(p => p.id === editingPresetId.value) || {} : {}),
+      ...jsonData,
+      id: editingPresetId.value || `custom_${Date.now()}`,
+      name: editingPresetName.value.trim(),
+      description: editingPresetDesc.value.trim(),
+      builtin: editingPresetId.value ? presets.value.find(p => p.id === editingPresetId.value)?.builtin ?? false : false,
+    };
+
+    if (editingPresetId.value) {
+      presetManager.updatePreset(editingPresetId.value, preset);
+    } else {
+      presetManager.registerPreset(preset);
+    }
+
+    loadPresets();
+    viewMode.value = 'preset-list';
+  } catch (e) {
+    const errMsg = e instanceof Error ? e.message : '';
+    if (errMsg.includes('JSON') || errMsg.includes('position') || errMsg.includes('token')) {
+      jsonError.value = 'JSON格式错误：请确保所有键名和字符串值都用双引号包裹';
+    } else {
+      jsonError.value = '保存失败：' + errMsg;
+    }
+  }
 }
 
 function duplicatePreset(preset: AdvancedDicePreset) {
-  const newName = prompt('请输入新预设名称：', `${preset.name} (副本)`);
-  if (!newName) return;
-
-  const copy = presetManager.duplicatePreset(preset.id, newName);
-  if (copy) {
-    loadPresets();
-  }
+  const copy: AdvancedDicePreset = {
+    ...preset,
+    id: `custom_${Date.now()}`,
+    name: `${preset.name} (副本)`,
+    builtin: false,
+  };
+  presetManager.registerPreset(copy);
+  loadPresets();
 }
 
 function deletePreset(preset: AdvancedDicePreset) {
@@ -69,9 +265,29 @@ function exportPreset(preset: AdvancedDicePreset) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${preset.id}.json`;
+  a.download = `acu_preset_${preset.name}_${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function importFromFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+
+  input.onchange = async e => {
+    const files = (e.target as HTMLInputElement).files;
+    if (!files || !files[0]) return;
+
+    const result = await presetFileLoader.loadPresetFromFile(files[0]);
+    if (result.success) {
+      loadPresets();
+    } else {
+      alert(`导入失败: ${result.error}`);
+    }
+  };
+
+  input.click();
 }
 
 function exportAllPresets() {
@@ -85,477 +301,661 @@ function exportAllPresets() {
   URL.revokeObjectURL(url);
 }
 
-async function importFromFile() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.multiple = true;
-
-  input.onchange = async e => {
-    const files = (e.target as HTMLInputElement).files;
-    if (!files) return;
-
-    for (let i = 0; i < files.length; i++) {
-      const result = await presetFileLoader.loadPresetFromFile(files[i]);
-      if (result.success) {
-        console.log(`成功导入: ${result.preset?.name}`);
-      } else {
-        alert(`导入失败: ${result.error}`);
-      }
-    }
-
-    loadPresets();
-  };
-
-  input.click();
-}
-
-function showImportDialog() {
-  importJson.value = '';
-  importError.value = '';
-  showImportModal.value = true;
-}
-
-async function importFromJson() {
-  if (!importJson.value.trim()) {
-    importError.value = '请输入JSON内容';
-    return;
-  }
-
-  try {
-    const result = await presetFileLoader.loadPresetsFromJsonArray(importJson.value);
-    if (result.loaded > 0) {
-      showImportModal.value = false;
-      loadPresets();
-      alert(`成功导入 ${result.loaded} 个预设`);
-    } else {
-      importError.value = result.errors.join('\n');
-    }
-  } catch (e) {
-    importError.value = e instanceof Error ? e.message : '导入失败';
-  }
-}
-
 onMounted(() => {
   loadPresets();
 });
 </script>
 
 <template>
-  <div class="acu-preset-manager">
-    <div class="acu-panel-header">
-      <div class="acu-panel-title"><i class="fa-solid fa-dice"></i> 预设管理器</div>
-      <button class="acu-close-btn" @click="emit('close')"><i class="fa-solid fa-times"></i></button>
-    </div>
-
-    <div class="acu-preset-toolbar">
-      <input v-model="searchQuery" type="text" class="acu-search-input" placeholder="搜索预设..." />
-      <div class="acu-toolbar-actions">
-        <button class="acu-toolbar-btn" title="导入文件" @click="importFromFile">
-          <i class="fa-solid fa-file-import"></i>
-        </button>
-        <button class="acu-toolbar-btn" title="粘贴导入" @click="showImportDialog">
-          <i class="fa-solid fa-paste"></i>
-        </button>
-        <button class="acu-toolbar-btn" title="导出全部" @click="exportAllPresets">
-          <i class="fa-solid fa-file-export"></i>
-        </button>
+  <div class="preset-manager">
+    <div class="preset-header">
+      <div class="preset-title">
+        <i class="fa-solid fa-dice-d20"></i>
+        <span v-if="viewMode === 'main'">检定设置</span>
+        <span v-else-if="viewMode === 'preset-list'">检定预设管理</span>
+        <span v-else>{{ editingPresetId ? '编辑' : '新建' }}检定预设</span>
       </div>
+      <button class="preset-close" @click="emit('close')" title="关闭">
+        <i class="fa-solid fa-times"></i>
+      </button>
     </div>
 
-    <div class="acu-preset-list">
-      <div v-if="builtinPresets.length > 0" class="acu-preset-section">
-        <div class="acu-section-title">内置预设</div>
-        <div
-          v-for="preset in builtinPresets"
-          :key="preset.id"
-          class="acu-preset-item"
-          :class="{ active: selectedPresetId === preset.id }"
-          @click="selectPreset(preset)"
-        >
-          <div class="acu-preset-info">
-            <div class="acu-preset-name">
-              <i class="fa-solid fa-lock"></i>
-              {{ preset.name }}
+    <div class="preset-body">
+      <template v-if="viewMode === 'main'">
+        <div class="setting-section">
+          <div class="setting-row" @click="viewMode = 'preset-list'">
+            <div class="setting-info">
+              <span class="setting-label"><i class="fa-solid fa-sliders"></i> 检定预设</span>
+              <span class="setting-desc">管理检定规则预设</span>
             </div>
-            <div class="acu-preset-desc">{{ preset.description || '无描述' }}</div>
-          </div>
-          <div class="acu-preset-actions">
-            <button title="复制" @click.stop="duplicatePreset(preset)">
-              <i class="fa-solid fa-copy"></i>
-            </button>
-            <button title="导出" @click.stop="exportPreset(preset)">
-              <i class="fa-solid fa-download"></i>
+            <button class="setting-action-btn">
+              <i class="fa-solid fa-cog"></i> 管理
             </button>
           </div>
-        </div>
-      </div>
 
-      <div v-if="customPresets.length > 0" class="acu-preset-section">
-        <div class="acu-section-title">自定义预设</div>
-        <div
-          v-for="preset in customPresets"
-          :key="preset.id"
-          class="acu-preset-item"
-          :class="{ active: selectedPresetId === preset.id }"
-          @click="selectPreset(preset)"
-        >
-          <div class="acu-preset-info">
-            <div class="acu-preset-name">{{ preset.name }}</div>
-            <div class="acu-preset-desc">{{ preset.description || '无描述' }}</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label"><i class="fa-solid fa-eye-slash"></i> 隐藏输入栏检定结果</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" v-model="hideDiceResultFromUser" />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
-          <div class="acu-preset-actions">
-            <button title="复制" @click.stop="duplicatePreset(preset)">
-              <i class="fa-solid fa-copy"></i>
-            </button>
-            <button title="导出" @click.stop="exportPreset(preset)">
-              <i class="fa-solid fa-download"></i>
-            </button>
-            <button class="danger" title="删除" @click.stop="deletePreset(preset)">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div v-if="filteredPresets.length === 0" class="acu-empty-state">
-        <i class="fa-solid fa-inbox"></i>
-        <p>没有找到预设</p>
-      </div>
-    </div>
-
-    <div v-if="showImportModal" class="acu-modal-overlay" @click.self="showImportModal = false">
-      <div class="acu-modal">
-        <div class="acu-modal-header">
-          <span>导入预设</span>
-          <button @click="showImportModal = false"><i class="fa-solid fa-times"></i></button>
-        </div>
-        <div class="acu-modal-body">
-          <div class="acu-form-row">
-            <label>JSON内容（支持数组格式）</label>
-            <textarea v-model="importJson" placeholder="粘贴JSON内容..." rows="10"></textarea>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label"><i class="fa-solid fa-comment-slash"></i> 隐藏聊天记录检定结果</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" v-model="hideDiceResultInChat" />
+              <span class="toggle-slider"></span>
+            </label>
           </div>
-          <div v-if="importError" class="acu-error-message">{{ importError }}</div>
         </div>
-        <div class="acu-modal-footer">
-          <button class="acu-half-btn" @click="showImportModal = false">取消</button>
-          <button class="acu-half-btn primary" @click="importFromJson">导入</button>
+
+        <div class="setting-hint">
+          <i class="fa-solid fa-info-circle"></i>
+          点击「检定预设」管理自定义检定规则，支持导入/导出、拖拽排序
         </div>
-      </div>
+      </template>
+
+      <template v-else-if="viewMode === 'preset-list'">
+        <div class="preset-toolbar">
+          <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索预设..." />
+          <div class="toolbar-actions">
+            <button class="toolbar-btn" title="新建预设" @click="openPresetEditor(null)">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button class="toolbar-btn" title="导入文件" @click="importFromFile">
+              <i class="fa-solid fa-file-import"></i>
+            </button>
+            <button class="toolbar-btn" title="导出全部" @click="exportAllPresets">
+              <i class="fa-solid fa-file-export"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="preset-list-hint">
+          <i class="fa-solid fa-info-circle"></i> 点击眼睛图标切换显示，拖拽条目排序
+        </div>
+
+        <div class="preset-list">
+          <div
+            v-for="preset in sortedPresets"
+            :key="preset.id"
+            class="preset-item"
+            :class="{ hidden: preset.visible === false }"
+            :draggable="true"
+            @dragstart="startDrag(preset.id)"
+            @dragover="onDragOver"
+            @drop="onDrop(preset.id)"
+          >
+            <div
+              class="preset-visibility"
+              :title="preset.visible !== false ? '点击隐藏' : '点击显示'"
+              @click="togglePresetVisibility(preset)"
+            >
+              <i :class="preset.visible !== false ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash'"></i>
+            </div>
+
+            <div class="preset-info">
+              <div class="preset-name">
+                {{ preset.name }}
+                <span v-if="preset.builtin" class="builtin-badge">(内置)</span>
+              </div>
+              <div v-if="preset.description" class="preset-desc">{{ preset.description }}</div>
+              <div class="preset-stats">
+                骰子: {{ preset.diceExpression }} | 判定分支: {{ preset.outcomes?.length || 0 }}个
+              </div>
+            </div>
+
+            <div class="preset-actions">
+              <button
+                v-if="preset.builtin"
+                class="action-btn"
+                title="复制为自定义预设"
+                @click="duplicatePreset(preset)"
+              >
+                <i class="fa-solid fa-copy"></i>
+              </button>
+              <button
+                v-else
+                class="action-btn"
+                title="编辑"
+                @click="openPresetEditor(preset.id)"
+              >
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="action-btn" title="导出" @click="exportPreset(preset)">
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <button
+                v-if="!preset.builtin"
+                class="action-btn danger"
+                title="删除"
+                @click="deletePreset(preset)"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+
+            <div class="preset-handle" title="拖拽排序">
+              <i class="fa-solid fa-grip-vertical"></i>
+            </div>
+          </div>
+
+          <div v-if="sortedPresets.length === 0" class="empty-state">
+            <i class="fa-solid fa-inbox"></i>
+            <span>暂无预设</span>
+          </div>
+        </div>
+
+        <div class="preset-footer">
+          <button class="footer-btn primary" @click="openPresetEditor(null)">
+            <i class="fa-solid fa-plus"></i> 新建预设
+          </button>
+          <button class="footer-btn" @click="viewMode = 'main'">
+            <i class="fa-solid fa-arrow-left"></i> 返回
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="editor-form">
+          <div class="form-row">
+            <label>预设名称</label>
+            <input v-model="editingPresetName" type="text" class="form-input" placeholder="输入预设名称" />
+          </div>
+
+          <div class="form-row">
+            <label>描述</label>
+            <input v-model="editingPresetDesc" type="text" class="form-input" placeholder="可选描述" />
+          </div>
+
+          <div class="form-row">
+            <label>JSON配置 <span class="hint">(支持直接编辑)</span></label>
+            <textarea
+              v-model="editingPresetJson"
+              class="form-textarea"
+              placeholder="预设JSON配置..."
+              rows="12"
+            ></textarea>
+          </div>
+
+          <div v-if="jsonError" class="error-message">{{ jsonError }}</div>
+
+          <div class="config-hint">
+            <strong>配置格式说明：</strong><br />
+            <strong>骰子表达式 (diceExpression)</strong><br />
+            • 基础: "1d20", "3d6", "4dF" (Fate骰)<br />
+            • 保留/舍弃: "4d6kh3" (保留最高3个), "2d20kl1" (保留最低1个)<br />
+            • CoC奖惩骰: "1d100b1" (奖励骰), "1d100p2" (惩罚骰)<br />
+            <br />
+            <strong>判定结果 (outcomes)</strong><br />
+            • 数组，每项: { id, name, condition, priority, rank?, contestRank? }<br />
+            • condition: 表达式如 "$roll.total >= $dc"<br />
+            • priority: 数字越小越优先匹配<br />
+            <br />
+            <strong>高级功能</strong><br />
+            • customFields: 自定义字段 [{ id, type, label, defaultValue, options? }]<br />
+            • derivedVars: 派生变量 [{ id, expr }]<br />
+            • dicePatches: 条件骰子 [{ when?, op, template }]
+          </div>
+        </div>
+
+        <div class="preset-footer">
+          <button class="footer-btn primary" @click="savePreset">
+            <i class="fa-solid fa-check"></i> 保存
+          </button>
+          <button class="footer-btn" @click="viewMode = 'preset-list'">
+            <i class="fa-solid fa-times"></i> 取消
+          </button>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-.acu-preset-manager {
+.preset-manager {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background: var(--acu-bg-panel);
+  background: var(--acu-bg-panel, #1a1a1e);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.acu-panel-header {
+.preset-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid var(--acu-border);
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--acu-bg-header, #252525);
+  border-bottom: 1px solid var(--acu-border, rgba(255,255,255,0.08));
 }
 
-.acu-panel-title {
-  font-weight: 800;
-  color: var(--acu-text-main);
-  font-size: 14px;
+.preset-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--acu-accent, #e87e22);
+
+  i { font-size: 16px; }
 }
 
-.acu-close-btn {
+.preset-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
   background: transparent;
-  border: none;
-  color: var(--acu-text-sub);
-  cursor: pointer;
-  width: 28px;
-  height: 28px;
+  color: var(--acu-text-sub, #888);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+
   &:hover {
-    background: var(--acu-accent-light);
-    color: var(--acu-accent);
+    background: rgba(255, 80, 80, 0.15);
+    color: #ff6b6b;
+    border-color: rgba(255, 80, 80, 0.3);
   }
 }
 
-.acu-preset-toolbar {
+.preset-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: var(--acu-bg-header, #252525);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--acu-accent, #e87e22);
+  }
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-text-main, #ddd);
+
+  i { margin-right: 6px; color: var(--acu-accent, #e87e22); }
+}
+
+.setting-desc {
+  font-size: 11px;
+  color: var(--acu-text-sub, #888);
+}
+
+.setting-action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--acu-text-sub, #888);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: var(--acu-accent, #e87e22);
+    color: var(--acu-accent, #e87e22);
+  }
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+
+  input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--acu-border, rgba(255,255,255,0.15));
+    transition: 0.2s;
+    border-radius: 22px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+  }
+
+  input:checked + .toggle-slider {
+    background-color: var(--acu-accent, #e87e22);
+
+    &:before {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.setting-hint {
+  font-size: 11px;
+  color: var(--acu-text-sub, #888);
+  padding: 10px 12px;
+  background: rgba(230, 126, 34, 0.08);
+  border-radius: 6px;
+  margin-top: 12px;
+  line-height: 1.5;
+
+  i { margin-right: 4px; }
+}
+
+.preset-toolbar {
   display: flex;
   gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--acu-border);
+  margin-bottom: 8px;
 }
 
-.acu-search-input {
+.search-input {
   flex: 1;
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 4px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-bg-header);
-  color: var(--acu-text-main);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--acu-text-main, #ccc);
   font-size: 12px;
+
+  &::placeholder { color: var(--acu-text-sub, #666); }
 }
 
-.acu-toolbar-actions {
+.toolbar-actions {
   display: flex;
   gap: 4px;
 }
 
-.acu-toolbar-btn {
+.toolbar-btn {
   width: 32px;
   height: 32px;
-  border-radius: 4px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-bg-header);
-  color: var(--acu-text-main);
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--acu-text-sub, #888);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+
   &:hover {
-    background: var(--acu-accent-light);
-    border-color: var(--acu-accent);
+    border-color: var(--acu-accent, #e87e22);
+    color: var(--acu-accent, #e87e22);
   }
 }
 
-.acu-preset-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.acu-preset-section {
-  margin-bottom: 16px;
-}
-
-.acu-section-title {
+.preset-list-hint {
   font-size: 10px;
-  font-weight: 900;
-  color: var(--acu-accent);
-  text-transform: uppercase;
+  color: var(--acu-text-sub, #888);
   margin-bottom: 8px;
-  padding: 0 4px;
+
+  i { margin-right: 4px; }
 }
 
-.acu-preset-item {
+.preset-list {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.preset-item {
+  display: flex;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-bg-header);
-  margin-bottom: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: var(--acu-bg-header, #252525);
+  transition: all 0.15s;
+
+  &:hover { border-color: var(--acu-accent, #e87e22); }
+
+  &.hidden { opacity: 0.5; }
+}
+
+.preset-visibility {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acu-text-sub, #888);
   cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 4px;
+  margin-right: 8px;
 
   &:hover {
-    border-color: var(--acu-accent);
-    background: var(--acu-bg-panel);
-  }
-
-  &.active {
-    border-color: var(--acu-accent);
-    background: var(--acu-accent-light);
+    background: rgba(255,255,255,0.05);
+    color: var(--acu-accent, #e87e22);
   }
 }
 
-.acu-preset-info {
+.preset-info {
   flex: 1;
   min-width: 0;
 }
 
-.acu-preset-name {
+.preset-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--acu-text-main);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  i {
-    font-size: 10px;
-    color: var(--acu-text-sub);
-  }
+  color: var(--acu-text-main, #ddd);
 }
 
-.acu-preset-desc {
+.builtin-badge {
+  font-size: 10px;
+  color: var(--acu-text-sub, #888);
+  margin-left: 6px;
+}
+
+.preset-desc {
   font-size: 11px;
-  color: var(--acu-text-sub);
+  color: var(--acu-text-sub, #888);
   margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.acu-preset-actions {
+.preset-stats {
+  font-size: 10px;
+  color: var(--acu-text-sub, #666);
+  margin-top: 2px;
+}
+
+.preset-actions {
   display: flex;
   gap: 4px;
+  margin-left: 8px;
+}
 
-  button {
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    color: var(--acu-text-sub);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
+.action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--acu-text-sub, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
 
-    &:hover {
-      background: var(--acu-accent-light);
-      color: var(--acu-accent);
-    }
+  &:hover {
+    border-color: var(--acu-accent, #e87e22);
+    color: var(--acu-accent, #e87e22);
+  }
 
-    &.danger:hover {
-      background: #ffebee;
-      color: #e74c3c;
-    }
+  &.danger:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
   }
 }
 
-.acu-empty-state {
+.preset-handle {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--acu-text-sub, #666);
+  cursor: grab;
+  margin-left: 8px;
+}
+
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px;
-  color: var(--acu-text-sub);
+  color: var(--acu-text-sub, #666);
+  gap: 8px;
 
-  i {
-    font-size: 48px;
-    margin-bottom: 12px;
-    opacity: 0.5;
-  }
-
-  p {
-    font-size: 14px;
-  }
+  i { font-size: 32px; opacity: 0.4; }
+  span { font-size: 12px; }
 }
 
-.acu-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+.preset-footer {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+}
+
+.footer-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--acu-text-main, #ccc);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-}
+  gap: 6px;
+  transition: all 0.15s;
 
-.acu-modal {
-  background: var(--acu-bg-panel);
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
+  &:hover {
+    border-color: var(--acu-accent, #e87e22);
+    color: var(--acu-accent, #e87e22);
+  }
 
-.acu-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--acu-border);
-  font-weight: 600;
-  color: var(--acu-text-main);
+  &.primary {
+    background: linear-gradient(135deg, rgba(230, 126, 34, 0.25), rgba(230, 126, 34, 0.1));
+    border-color: rgba(230, 126, 34, 0.3);
+    color: var(--acu-accent, #e87e22);
 
-  button {
-    background: transparent;
-    border: none;
-    color: var(--acu-text-sub);
-    cursor: pointer;
-    font-size: 16px;
     &:hover {
-      color: var(--acu-accent);
+      background: linear-gradient(135deg, rgba(230, 126, 34, 0.35), rgba(230, 126, 34, 0.15));
     }
   }
 }
 
-.acu-modal-body {
-  padding: 16px;
-  overflow-y: auto;
+.editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   flex: 1;
 }
 
-.acu-form-row {
-  margin-bottom: 12px;
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 
   label {
-    display: block;
     font-size: 11px;
-    color: var(--acu-text-sub);
-    margin-bottom: 4px;
-  }
+    color: var(--acu-text-sub, #888);
+    font-weight: 600;
 
-  textarea {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid var(--acu-border);
-    background: var(--acu-bg-header);
-    color: var(--acu-text-main);
-    font-size: 12px;
-    font-family: 'Courier New', monospace;
-    resize: vertical;
+    .hint { font-weight: 400; opacity: 0.7; }
   }
 }
 
-.acu-error-message {
+.form-input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--acu-text-main, #ccc);
+  font-size: 12px;
+
+  &::placeholder { color: var(--acu-text-sub, #666); }
+}
+
+.form-textarea {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--acu-text-main, #ccc);
+  font-size: 11px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.error-message {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
   color: #e74c3c;
-  font-size: 12px;
-  padding: 8px;
-  background: #ffebee;
-  border-radius: 4px;
+  font-size: 11px;
 }
 
-.acu-modal-footer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--acu-border);
-}
+.config-hint {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  font-size: 10px;
+  color: var(--acu-text-sub, #888);
+  line-height: 1.6;
 
-.acu-half-btn {
-  flex: 1;
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-bg-header);
-  color: var(--acu-text-main);
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-
-  &:hover {
-    background: var(--acu-accent-light);
-    border-color: var(--acu-accent);
-  }
-
-  &.primary {
-    background: var(--acu-accent);
-    color: white;
-    border-color: var(--acu-accent);
-  }
+  strong { color: var(--acu-text-main, #bbb); }
 }
 </style>

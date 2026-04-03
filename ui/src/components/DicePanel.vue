@@ -1138,7 +1138,7 @@ function switchToOpposed() {
 }
 
 function openSettings() {
-  window.dispatchEvent(new CustomEvent('acu-open-settings-section', { detail: { section: 'general' } }));
+  window.dispatchEvent(new CustomEvent('acu-show-preset-manager'));
 }
 
 watch(worldLevel, () => {

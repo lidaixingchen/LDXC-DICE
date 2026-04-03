@@ -12,6 +12,7 @@ import RelationGraph from './RelationGraph.vue';
 import SettingsPanel from './SettingsPanel.vue';
 import SavePanel from './SavePanel.vue';
 import DiceHistoryPanel from './DiceHistoryPanel.vue';
+import PresetManager from './PresetManager.vue';
 import TableBrowser from './TableBrowser.vue';
 
 const { getTableData } = useDashboard();
@@ -29,6 +30,7 @@ const showFavorites = ref(false);
 const showSettings = ref(false);
 const showSave = ref(false);
 const showDiceHistory = ref(false);
+const showPresetManager = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
@@ -97,6 +99,7 @@ function closeAllPanels() {
   showSettings.value = false;
   showSave.value = false;
   showDiceHistory.value = false;
+  showPresetManager.value = false;
   showOpposedCheck.value = false;
 }
 
@@ -224,6 +227,7 @@ const showDataDisplay = computed(
     showSettings.value ||
     showSave.value ||
     showDiceHistory.value ||
+    showPresetManager.value ||
     showOpposedCheck.value ||
     activeTab.value !== '',
 );
@@ -272,6 +276,12 @@ onMounted(() => {
     activeTab.value = '';
     showDiceHistory.value = true;
   });
+
+  window.addEventListener('acu-show-preset-manager', () => {
+    closeAllPanels();
+    activeTab.value = '';
+    showPresetManager.value = true;
+  });
 });
 
 onUnmounted(() => {
@@ -279,6 +289,7 @@ onUnmounted(() => {
   window.removeEventListener('acu-show-changes-panel', () => {});
   window.removeEventListener('acu-open-settings-section', () => {});
   window.removeEventListener('acu-show-dice-history', () => {});
+  window.removeEventListener('acu-show-preset-manager', () => {});
 });
 </script>
 
@@ -320,6 +331,7 @@ onUnmounted(() => {
       <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
       <SavePanel v-else-if="showSave" @close="showSave = false" />
       <DiceHistoryPanel v-else-if="showDiceHistory" @close="showDiceHistory = false" />
+      <PresetManager v-else-if="showPresetManager" @close="showPresetManager = false" />
       <TableBrowser
         v-else-if="activeTab"
         :key="activeTab"
