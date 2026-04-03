@@ -241,9 +241,52 @@ const LEVEL_COLORS: Record<string, string> = {
   'SSS级': '#ffd700'
 };
 
+const LEVEL_DATA: Record<string, { minTotal: number; maxTotal: number; maxSingle: number }> = {
+  'F级': { minTotal: 30, maxTotal: 119, maxSingle: 30 },
+  'E级': { minTotal: 120, maxTotal: 209, maxSingle: 45 },
+  'D级': { minTotal: 210, maxTotal: 329, maxSingle: 60 },
+  'C级': { minTotal: 330, maxTotal: 479, maxSingle: 80 },
+  'B级': { minTotal: 480, maxTotal: 659, maxSingle: 100 },
+  'A级': { minTotal: 660, maxTotal: 869, maxSingle: 125 },
+  'S级': { minTotal: 870, maxTotal: 1109, maxSingle: 150 },
+  'SS级': { minTotal: 1110, maxTotal: 1379, maxSingle: 180 },
+  'SSS级': { minTotal: 1380, maxTotal: 9999, maxSingle: 999 }
+};
+
 function getLevelColor(level: string): string {
   return LEVEL_COLORS[level] || 'var(--acu-accent)';
 }
+
+const levelProgress = computed(() => {
+  const level = playerInfo.value?.level || worldLevel.value;
+  if (!level) return null;
+  
+  const data = LEVEL_DATA[level];
+  if (!data) return null;
+  
+  const baseAttrs = playerInfo.value?.baseAttrs || [];
+  const totalAttrs = baseAttrs.reduce((sum, attr) => sum + Number(attr.value) || 0, 0);
+  
+  const progress = Math.min(100, Math.max(0, 
+    ((totalAttrs - data.minTotal) / (data.maxTotal - data.minTotal)) * 100
+  ));
+  
+  const isMaxed = totalAttrs >= data.maxTotal;
+  const nextLevel = Object.keys(LEVEL_DATA).find(key => 
+    LEVEL_DATA[key].minTotal > totalAttrs
+  );
+  
+  return {
+    level,
+    totalAttrs,
+    minTotal: data.minTotal,
+    maxTotal: data.maxTotal,
+    maxSingle: data.maxSingle,
+    progress,
+    isMaxed,
+    nextLevel
+  };
+});
 
 const playerHP = computed(() => {
   const attrs = playerInfo.value?.combatAttrs;
@@ -430,8 +473,44 @@ function handleDice(name: string, val: any) {
           <div class="acu-player-header">
             <div class="acu-player-avatar" :style="playerInfo?.level ? { borderColor: getLevelColor(playerInfo.level) } : {}">
               {{ playerInfo?.name?.charAt(0) || '主' }}
-              <span v-if="playerInfo?.level" class="acu-level-badge" :style="{ background: getLevelColor(playerInfo.level) }">
+              <span 
+                v-if="playerInfo?.level" 
+                class="acu-level-badge" 
+                :style="{ background: getLevelColor(playerInfo.level) }"
+                :class="{ 'acu-has-tooltip': levelProgress }"
+              >
                 {{ playerInfo.level }}
+                <!-- 等级Tooltip -->
+                <span v-if="levelProgress" class="acu-level-tooltip">
+                  <span class="acu-tooltip-header">
+                    <i class="fa-solid fa-crown"></i>
+                    当前等级: {{ levelProgress.level }}
+                  </span>
+                  <span class="acu-tooltip-row">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    单项上限: {{ levelProgress.maxSingle }}
+                  </span>
+                  <span class="acu-tooltip-row">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    总属性范围: {{ levelProgress.minTotal }}-{{ levelProgress.maxTotal }}
+                  </span>
+                  <span class="acu-tooltip-row" :class="{ 'acu-maxed': levelProgress.isMaxed }">
+                    <i class="fa-solid fa-calculator"></i>
+                    当前总属性: {{ levelProgress.totalAttrs }}
+                    <i v-if="levelProgress.isMaxed" class="fa-solid fa-check"></i>
+                  </span>
+                  <span class="acu-tooltip-progress">
+                    <span class="acu-progress-label">等级进度</span>
+                    <span class="acu-progress-bar">
+                      <span class="acu-progress-fill" :style="{ width: levelProgress.progress + '%' }"></span>
+                    </span>
+                    <span class="acu-progress-text">{{ Math.round(levelProgress.progress) }}%</span>
+                  </span>
+                  <span v-if="levelProgress.nextLevel && !levelProgress.isMaxed" class="acu-tooltip-next">
+                    <i class="fa-solid fa-arrow-right"></i>
+                    下一等级: {{ levelProgress.nextLevel }}
+                  </span>
+                </span>
               </span>
             </div>
             <div class="acu-player-basic">
@@ -1416,6 +1495,141 @@ function handleDice(name: string, val: any) {
   color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
+  cursor: default;
+  
+  &.acu-has-tooltip {
+    cursor: help;
+    
+    &:hover .acu-level-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}
+
+.acu-level-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(8px);
+  min-width: 180px;
+  padding: 10px 12px;
+  background: var(--acu-card-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md, 6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+  color: var(--acu-text-main);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--acu-card-bg);
+  }
+}
+
+.acu-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--acu-accent);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--acu-border);
+  
+  i {
+    font-size: 10px;
+  }
+}
+
+.acu-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  color: var(--acu-text-sub);
+  
+  i {
+    font-size: 10px;
+    width: 14px;
+    text-align: center;
+    color: var(--acu-accent);
+  }
+  
+  &.acu-maxed {
+    color: #22c55e;
+    font-weight: 500;
+    
+    i {
+      color: #22c55e;
+    }
+  }
+}
+
+.acu-tooltip-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--acu-border);
+}
+
+.acu-progress-label {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  white-space: nowrap;
+}
+
+.acu-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.acu-progress-fill {
+  height: 100%;
+  background: var(--acu-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.acu-progress-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--acu-accent);
+  min-width: 30px;
+  text-align: right;
+}
+
+.acu-tooltip-next {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 6px;
+  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--acu-accent);
+  
+  i {
+    font-size: 9px;
+  }
 }
 
 .acu-player-basic {
