@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, inject } from 'vue';
+import { computed, inject } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 
 const emit = defineEmits<{
@@ -7,16 +7,6 @@ const emit = defineEmits<{
 }>();
 
 const { getTableData } = useDashboard();
-
-interface StatusEffect {
-  id: number;
-  name: string;
-  type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
-  intensity: 'weak' | 'medium' | 'strong';
-  value: number;
-  remainingRounds: number;
-  description: string;
-}
 
 interface CombatState {
   active: boolean;
@@ -29,55 +19,7 @@ interface CombatState {
   playerShield: number;
 }
 
-const activeStatuses = inject<any>('aidmStatuses');
 const combat = inject<any>('aidmCombat');
-
-let statusIdCounter = 0;
-const newStatusName = ref('');
-const newStatusType = ref<'buff' | 'debuff' | 'dot' | 'control' | 'shield'>('debuff');
-const newStatusIntensity = ref<'weak' | 'medium' | 'strong'>('medium');
-const newStatusValue = ref<number | string>('1');
-const newStatusRounds = ref<number | string>('3');
-
-function addStatus(): void {
-  const name = newStatusName.value.trim();
-  if (!name) return;
-
-  statusIdCounter++;
-  if (activeStatuses && activeStatuses.value) {
-    activeStatuses.value.push({
-      id: statusIdCounter,
-      name,
-      type: newStatusType.value,
-      intensity: newStatusIntensity.value,
-      value: newStatusValue.value !== '' ? Number(newStatusValue.value) : 1,
-      remainingRounds: newStatusRounds.value !== '' ? Number(newStatusRounds.value) : 3,
-      description: '',
-    });
-  }
-
-  newStatusName.value = '';
-}
-
-function removeStatus(id: number): void {
-  if (activeStatuses && activeStatuses.value) {
-    activeStatuses.value = activeStatuses.value.filter((s: StatusEffect) => s.id !== id);
-  }
-}
-
-function decayStatuses(): void {
-  if (activeStatuses && activeStatuses.value) {
-    activeStatuses.value = activeStatuses.value
-      .map((s: StatusEffect) => ({ ...s, remainingRounds: s.remainingRounds - 1 }))
-      .filter((s: StatusEffect) => s.remainingRounds > 0);
-  }
-}
-
-function clearAllStatuses(): void {
-  if (activeStatuses && activeStatuses.value) {
-    activeStatuses.value = [];
-  }
-}
 
 const data = computed(() => {
   const raw = getTableData();
@@ -353,59 +295,6 @@ function handleDice(name: string, val: any) {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- 状态效果区 -->
-          <div class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-flask"></i>
-              状态效果
-              <button class="acu-tiny-btn" title="回合衰减" @click="decayStatuses">⏱️ -1</button>
-              <button class="acu-tiny-btn danger" title="清除全部" @click="clearAllStatuses">🗑️</button>
-            </h4>
-            <div v-if="activeStatuses && activeStatuses.value && activeStatuses.value.length > 0" class="acu-status-list">
-              <div 
-                v-for="s in activeStatuses.value" 
-                :key="s.id" 
-                class="acu-status-item"
-                :class="`status-${s.type}`"
-              >
-                <div class="acu-status-header">
-                  <span class="acu-status-name">{{ s.name }}</span>
-                  <span class="acu-status-badge" :class="s.intensity">
-                    {{ s.intensity === 'weak' ? '弱' : (s.intensity === 'medium' ? '中' : '强') }}
-                  </span>
-                  <span class="acu-status-type">
-                    {{ s.type === 'buff' ? '增益' : (s.type === 'debuff' ? '减益' : (s.type === 'dot' ? '持续伤' : (s.type === 'control' ? '控制' : '护盾'))) }}
-                  </span>
-                  <button class="acu-status-remove" @click="removeStatus(s.id)" title="移除">×</button>
-                </div>
-                <div class="acu-status-detail">
-                  数值:{{ s.value }} | 剩余:{{ s.remainingRounds }}回合
-                </div>
-              </div>
-            </div>
-            <div v-else class="acu-empty-hint">无活跃状态效果</div>
-            <div class="acu-status-add">
-              <div class="acu-status-form">
-                <input v-model="newStatusName" type="text" class="acu-status-input" placeholder="状态名称" />
-                <select v-model="newStatusType" class="acu-status-select">
-                  <option value="debuff">减益</option>
-                  <option value="buff">增益</option>
-                  <option value="dot">持续伤害</option>
-                  <option value="control">控制</option>
-                  <option value="shield">护盾</option>
-                </select>
-                <select v-model="newStatusIntensity" class="acu-status-select">
-                  <option value="weak">弱效</option>
-                  <option value="medium">中效</option>
-                  <option value="strong">强效</option>
-                </select>
-                <input v-model="newStatusValue" type="text" class="acu-status-input small" placeholder="数值" />
-                <input v-model="newStatusRounds" type="text" class="acu-status-input small" placeholder="回合" />
-              </div>
-              <button class="acu-full-btn accent" @click="addStatus">+ 添加状态</button>
             </div>
           </div>
         </div>
@@ -840,154 +729,9 @@ function handleDice(name: string, val: any) {
   transition: width 0.3s ease;
 }
 
-/* 状态效果 */
-.acu-status-section {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--acu-border);
-}
+/* 状态效果样式已移除 */
 
-.acu-status-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.acu-status-item {
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-card-bg);
-  font-size: 10px;
-}
-
-.acu-status-item.status-buff {
-  border-left: 3px solid #27ae60;
-}
-
-.acu-status-item.status-debuff {
-  border-left: 3px solid #e74c3c;
-}
-
-.acu-status-item.status-dot {
-  border-left: 3px solid #e67e22;
-}
-
-.acu-status-item.status-control {
-  border-left: 3px solid #9b59b6;
-}
-
-.acu-status-item.status-shield {
-  border-left: 3px solid #3498db;
-}
-
-.acu-status-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-
-.acu-status-name {
-  font-weight: bold;
-  color: var(--acu-text-main);
-  font-size: 11px;
-}
-
-.acu-status-badge {
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 9px;
-  background: var(--acu-badge-bg);
-  color: var(--acu-text-main);
-}
-
-.acu-status-badge.weak {
-  background: #ffeaa7;
-  color: #fdcb6e;
-}
-
-.acu-status-badge.medium {
-  background: #fab1a0;
-  color: #e17055;
-}
-
-.acu-status-badge.strong {
-  background: #ff7675;
-  color: #d63031;
-}
-
-.acu-status-type {
-  font-size: 9px;
-  color: var(--acu-text-sub);
-  padding: 1px 4px;
-  background: var(--acu-badge-bg);
-  border-radius: 3px;
-}
-
-.acu-status-remove {
-  margin-left: auto;
-  width: 16px;
-  height: 16px;
-  border: none;
-  border-radius: 50%;
-  background: var(--acu-error-bg);
-  color: var(--acu-error-text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.2s;
-}
-
-.acu-status-remove:hover {
-  background: var(--acu-error-text);
-  color: white;
-}
-
-.acu-status-detail {
-  font-size: 9px;
-  color: var(--acu-text-sub);
-}
-
-.acu-status-add {
-  margin-top: 8px;
-}
-
-.acu-status-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.acu-status-input {
-  padding: 4px 6px;
-  border: 1px solid var(--acu-border);
-  border-radius: 4px;
-  background: var(--acu-input-bg);
-  color: var(--acu-text-main);
-  font-size: 10px;
-}
-
-.acu-status-input.small {
-  width: 100%;
-}
-
-.acu-status-select {
-  padding: 4px 6px;
-  border: 1px solid var(--acu-border);
-  border-radius: 4px;
-  background: var(--acu-input-bg);
-  color: var(--acu-text-main);
-  font-size: 10px;
-}
-
+/* 按钮样式 */
 .acu-tiny-btn {
   padding: 2px 6px;
   border: none;
