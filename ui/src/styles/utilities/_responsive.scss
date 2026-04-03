@@ -1,0 +1,498 @@
+/* ===================================
+   响应式断点系统
+   =================================== */
+
+/* ========== 断点变量 ========== */
+:root {
+  /* 超小屏幕 (手机竖屏) */
+  --acu-breakpoint-xs: 0;
+  --acu-breakpoint-xs-max: 479px;
+  
+  /* 小屏幕 (手机横屏) */
+  --acu-breakpoint-sm: 480px;
+  --acu-breakpoint-sm-max: 767px;
+  
+  /* 中等屏幕 (平板竖屏) */
+  --acu-breakpoint-md: 768px;
+  --acu-breakpoint-md-max: 1023px;
+  
+  /* 大屏幕 (平板横屏/小型笔记本) */
+  --acu-breakpoint-lg: 1024px;
+  --acu-breakpoint-lg-max: 1279px;
+  
+  /* 超大屏幕 (桌面) */
+  --acu-breakpoint-xl: 1280px;
+  --acu-breakpoint-xl-max: 1535px;
+  
+  /* 超超大屏幕 (大型桌面) */
+  --acu-breakpoint-2xl: 1536px;
+  
+  /* 容器最大宽度 */
+  --acu-container-sm: 640px;
+  --acu-container-md: 768px;
+  --acu-container-lg: 1024px;
+  --acu-container-xl: 1280px;
+  --acu-container-2xl: 1536px;
+}
+
+/* ========== 媒体查询 Mixin (使用方式) ========== */
+
+/* 超小屏幕 (手机竖屏, < 480px) */
+@mixin acu-media-xs {
+  @media (max-width: 479px) {
+    @content;
+  }
+}
+
+/* 小屏幕及以上 (手机横屏, ≥ 480px) */
+@mixin acu-media-sm-up {
+  @media (min-width: 480px) {
+    @content;
+  }
+}
+
+/* 小屏幕 (手机横屏, 480px - 767px) */
+@mixin acu-media-sm {
+  @media (min-width: 480px) and (max-width: 767px) {
+    @content;
+  }
+}
+
+/* 小屏幕及以下 (手机, < 768px) */
+@mixin acu-media-sm-down {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+/* 中等屏幕及以上 (平板竖屏, ≥ 768px) */
+@mixin acu-media-md-up {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+/* 中等屏幕 (平板竖屏, 768px - 1023px) */
+@mixin acu-media-md {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+/* 中等屏幕及以下 (平板及以下, < 1024px) */
+@mixin acu-media-md-down {
+  @media (max-width: 1023px) {
+    @content;
+  }
+}
+
+/* 大屏幕及以上 (平板横屏, ≥ 1024px) */
+@mixin acu-media-lg-up {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+/* 大屏幕 (平板横屏, 1024px - 1279px) */
+@mixin acu-media-lg {
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    @content;
+  }
+}
+
+/* 大屏幕及以下 (小型笔记本及以下, < 1280px) */
+@mixin acu-media-lg-down {
+  @media (max-width: 1279px) {
+    @content;
+  }
+}
+
+/* 超大屏幕及以上 (桌面, ≥ 1280px) */
+@mixin acu-media-xl-up {
+  @media (min-width: 1280px) {
+    @content;
+  }
+}
+
+/* 超大屏幕 (桌面, 1280px - 1535px) */
+@mixin acu-media-xl {
+  @media (min-width: 1280px) and (max-width: 1535px) {
+    @content;
+  }
+}
+
+/* 超大屏幕及以下 (桌面及以下, < 1536px) */
+@mixin acu-media-xl-down {
+  @media (max-width: 1535px) {
+    @content;
+  }
+}
+
+/* 超超大屏幕及以上 (大型桌面, ≥ 1536px) */
+@mixin acu-media-2xl-up {
+  @media (min-width: 1536px) {
+    @content;
+  }
+}
+
+/* ========== 响应式工具类 ========== */
+
+/* 隐藏/显示工具 */
+.acu-hidden-xs { @media (max-width: 479px) { display: none !important; } }
+.acu-hidden-sm { @media (min-width: 480px) and (max-width: 767px) { display: none !important; } }
+.acu-hidden-md { @media (min-width: 768px) and (max-width: 1023px) { display: none !important; } }
+.acu-hidden-lg { @media (min-width: 1024px) and (max-width: 1279px) { display: none !important; } }
+.acu-hidden-xl { @media (min-width: 1280px) and (max-width: 1535px) { display: none !important; } }
+.acu-hidden-2xl { @media (min-width: 1536px) { display: none !important; } }
+
+.acu-visible-xs { @media (min-width: 480px) { display: none !important; } }
+.acu-visible-sm { @media (max-width: 479px), (min-width: 768px) { display: none !important; } }
+.acu-visible-md { @media (max-width: 767px), (min-width: 1024px) { display: none !important; } }
+.acu-visible-lg { @media (max-width: 1023px), (min-width: 1280px) { display: none !important; } }
+.acu-visible-xl { @media (max-width: 1279px), (min-width: 1536px) { display: none !important; } }
+.acu-visible-2xl { @media (max-width: 1535px) { display: none !important; } }
+
+/* 仅在移动设备显示 */
+.acu-visible-mobile {
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+}
+
+/* 仅在平板显示 */
+.acu-visible-tablet {
+  @media (max-width: 767px), (min-width: 1024px) {
+    display: none !important;
+  }
+}
+
+/* 仅在桌面显示 */
+.acu-visible-desktop {
+  @media (max-width: 1023px) {
+    display: none !important;
+  }
+}
+
+/* ========== 容器响应式 ========== */
+.acu-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--acu-space-md);
+  padding-right: var(--acu-space-md);
+  
+  @media (min-width: 480px) {
+    padding-left: var(--acu-space-lg);
+    padding-right: var(--acu-space-lg);
+  }
+  
+  @media (min-width: 768px) {
+    max-width: var(--acu-container-md);
+  }
+  
+  @media (min-width: 1024px) {
+    max-width: var(--acu-container-lg);
+    padding-left: var(--acu-space-xl);
+    padding-right: var(--acu-space-xl);
+  }
+  
+  @media (min-width: 1280px) {
+    max-width: var(--acu-container-xl);
+  }
+  
+  @media (min-width: 1536px) {
+    max-width: var(--acu-container-2xl);
+  }
+}
+
+/* 流式容器 */
+.acu-container-fluid {
+  width: 100%;
+  padding-left: var(--acu-space-md);
+  padding-right: var(--acu-space-md);
+  
+  @media (min-width: 480px) {
+    padding-left: var(--acu-space-lg);
+    padding-right: var(--acu-space-lg);
+  }
+  
+  @media (min-width: 1024px) {
+    padding-left: var(--acu-space-xl);
+    padding-right: var(--acu-space-xl);
+  }
+}
+
+/* ========== 网格系统响应式 ========== */
+.acu-grid {
+  display: grid;
+  gap: var(--acu-space-md);
+  
+  /* 自动响应式网格 */
+  &.acu-grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    
+    @media (max-width: 479px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* 2列网格 */
+  &.acu-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* 3列网格 */
+  &.acu-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    
+    @media (max-width: 1023px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* 4列网格 */
+  &.acu-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    
+    @media (max-width: 1279px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    @media (max-width: 1023px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* ========== 响应式间距 ========== */
+.acu-responsive-spacing {
+  padding: var(--acu-space-md);
+  
+  @media (min-width: 480px) {
+    padding: var(--acu-space-lg);
+  }
+  
+  @media (min-width: 768px) {
+    padding: var(--acu-space-xl);
+  }
+  
+  @media (min-width: 1024px) {
+    padding: var(--acu-space-2xl);
+  }
+}
+
+/* ========== 响应式字体大小 ========== */
+.acu-text-responsive {
+  font-size: var(--acu-font-md);
+  
+  @media (min-width: 480px) {
+    font-size: var(--acu-font-lg);
+  }
+  
+  @media (min-width: 768px) {
+    font-size: var(--acu-font-xl);
+  }
+  
+  @media (min-width: 1024px) {
+    font-size: var(--acu-font-2xl);
+  }
+}
+
+/* ========== 响应式标题 ========== */
+.acu-heading-responsive {
+  font-size: var(--acu-heading-3);
+  
+  @media (min-width: 480px) {
+    font-size: var(--acu-heading-2);
+  }
+  
+  @media (min-width: 768px) {
+    font-size: var(--acu-heading-1);
+  }
+}
+
+/* ========== 响应式布局方向 ========== */
+.acu-layout-responsive {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-md);
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: var(--acu-space-lg);
+  }
+}
+
+/* ========== 响应式侧边栏 ========== */
+.acu-sidebar-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--acu-space-md);
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: 250px 1fr;
+    gap: var(--acu-space-lg);
+  }
+  
+  @media (min-width: 1280px) {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+/* ========== 响应式卡片网格 ========== */
+.acu-card-grid {
+  display: grid;
+  gap: var(--acu-space-md);
+  grid-template-columns: 1fr;
+  
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--acu-space-lg);
+  }
+  
+  @media (min-width: 1280px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========== 响应式表单 ========== */
+.acu-form-responsive {
+  display: grid;
+  gap: var(--acu-space-md);
+  grid-template-columns: 1fr;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ========== 响应式导航 ========== */
+.acu-nav-responsive {
+  display: none;
+  
+  @media (min-width: 768px) {
+    display: flex;
+  }
+}
+
+.acu-nav-mobile-toggle {
+  display: block;
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+/* ========== 响应式图片 ========== */
+.acu-img-responsive {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.acu-img-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.acu-img-contain {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ========== 响应式视频 ========== */
+.acu-video-responsive {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 比例 */
+  height: 0;
+  overflow: hidden;
+  
+  iframe,
+  video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ========== 响应式表格 ========== */
+.acu-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  table {
+    width: 100%;
+    min-width: 600px;
+  }
+  
+  @media (max-width: 767px) {
+    table {
+      min-width: 500px;
+    }
+  }
+}
+
+/* ========== 响应式模态框 ========== */
+.acu-modal-responsive {
+  width: 95%;
+  max-width: 500px;
+  
+  @media (min-width: 768px) {
+    width: 90%;
+    max-width: 600px;
+  }
+  
+  @media (min-width: 1024px) {
+    max-width: 800px;
+  }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .acu-no-print {
+    display: none !important;
+  }
+  
+  .acu-print-only {
+    display: block !important;
+  }
+  
+  .acu-container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+}
+
+.acu-print-only {
+  display: none !important;
+}

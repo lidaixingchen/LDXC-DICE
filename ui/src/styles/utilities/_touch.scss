@@ -1,0 +1,534 @@
+/* ===================================
+   触摸优化
+   =================================== */
+
+/* ========== 触摸设备检测 ========== */
+
+/* 触摸设备特定样式 */
+@media (hover: none) and (pointer: coarse) {
+  /* 移除hover效果 */
+  .acu-btn:hover,
+  .acu-nav-btn:hover,
+  .acu-input:hover,
+  a:hover {
+    transform: none;
+    box-shadow: none;
+    background: inherit;
+  }
+  
+  /* 使用active状态替代hover */
+  .acu-btn:active {
+    transform: scale(0.98);
+    background: var(--acu-btn-hover);
+  }
+  
+  .acu-nav-btn:active {
+    transform: scale(0.98);
+    background: var(--acu-btn-hover);
+  }
+  
+  /* 禁用hover工具提示 */
+  .acu-tooltip-hover:hover::before,
+  .acu-tooltip-hover:hover::after {
+    display: none;
+  }
+}
+
+/* ========== 触摸交互优化 ========== */
+
+/* 触摸滚动优化 */
+.acu-touch-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  
+  & > * {
+    scroll-snap-align: start;
+  }
+}
+
+/* 触摸滑动容器 */
+.acu-touch-swipe {
+  touch-action: pan-x pan-y;
+  user-select: none;
+}
+
+/* 触摸缩放容器 */
+.acu-touch-zoom {
+  touch-action: pinch-zoom;
+}
+
+/* ========== 触摸手势支持 ========== */
+
+/* 可触摸拖动 */
+.acu-touch-draggable {
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+/* 可触摸滑动删除 */
+.acu-touch-swipe-delete {
+  position: relative;
+  overflow: hidden;
+  
+  .acu-swipe-content {
+    transition: transform 0.3s ease;
+    background: var(--acu-bg-panel);
+    position: relative;
+    z-index: 1;
+  }
+  
+  .acu-swipe-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    z-index: 0;
+    
+    .acu-swipe-action {
+      padding: 0 var(--acu-space-lg);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      
+      &.acu-swipe-delete {
+        background: var(--acu-color-error);
+      }
+      
+      &.acu-swipe-edit {
+        background: var(--acu-color-info);
+      }
+    }
+  }
+}
+
+/* ========== 触摸反馈样式 ========== */
+
+/* 触摸高亮 */
+.acu-touch-highlight {
+  -webkit-tap-highlight-color: rgba(var(--acu-accent-rgb), 0.1);
+}
+
+/* 禁用触摸高亮 */
+.acu-no-touch-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 触摸涟漪效果 */
+.acu-touch-ripple {
+  position: relative;
+  overflow: hidden;
+  
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple-animation 0.6s ease-out;
+    pointer-events: none;
+  }
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ========== 触摸目标优化 ========== */
+
+/* 扩大触摸区域 */
+.acu-touch-area {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+  }
+}
+
+/* 最小触摸目标 */
+.acu-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========== 触摸键盘优化 ========== */
+
+/* 触摸设备输入优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 输入框优化 */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    font-size: 16px; /* 防止iOS自动缩放 */
+  }
+  
+  /* 选择框优化 */
+  select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  
+  /* 日期选择器优化 */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    min-height: 44px;
+  }
+}
+
+/* ========== 触摸滚动优化 ========== */
+
+/* 平滑滚动 */
+.acu-smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 弹性滚动 */
+.acu-bounce-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* 禁用弹性滚动 */
+.acu-no-bounce-scroll {
+  overscroll-behavior: none;
+}
+
+/* ========== 触摸长按支持 ========== */
+
+/* 长按菜单 */
+.acu-long-press-menu {
+  position: relative;
+  
+  .acu-context-menu {
+    position: absolute;
+    display: none;
+    background: var(--acu-bg-panel);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-md);
+    box-shadow: var(--acu-shadow-lg);
+    z-index: 1000;
+    min-width: 150px;
+    
+    &.active {
+      display: block;
+    }
+    
+    .acu-menu-item {
+      padding: var(--acu-space-sm) var(--acu-space-md);
+      cursor: pointer;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      
+      &:active {
+        background: var(--acu-btn-hover);
+      }
+    }
+  }
+}
+
+/* ========== 触摸双击缩放 ========== */
+
+.acu-double-tap-zoom {
+  touch-action: manipulation;
+  
+  &.zoomed {
+    transform: scale(1.5);
+    transform-origin: center center;
+  }
+}
+
+/* ========== 触摸下拉刷新 ========== */
+
+.acu-pull-to-refresh {
+  position: relative;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  .acu-pull-indicator {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    
+    &.pulling {
+      transform: translateX(-50%) rotate(180deg);
+    }
+    
+    &.refreshing {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* ========== 触摸手势指示器 ========== */
+
+/* 滑动指示器 */
+.acu-swipe-indicator {
+  display: flex;
+  gap: var(--acu-space-xs);
+  justify-content: center;
+  padding: var(--acu-space-sm);
+  
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--acu-gray-300);
+    transition: all 0.3s ease;
+    
+    &.active {
+      width: 24px;
+      border-radius: var(--acu-radius-full);
+      background: var(--acu-accent);
+    }
+  }
+}
+
+/* ========== 触摸优化组件 ========== */
+
+/* 触摸优化按钮 */
+.acu-touch-btn {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  background: var(--acu-btn-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  &:active {
+    transform: scale(0.98);
+    background: var(--acu-btn-hover);
+  }
+}
+
+/* 触摸优化卡片 */
+.acu-touch-card {
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  padding: var(--acu-space-md);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  &:active {
+    transform: scale(0.99);
+    background: var(--acu-btn-hover);
+  }
+}
+
+/* 触摸优化列表项 */
+.acu-touch-list-item {
+  display: flex;
+  align-items: center;
+  padding: var(--acu-space-md);
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-bottom: 1px solid var(--acu-border);
+  
+  &:active {
+    background: var(--acu-btn-hover);
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+/* ========== 触摸设备特定隐藏/显示 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  .acu-hidden-touch {
+    display: none !important;
+  }
+  
+  .acu-visible-touch {
+    display: block !important;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .acu-hidden-mouse {
+    display: none !important;
+  }
+  
+  .acu-visible-mouse {
+    display: block !important;
+  }
+}
+
+/* ========== 触摸优化模态框 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  .acu-modal-touch {
+    /* 模态框触摸优化 */
+    .acu-modal-header {
+      padding: var(--acu-space-md);
+      min-height: 44px;
+    }
+    
+    .acu-modal-body {
+      padding: var(--acu-space-md);
+    }
+    
+    .acu-modal-footer {
+      padding: var(--acu-space-md);
+      
+      .acu-btn {
+        min-height: 48px;
+        flex: 1;
+      }
+    }
+  }
+}
+
+/* ========== 触摸优化标签页 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  .acu-tabs-touch {
+    [role="tablist"] {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+    }
+    
+    [role="tab"] {
+      min-height: 44px;
+      min-width: 80px;
+      padding: var(--acu-space-sm) var(--acu-space-md);
+      
+      &:active {
+        background: var(--acu-btn-hover);
+      }
+    }
+  }
+}
+
+/* ========== 触摸优化下拉菜单 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  .acu-dropdown-touch {
+    /* 下拉菜单触摸优化 */
+    .acu-dropdown-toggle {
+      min-height: 44px;
+      
+      &:active {
+        background: var(--acu-btn-hover);
+      }
+    }
+    
+    .acu-dropdown-menu {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 50vh;
+      overflow-y: auto;
+      border-radius: var(--acu-radius-lg) var(--acu-radius-lg) 0 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      
+      .acu-dropdown-item {
+        min-height: 44px;
+        padding: var(--acu-space-md);
+        
+        &:active {
+          background: var(--acu-btn-hover);
+        }
+      }
+    }
+  }
+}
+
+/* ========== 触摸设备焦点优化 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* 减少焦点环 */
+  *:focus {
+    outline-width: 2px;
+  }
+  
+  /* 触摸设备不显示焦点环，除非使用键盘 */
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* ========== 触摸设备动画优化 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* 减少动画 */
+  * {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+  
+  /* 禁用悬停动画 */
+  .acu-hover-lift:hover,
+  .acu-hover-scale:hover,
+  .acu-hover-glow:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========== 触摸设备性能优化 ========== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* GPU加速 */
+  .acu-gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* 减少重绘 */
+  .acu-reduce-repaint {
+    will-change: transform;
+  }
+}
