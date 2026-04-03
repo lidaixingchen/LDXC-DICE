@@ -1,0 +1,715 @@
+/* ===================================
+   表格增强样式
+   =================================== */
+
+/* ========== 表格基础样式 ========== */
+
+.acu-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: var(--acu-bg-panel);
+  border-radius: var(--acu-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--acu-shadow-sm);
+  
+  /* 表头 */
+  thead {
+    background: var(--acu-gray-50);
+    border-bottom: 2px solid var(--acu-border);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+  }
+  
+  /* 表头单元格 */
+  th {
+    padding: var(--acu-space-md) var(--acu-space-lg);
+    text-align: left;
+    font-weight: var(--acu-font-weight-semibold);
+    font-size: var(--acu-font-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--acu-gray-600);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-400);
+    }
+  }
+  
+  /* 表体 */
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--acu-border);
+      transition: background-color var(--acu-transition-fast);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background: var(--acu-gray-50);
+        
+        .acu-theme-dark & {
+          background: var(--acu-gray-800);
+        }
+      }
+      
+      &.acu-table-row-active {
+        background: rgba(var(--acu-accent-rgb), 0.1);
+      }
+    }
+  }
+  
+  /* 表体单元格 */
+  td {
+    padding: var(--acu-space-md) var(--acu-space-lg);
+    font-size: var(--acu-font-md);
+    color: var(--acu-text-main);
+  }
+}
+
+/* ========== 可排序列 ========== */
+
+.acu-table-sortable {
+  th.acu-table-sort {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: var(--acu-space-2xl);
+    
+    &:hover {
+      background: var(--acu-gray-100);
+      
+      .acu-theme-dark & {
+        background: var(--acu-gray-700);
+      }
+    }
+    
+    /* 排序图标 */
+    .acu-sort-icon {
+      position: absolute;
+      right: var(--acu-space-md);
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      
+      .acu-sort-arrow {
+        width: 0;
+        height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        
+        &.acu-sort-asc {
+          border-bottom: 4px solid var(--acu-gray-400);
+          
+          .acu-theme-dark & {
+            border-bottom-color: var(--acu-gray-500);
+          }
+        }
+        
+        &.acu-sort-desc {
+          border-top: 4px solid var(--acu-gray-400);
+          
+          .acu-theme-dark & {
+            border-top-color: var(--acu-gray-500);
+          }
+        }
+      }
+    }
+    
+    /* 激活排序状态 */
+    &.acu-sort-asc .acu-sort-icon .acu-sort-arrow.acu-sort-asc {
+      border-bottom-color: var(--acu-accent);
+    }
+    
+    &.acu-sort-desc .acu-sort-icon .acu-sort-arrow.acu-sort-desc {
+      border-top-color: var(--acu-accent);
+    }
+  }
+}
+
+/* ========== 表格状态指示 ========== */
+
+/* 状态徽章 */
+.acu-table-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--acu-space-xs);
+  padding: var(--acu-space-2xs) var(--acu-space-sm);
+  border-radius: var(--acu-radius-full);
+  font-size: var(--acu-font-xs);
+  font-weight: var(--acu-font-weight-semibold);
+  white-space: nowrap;
+  
+  /* 成功状态 */
+  &.acu-status-success {
+    background: var(--acu-color-success-light);
+    color: var(--acu-color-success-dark);
+    
+    .acu-theme-dark & {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--acu-color-success);
+    }
+  }
+  
+  /* 警告状态 */
+  &.acu-status-warning {
+    background: var(--acu-color-warning-light);
+    color: var(--acu-color-warning-dark);
+    
+    .acu-theme-dark & {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--acu-color-warning);
+    }
+  }
+  
+  /* 错误状态 */
+  &.acu-status-error {
+    background: var(--acu-color-error-light);
+    color: var(--acu-color-error-dark);
+    
+    .acu-theme-dark & {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--acu-color-error);
+    }
+  }
+  
+  /* 信息状态 */
+  &.acu-status-info {
+    background: var(--acu-color-info-light);
+    color: var(--acu-color-info-dark);
+    
+    .acu-theme-dark & {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--acu-color-info);
+    }
+  }
+  
+  /* 默认状态 */
+  &.acu-status-default {
+    background: var(--acu-gray-100);
+    color: var(--acu-gray-700);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-700);
+      color: var(--acu-gray-300);
+    }
+  }
+  
+  /* 状态图标 */
+  .acu-status-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+/* ========== 表格行状态 ========== */
+
+.acu-table {
+  tbody tr {
+    /* 成功行 */
+    &.acu-row-success {
+      background: var(--acu-color-success-light);
+      
+      .acu-theme-dark & {
+        background: rgba(16, 185, 129, 0.1);
+      }
+    }
+    
+    /* 警告行 */
+    &.acu-row-warning {
+      background: var(--acu-color-warning-light);
+      
+      .acu-theme-dark & {
+        background: rgba(245, 158, 11, 0.1);
+      }
+    }
+    
+    /* 错误行 */
+    &.acu-row-error {
+      background: var(--acu-color-error-light);
+      
+      .acu-theme-dark & {
+        background: rgba(239, 68, 68, 0.1);
+      }
+    }
+    
+    /* 信息行 */
+    &.acu-row-info {
+      background: var(--acu-color-info-light);
+      
+      .acu-theme-dark & {
+        background: rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+}
+
+/* ========== 表格选择框 ========== */
+
+.acu-table {
+  /* 选择列 */
+  .acu-table-select {
+    width: 48px;
+    text-align: center;
+    
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+  }
+  
+  /* 已选择行 */
+  tbody tr.acu-row-selected {
+    background: rgba(var(--acu-accent-rgb), 0.05);
+    
+    &:hover {
+      background: rgba(var(--acu-accent-rgb), 0.1);
+    }
+  }
+}
+
+/* ========== 表格操作列 ========== */
+
+.acu-table-actions {
+  display: flex;
+  gap: var(--acu-space-xs);
+  align-items: center;
+  justify-content: flex-end;
+  
+  .acu-table-action-btn {
+    padding: var(--acu-space-2xs) var(--acu-space-sm);
+    border: none;
+    background: transparent;
+    color: var(--acu-gray-600);
+    cursor: pointer;
+    border-radius: var(--acu-radius-sm);
+    transition: all var(--acu-transition-fast);
+    
+    &:hover {
+      background: var(--acu-gray-100);
+      color: var(--acu-accent);
+      
+      .acu-theme-dark & {
+        background: var(--acu-gray-700);
+      }
+    }
+    
+    &.acu-action-danger:hover {
+      color: var(--acu-color-error);
+    }
+  }
+}
+
+/* ========== 表格分页 ========== */
+
+.acu-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  border-top: 1px solid var(--acu-border);
+  background: var(--acu-bg-panel);
+  
+  /* 分页信息 */
+  .acu-pagination-info {
+    font-size: var(--acu-font-sm);
+    color: var(--acu-gray-600);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-400);
+    }
+  }
+  
+  /* 分页控件 */
+  .acu-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    
+    .acu-pagination-btn {
+      min-width: 32px;
+      height: 32px;
+      padding: 0 var(--acu-space-sm);
+      border: 1px solid var(--acu-border);
+      background: var(--acu-bg-panel);
+      color: var(--acu-text-main);
+      cursor: pointer;
+      border-radius: var(--acu-radius-sm);
+      transition: all var(--acu-transition-fast);
+      
+      &:hover:not(:disabled) {
+        background: var(--acu-gray-50);
+        border-color: var(--acu-accent);
+        
+        .acu-theme-dark & {
+          background: var(--acu-gray-700);
+        }
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      
+      &.acu-pagination-active {
+        background: var(--acu-accent);
+        color: var(--acu-button-text-on-accent, #fff);
+        border-color: var(--acu-accent);
+      }
+    }
+  }
+}
+
+/* ========== 表格加载状态 ========== */
+
+.acu-table-loading {
+  position: relative;
+  
+  /* 加载遮罩 */
+  .acu-table-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    
+    .acu-theme-dark & {
+      background: rgba(0, 0, 0, 0.8);
+    }
+  }
+  
+  /* 加载动画 */
+  .acu-table-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--acu-border);
+    border-top-color: var(--acu-accent);
+    border-radius: 50%;
+    animation: acu-table-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes acu-table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== 表格空状态 ========== */
+
+.acu-table-empty {
+  text-align: center;
+  padding: var(--acu-space-3xl) var(--acu-space-lg);
+  
+  .acu-table-empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--acu-space-md);
+    color: var(--acu-gray-300);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-600);
+    }
+  }
+  
+  .acu-table-empty-title {
+    font-size: var(--acu-font-lg);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-gray-700);
+    margin-bottom: var(--acu-space-sm);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-300);
+    }
+  }
+  
+  .acu-table-empty-description {
+    font-size: var(--acu-font-md);
+    color: var(--acu-gray-500);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-400);
+    }
+  }
+}
+
+/* ========== 表格紧凑模式 ========== */
+
+.acu-table-compact {
+  th,
+  td {
+    padding: var(--acu-space-sm) var(--acu-space-md);
+    font-size: var(--acu-font-sm);
+  }
+}
+
+/* ========== 表格条纹 ========== */
+
+.acu-table-striped {
+  tbody tr:nth-child(even) {
+    background: var(--acu-gray-50);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+  }
+}
+
+/* ========== 表格边框 ========== */
+
+.acu-table-bordered {
+  border: 1px solid var(--acu-border);
+  
+  th,
+  td {
+    border: 1px solid var(--acu-border);
+  }
+}
+
+/* ========== 表格悬停高亮 ========== */
+
+.acu-table-hover {
+  tbody tr:hover {
+    background: var(--acu-gray-50);
+    box-shadow: inset 0 0 0 1px var(--acu-accent);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+  }
+}
+
+/* ========== 响应式表格 ========== */
+
+@media (max-width: 767px) {
+  .acu-table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    .acu-table {
+      min-width: 600px;
+    }
+  }
+  
+  /* 移动端卡片化表格 */
+  .acu-table-card-mobile {
+    thead {
+      display: none;
+    }
+    
+    tbody tr {
+      display: block;
+      margin-bottom: var(--acu-space-md);
+      border: 1px solid var(--acu-border);
+      border-radius: var(--acu-radius-md);
+      padding: var(--acu-space-md);
+      background: var(--acu-bg-panel);
+    }
+    
+    td {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--acu-space-xs) 0;
+      border: none;
+      
+      &:before {
+        content: attr(data-label);
+        font-weight: var(--acu-font-weight-semibold);
+        color: var(--acu-gray-600);
+        margin-right: var(--acu-space-md);
+        
+        .acu-theme-dark & {
+          color: var(--acu-gray-400);
+        }
+      }
+    }
+  }
+}
+
+/* ========== 表格固定列 ========== */
+
+.acu-table-fixed {
+  position: relative;
+  
+  /* 固定左侧列 */
+  .acu-table-fixed-left {
+    position: sticky;
+    left: 0;
+    background: var(--acu-bg-panel);
+    z-index: 2;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--acu-border);
+    }
+  }
+  
+  /* 固定右侧列 */
+  .acu-table-fixed-right {
+    position: sticky;
+    right: 0;
+    background: var(--acu-bg-panel);
+    z-index: 2;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--acu-border);
+    }
+  }
+}
+
+/* ========== 表格固定表头 ========== */
+
+.acu-table-fixed-header {
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    
+    th {
+      background: var(--acu-gray-50);
+      
+      .acu-theme-dark & {
+        background: var(--acu-gray-800);
+      }
+    }
+  }
+}
+
+/* ========== 表格展开行 ========== */
+
+.acu-table-expandable {
+  /* 展开按钮 */
+  .acu-table-expand-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--acu-gray-600);
+    transition: transform var(--acu-transition-fast);
+    
+    &:hover {
+      color: var(--acu-accent);
+    }
+    
+    &.acu-expanded {
+      transform: rotate(90deg);
+    }
+  }
+  
+  /* 展开内容 */
+  .acu-table-expand-content {
+    background: var(--acu-gray-50);
+    padding: var(--acu-space-lg);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+  }
+}
+
+/* ========== 表格数字列 ========== */
+
+.acu-table-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
+}
+
+/* ========== 表格高亮单元格 ========== */
+
+.acu-table {
+  td {
+    /* 高亮单元格 */
+    &.acu-cell-highlight {
+      background: rgba(var(--acu-accent-rgb), 0.1);
+      font-weight: var(--acu-font-weight-semibold);
+    }
+    
+    /* 最大值 */
+    &.acu-cell-max {
+      background: var(--acu-color-success-light);
+      color: var(--acu-color-success-dark);
+      font-weight: var(--acu-font-weight-semibold);
+      
+      .acu-theme-dark & {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--acu-color-success);
+      }
+    }
+    
+    /* 最小值 */
+    &.acu-cell-min {
+      background: var(--acu-color-error-light);
+      color: var(--acu-color-error-dark);
+      font-weight: var(--acu-font-weight-semibold);
+      
+      .acu-theme-dark & {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--acu-color-error);
+      }
+    }
+  }
+}
+
+/* ========== 表格工具栏 ========== */
+
+.acu-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  border-bottom: 1px solid var(--acu-border);
+  background: var(--acu-bg-panel);
+  
+  /* 搜索框 */
+  .acu-table-search {
+    flex: 1;
+    max-width: 300px;
+    
+    input {
+      width: 100%;
+      padding: var(--acu-space-sm) var(--acu-space-md);
+      border: 1px solid var(--acu-border);
+      border-radius: var(--acu-radius-md);
+      font-size: var(--acu-font-md);
+      
+      &:focus {
+        outline: none;
+        border-color: var(--acu-accent);
+        box-shadow: 0 0 0 3px rgba(var(--acu-accent-rgb), 0.1);
+      }
+    }
+  }
+  
+  /* 工具按钮组 */
+  .acu-table-tools {
+    display: flex;
+    gap: var(--acu-space-sm);
+  }
+}

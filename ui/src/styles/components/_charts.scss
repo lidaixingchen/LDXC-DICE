@@ -1,0 +1,726 @@
+/* ===================================
+   统计图表样式
+   =================================== */
+
+/* ========== 图表容器 ========== */
+
+.acu-chart {
+  position: relative;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  padding: var(--acu-space-lg);
+  
+  /* 图表标题 */
+  .acu-chart-title {
+    font-size: var(--acu-font-lg);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-text-main);
+    margin-bottom: var(--acu-space-lg);
+  }
+  
+  /* 图表图例 */
+  .acu-chart-legend {
+    display: flex;
+    gap: var(--acu-space-md);
+    margin-top: var(--acu-space-lg);
+    flex-wrap: wrap;
+    
+    .acu-legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--acu-space-xs);
+      font-size: var(--acu-font-sm);
+      color: var(--acu-text-main);
+      
+      .acu-legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: var(--acu-radius-sm);
+      }
+    }
+  }
+}
+
+/* ========== 柱状图 ========== */
+
+.acu-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--acu-space-sm);
+  height: 200px;
+  padding: var(--acu-space-md) 0;
+  
+  /* 柱状图项 */
+  .acu-bar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    
+    /* 柱子 */
+    .acu-bar {
+      width: 100%;
+      max-width: 60px;
+      background: linear-gradient(180deg, var(--acu-accent) 0%, rgba(var(--acu-accent-rgb), 0.7) 100%);
+      border-radius: var(--acu-radius-sm) var(--acu-radius-sm) 0 0;
+      transition: transform var(--acu-transition-normal);
+      position: relative;
+      cursor: pointer;
+      
+      &:hover {
+        transform: scaleY(1.05);
+        transform-origin: bottom;
+      }
+      
+      /* 柱子标签 */
+      .acu-bar-label {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: var(--acu-font-xs);
+        font-weight: var(--acu-font-weight-semibold);
+        color: var(--acu-text-main);
+        white-space: nowrap;
+      }
+    }
+    
+    /* X轴标签 */
+    .acu-bar-x-label {
+      font-size: var(--acu-font-xs);
+      color: var(--acu-gray-600);
+      text-align: center;
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+  
+  /* 多系列柱状图 */
+  &.acu-bar-grouped {
+    .acu-bar-item {
+      flex-direction: column;
+      
+      .acu-bar-group {
+        display: flex;
+        gap: 2px;
+        width: 100%;
+        max-width: 80px;
+        
+        .acu-bar {
+          flex: 1;
+          max-width: none;
+        }
+      }
+    }
+  }
+}
+
+/* ========== 折线图 ========== */
+
+.acu-line-chart {
+  position: relative;
+  height: 200px;
+  padding: var(--acu-space-md) 0;
+  
+  /* 图表区域 */
+  .acu-line-chart-area {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    
+    /* 网格线 */
+    .acu-chart-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      
+      .acu-grid-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: var(--acu-border);
+        
+        .acu-theme-dark & {
+          background: var(--acu-gray-700);
+        }
+      }
+    }
+    
+    /* 折线 */
+    .acu-line-path {
+      fill: none;
+      stroke: var(--acu-accent);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    /* 填充区域 */
+    .acu-line-area {
+      fill: rgba(var(--acu-accent-rgb), 0.1);
+    }
+    
+    /* 数据点 */
+    .acu-line-point {
+      fill: var(--acu-accent);
+      stroke: var(--acu-bg-panel);
+      stroke-width: 2;
+      cursor: pointer;
+      transition: all var(--acu-transition-fast);
+      
+      &:hover {
+        r: 6;
+        stroke-width: 3;
+      }
+    }
+  }
+  
+  /* X轴标签 */
+  .acu-line-x-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--acu-space-sm);
+    
+    .acu-x-label {
+      font-size: var(--acu-font-xs);
+      color: var(--acu-gray-600);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+  
+  /* Y轴标签 */
+  .acu-line-y-labels {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-right: var(--acu-space-sm);
+    
+    .acu-y-label {
+      font-size: var(--acu-font-xs);
+      color: var(--acu-gray-600);
+      text-align: right;
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+}
+
+/* ========== 饼图 ========== */
+
+.acu-pie-chart {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  
+  /* 饼图SVG */
+  .acu-pie-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    
+    .acu-pie-slice {
+      fill: var(--acu-accent);
+      stroke: var(--acu-bg-panel);
+      stroke-width: 2;
+      transition: all var(--acu-transition-fast);
+      cursor: pointer;
+      
+      &:hover {
+        transform: scale(1.05);
+        transform-origin: center;
+      }
+    }
+  }
+  
+  /* 中心文本 */
+  .acu-pie-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    
+    .acu-pie-center-value {
+      font-size: var(--acu-font-2xl);
+      font-weight: var(--acu-font-weight-bold);
+      color: var(--acu-text-main);
+    }
+    
+    .acu-pie-center-label {
+      font-size: var(--acu-font-sm);
+      color: var(--acu-gray-600);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+}
+
+/* ========== 环形图 ========== */
+
+.acu-donut-chart {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  
+  /* 环形图SVG */
+  .acu-donut-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    
+    .acu-donut-track {
+      fill: none;
+      stroke: var(--acu-gray-200);
+      stroke-width: 20;
+      
+      .acu-theme-dark & {
+        stroke: var(--acu-gray-700);
+      }
+    }
+    
+    .acu-donut-progress {
+      fill: none;
+      stroke: var(--acu-accent);
+      stroke-width: 20;
+      stroke-linecap: round;
+      transition: stroke-dashoffset var(--acu-transition-slow);
+    }
+  }
+  
+  /* 中心内容 */
+  .acu-donut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    
+    .acu-donut-value {
+      font-size: var(--acu-font-3xl);
+      font-weight: var(--acu-font-weight-bold);
+      color: var(--acu-text-main);
+    }
+    
+    .acu-donut-label {
+      font-size: var(--acu-font-sm);
+      color: var(--acu-gray-600);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+}
+
+/* ========== 分布图 ========== */
+
+.acu-distribution-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 200px;
+  padding: var(--acu-space-md) 0;
+  
+  /* 分布柱 */
+  .acu-dist-bar {
+    flex: 1;
+    background: var(--acu-accent);
+    opacity: 0.6;
+    transition: all var(--acu-transition-fast);
+    cursor: pointer;
+    
+    &:hover {
+      opacity: 1;
+    }
+    
+    &.acu-dist-highlight {
+      opacity: 1;
+      background: var(--acu-color-success);
+    }
+  }
+}
+
+/* ========== 趋势图 ========== */
+
+.acu-trend-chart {
+  position: relative;
+  padding: var(--acu-space-md);
+  
+  /* 趋势指示器 */
+  .acu-trend-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-sm);
+    margin-bottom: var(--acu-space-md);
+    
+    .acu-trend-value {
+      font-size: var(--acu-font-3xl);
+      font-weight: var(--acu-font-weight-bold);
+      color: var(--acu-text-main);
+    }
+    
+    .acu-trend-change {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--acu-space-2xs);
+      padding: var(--acu-space-2xs) var(--acu-space-sm);
+      border-radius: var(--acu-radius-full);
+      font-size: var(--acu-font-sm);
+      font-weight: var(--acu-font-weight-semibold);
+      
+      &.acu-trend-up {
+        background: var(--acu-color-success-light);
+        color: var(--acu-color-success-dark);
+        
+        .acu-theme-dark & {
+          background: rgba(16, 185, 129, 0.2);
+          color: var(--acu-color-success);
+        }
+      }
+      
+      &.acu-trend-down {
+        background: var(--acu-color-error-light);
+        color: var(--acu-color-error-dark);
+        
+        .acu-theme-dark & {
+          background: rgba(239, 68, 68, 0.2);
+          color: var(--acu-color-error);
+        }
+      }
+    }
+  }
+  
+  /* 迷你图 */
+  .acu-trend-sparkline {
+    height: 60px;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .acu-sparkline-path {
+      fill: none;
+      stroke: var(--acu-accent);
+      stroke-width: 2;
+    }
+    
+    .acu-sparkline-area {
+      fill: rgba(var(--acu-accent-rgb), 0.1);
+    }
+  }
+}
+
+/* ========== 热力图 ========== */
+
+.acu-heatmap {
+  display: grid;
+  gap: 2px;
+  
+  /* 热力图单元格 */
+  .acu-heatmap-cell {
+    aspect-ratio: 1;
+    background: var(--acu-gray-100);
+    border-radius: var(--acu-radius-sm);
+    transition: all var(--acu-transition-fast);
+    cursor: pointer;
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+    
+    &:hover {
+      transform: scale(1.1);
+      z-index: 1;
+    }
+    
+    /* 热度等级 */
+    &.acu-heat-1 { background: rgba(var(--acu-accent-rgb), 0.1); }
+    &.acu-heat-2 { background: rgba(var(--acu-accent-rgb), 0.2); }
+    &.acu-heat-3 { background: rgba(var(--acu-accent-rgb), 0.3); }
+    &.acu-heat-4 { background: rgba(var(--acu-accent-rgb), 0.4); }
+    &.acu-heat-5 { background: rgba(var(--acu-accent-rgb), 0.5); }
+    &.acu-heat-6 { background: rgba(var(--acu-accent-rgb), 0.6); }
+    &.acu-heat-7 { background: rgba(var(--acu-accent-rgb), 0.7); }
+    &.acu-heat-8 { background: rgba(var(--acu-accent-rgb), 0.8); }
+    &.acu-heat-9 { background: rgba(var(--acu-accent-rgb), 0.9); }
+    &.acu-heat-10 { background: var(--acu-accent); }
+  }
+}
+
+/* ========== 统计卡片 ========== */
+
+.acu-stat-card {
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  padding: var(--acu-space-lg);
+  transition: all var(--acu-transition-normal);
+  
+  &:hover {
+    box-shadow: var(--acu-shadow-md);
+    transform: translateY(-2px);
+  }
+  
+  .acu-stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--acu-space-md);
+    
+    .acu-stat-title {
+      font-size: var(--acu-font-sm);
+      color: var(--acu-gray-600);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+    
+    .acu-stat-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(var(--acu-accent-rgb), 0.1);
+      border-radius: var(--acu-radius-md);
+      color: var(--acu-accent);
+    }
+  }
+  
+  .acu-stat-value {
+    font-size: var(--acu-font-3xl);
+    font-weight: var(--acu-font-weight-bold);
+    color: var(--acu-text-main);
+    margin-bottom: var(--acu-space-sm);
+  }
+  
+  .acu-stat-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    font-size: var(--acu-font-sm);
+    
+    .acu-stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--acu-space-2xs);
+      
+      &.acu-change-up {
+        color: var(--acu-color-success);
+      }
+      
+      &.acu-change-down {
+        color: var(--acu-color-error);
+      }
+    }
+    
+    .acu-stat-period {
+      color: var(--acu-gray-500);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+}
+
+/* ========== 图表工具提示 ========== */
+
+.acu-chart-tooltip {
+  position: absolute;
+  background: var(--acu-gray-900);
+  color: white;
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  border-radius: var(--acu-radius-md);
+  font-size: var(--acu-font-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--acu-transition-fast);
+  z-index: 1000;
+  white-space: nowrap;
+  
+  .acu-theme-dark & {
+    background: var(--acu-gray-100);
+    color: var(--acu-gray-900);
+  }
+  
+  &.acu-tooltip-visible {
+    opacity: 1;
+  }
+  
+  .acu-tooltip-title {
+    font-weight: var(--acu-font-weight-semibold);
+    margin-bottom: var(--acu-space-2xs);
+  }
+  
+  .acu-tooltip-value {
+    color: var(--acu-accent);
+  }
+}
+
+/* ========== 图表加载状态 ========== */
+
+.acu-chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  
+  .acu-chart-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--acu-border);
+    border-top-color: var(--acu-accent);
+    border-radius: 50%;
+    animation: acu-chart-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes acu-chart-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== 图表空状态 ========== */
+
+.acu-chart-empty {
+  text-align: center;
+  padding: var(--acu-space-3xl);
+  
+  .acu-chart-empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--acu-space-md);
+    color: var(--acu-gray-300);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-600);
+    }
+  }
+  
+  .acu-chart-empty-title {
+    font-size: var(--acu-font-lg);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-gray-700);
+    margin-bottom: var(--acu-space-sm);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-300);
+    }
+  }
+  
+  .acu-chart-empty-description {
+    font-size: var(--acu-font-md);
+    color: var(--acu-gray-500);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-400);
+    }
+  }
+}
+
+/* ========== 响应式优化 ========== */
+
+@media (max-width: 767px) {
+  .acu-bar-chart {
+    height: 150px;
+    
+    .acu-bar-item .acu-bar {
+      max-width: 40px;
+    }
+  }
+  
+  .acu-line-chart {
+    height: 150px;
+  }
+  
+  .acu-pie-chart,
+  .acu-donut-chart {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .acu-stat-card {
+    .acu-stat-value {
+      font-size: var(--acu-font-2xl);
+    }
+  }
+}
+
+/* ========== 动画效果 ========== */
+
+/* 柱状图动画 */
+.acu-bar-animate {
+  animation: acu-bar-grow 0.6s ease-out forwards;
+}
+
+@keyframes acu-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* 折线图动画 */
+.acu-line-animate {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: acu-line-draw 2s ease-out forwards;
+}
+
+@keyframes acu-line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 饼图动画 */
+.acu-pie-animate {
+  animation: acu-pie-rotate 1s ease-out;
+}
+
+@keyframes acu-pie-rotate {
+  from {
+    transform: rotate(-90deg) scale(0);
+  }
+  to {
+    transform: rotate(-90deg) scale(1);
+  }
+}
+
+/* 环形图动画 */
+.acu-donut-animate {
+  animation: acu-donut-fill 1.5s ease-out;
+}
+
+@keyframes acu-donut-fill {
+  from {
+    stroke-dashoffset: 100;
+  }
+}

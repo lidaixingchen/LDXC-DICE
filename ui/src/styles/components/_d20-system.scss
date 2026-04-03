@@ -1,0 +1,756 @@
+/* ===================================
+   D20 骰子系统 (D&D 专用)
+   =================================== */
+
+/* ========== D20 骰子基础样式 ========== */
+
+.acu-d20 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid #553c9a;
+  border-radius: 50%;
+  box-shadow: 
+    0 8px 16px rgba(102, 126, 234, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  font-size: 36px;
+  font-weight: var(--acu-font-weight-bold);
+  color: white;
+  position: relative;
+  transition: all var(--acu-transition-normal);
+  
+  .acu-theme-dark & {
+    background: linear-gradient(135deg, #553c9a 0%, #44337a 100%);
+    border-color: #6b46c1;
+  }
+  
+  /* 骰子数值 */
+  &::before {
+    content: attr(data-value);
+  }
+  
+  /* 小尺寸 */
+  &.acu-d20-sm {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+  
+  /* 大尺寸 */
+  &.acu-d20-lg {
+    width: 100px;
+    height: 100px;
+    font-size: 48px;
+  }
+  
+  /* 超大尺寸 */
+  &.acu-d20-xl {
+    width: 120px;
+    height: 120px;
+    font-size: 56px;
+  }
+}
+
+/* ========== 暴击 (20) 样式 ========== */
+
+.acu-d20-critical {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  border-color: #ed8936;
+  animation: acu-critical-glow 1s ease-in-out infinite alternate;
+  box-shadow: 
+    0 0 20px rgba(253, 160, 133, 0.6),
+    0 8px 16px rgba(246, 211, 101, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  
+  &::after {
+    content: '✦';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 24px;
+    color: #ed8936;
+    animation: acu-critical-star 0.6s ease-in-out infinite;
+  }
+  
+  .acu-theme-dark & {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+    border-color: #f6ad55;
+  }
+}
+
+@keyframes acu-critical-glow {
+  from {
+    box-shadow: 
+      0 0 20px rgba(253, 160, 133, 0.6),
+      0 8px 16px rgba(246, 211, 101, 0.3),
+      inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  }
+  to {
+    box-shadow: 
+      0 0 30px rgba(253, 160, 133, 0.8),
+      0 8px 16px rgba(246, 211, 101, 0.5),
+      inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  }
+}
+
+@keyframes acu-critical-star {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+/* ========== 失误 (1) 样式 ========== */
+
+.acu-d20-fumble {
+  background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%);
+  border-color: #c53030;
+  animation: acu-fumble-shake 0.5s ease-in-out;
+  box-shadow: 
+    0 0 20px rgba(197, 48, 48, 0.6),
+    0 8px 16px rgba(116, 42, 42, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  &::after {
+    content: '✗';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 24px;
+    color: #fc8181;
+  }
+  
+  .acu-theme-dark & {
+    background: linear-gradient(135deg, #9b2c2c 0%, #742a2a 100%);
+    border-color: #fc8181;
+  }
+}
+
+@keyframes acu-fumble-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* ========== 优势掷骰 ========== */
+
+.acu-d20-advantage {
+  display: inline-flex;
+  gap: var(--acu-space-xs);
+  align-items: center;
+  position: relative;
+  
+  .acu-d20 {
+    transition: all var(--acu-transition-normal);
+  }
+  
+  /* 较低的骰子变暗 */
+  .acu-d20.acu-d20-lower {
+    opacity: 0.4;
+    transform: scale(0.9);
+    filter: grayscale(50%);
+  }
+  
+  /* 较高的骰子高亮 */
+  .acu-d20.acu-d20-higher {
+    box-shadow: 
+      0 0 20px rgba(102, 126, 234, 0.6),
+      0 8px 16px rgba(102, 126, 234, 0.3);
+  }
+  
+  /* 优势标签 */
+  &::before {
+    content: '优势';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: var(--acu-font-xs);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-color-success);
+    background: var(--acu-color-success-light);
+    padding: var(--acu-space-2xs) var(--acu-space-sm);
+    border-radius: var(--acu-radius-full);
+    white-space: nowrap;
+    
+    .acu-theme-dark & {
+      background: rgba(16, 185, 129, 0.2);
+    }
+  }
+}
+
+/* ========== 劣势掷骰 ========== */
+
+.acu-d20-disadvantage {
+  display: inline-flex;
+  gap: var(--acu-space-xs);
+  align-items: center;
+  position: relative;
+  
+  .acu-d20 {
+    transition: all var(--acu-transition-normal);
+  }
+  
+  /* 较高的骰子变暗 */
+  .acu-d20.acu-d20-higher {
+    opacity: 0.4;
+    transform: scale(0.9);
+    filter: grayscale(50%);
+  }
+  
+  /* 较低的骰子高亮 */
+  .acu-d20.acu-d20-lower {
+    box-shadow: 
+      0 0 20px rgba(197, 48, 48, 0.6),
+      0 8px 16px rgba(197, 48, 48, 0.3);
+  }
+  
+  /* 劣势标签 */
+  &::before {
+    content: '劣势';
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: var(--acu-font-xs);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-color-error);
+    background: var(--acu-color-error-light);
+    padding: var(--acu-space-2xs) var(--acu-space-sm);
+    border-radius: var(--acu-radius-full);
+    white-space: nowrap;
+    
+    .acu-theme-dark & {
+      background: rgba(239, 68, 68, 0.2);
+    }
+  }
+}
+
+/* ========== 修饰符显示 ========== */
+
+.acu-d20-modifier {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--acu-space-xs);
+  font-size: var(--acu-font-lg);
+  font-weight: var(--acu-font-weight-semibold);
+  color: var(--acu-text-main);
+  margin-left: var(--acu-space-sm);
+  
+  .acu-mod-sign {
+    color: var(--acu-gray-500);
+    
+    .acu-theme-dark & {
+      color: var(--acu-gray-400);
+    }
+  }
+  
+  .acu-mod-value {
+    color: var(--acu-accent);
+  }
+  
+  /* 正修饰符 */
+  &.acu-mod-positive .acu-mod-value {
+    color: var(--acu-color-success);
+  }
+  
+  /* 负修饰符 */
+  &.acu-mod-negative .acu-mod-value {
+    color: var(--acu-color-error);
+  }
+}
+
+/* ========== D20 结果卡片 ========== */
+
+.acu-d20-result-card {
+  background: var(--acu-bg-panel);
+  border: 2px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  padding: var(--acu-space-lg);
+  box-shadow: var(--acu-shadow-lg);
+  position: relative;
+  overflow: hidden;
+  
+  /* 暴击边框 */
+  &.acu-result-critical {
+    border-color: #ed8936;
+    box-shadow: 
+      var(--acu-shadow-lg),
+      0 0 20px rgba(237, 137, 54, 0.3);
+    
+    &::before {
+      content: '暴击！';
+      position: absolute;
+      top: var(--acu-space-sm);
+      right: var(--acu-space-sm);
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      color: white;
+      padding: var(--acu-space-2xs) var(--acu-space-sm);
+      border-radius: var(--acu-radius-full);
+      font-size: var(--acu-font-xs);
+      font-weight: var(--acu-font-weight-bold);
+      box-shadow: 0 2px 8px rgba(237, 137, 54, 0.4);
+    }
+  }
+  
+  /* 失误边框 */
+  &.acu-result-fumble {
+    border-color: #c53030;
+    box-shadow: 
+      var(--acu-shadow-lg),
+      0 0 20px rgba(197, 48, 48, 0.3);
+    
+    &::before {
+      content: '失误！';
+      position: absolute;
+      top: var(--acu-space-sm);
+      right: var(--acu-space-sm);
+      background: linear-gradient(135deg, #742a2a 0%, #9b2c2c 100%);
+      color: white;
+      padding: var(--acu-space-2xs) var(--acu-space-sm);
+      border-radius: var(--acu-radius-full);
+      font-size: var(--acu-font-xs);
+      font-weight: var(--acu-font-weight-bold);
+      box-shadow: 0 2px 8px rgba(197, 48, 48, 0.4);
+    }
+  }
+  
+  /* 结果头部 */
+  .acu-d20-result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--acu-space-md);
+    padding-bottom: var(--acu-space-md);
+    border-bottom: 1px solid var(--acu-border);
+    
+    .acu-result-title {
+      font-size: var(--acu-font-lg);
+      font-weight: var(--acu-font-weight-semibold);
+      color: var(--acu-text-main);
+    }
+    
+    .acu-result-time {
+      font-size: var(--acu-font-sm);
+      color: var(--acu-gray-500);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+  
+  /* 结果内容 */
+  .acu-d20-result-content {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-lg);
+    
+    /* 骰子展示 */
+    .acu-result-dice {
+      flex-shrink: 0;
+    }
+    
+    /* 结果详情 */
+    .acu-result-details {
+      flex: 1;
+      
+      .acu-result-formula {
+        font-size: var(--acu-font-md);
+        color: var(--acu-gray-600);
+        margin-bottom: var(--acu-space-sm);
+        font-family: 'Courier New', monospace;
+        
+        .acu-theme-dark & {
+          color: var(--acu-gray-400);
+        }
+        
+        .acu-formula-dice {
+          color: var(--acu-accent);
+          font-weight: var(--acu-font-weight-semibold);
+        }
+        
+        .acu-formula-mod {
+          color: var(--acu-color-success);
+          font-weight: var(--acu-font-weight-semibold);
+          
+          &.acu-mod-negative {
+            color: var(--acu-color-error);
+          }
+        }
+      }
+      
+      .acu-result-total {
+        font-size: var(--acu-font-3xl);
+        font-weight: var(--acu-font-weight-bold);
+        color: var(--acu-text-main);
+        display: flex;
+        align-items: baseline;
+        gap: var(--acu-space-sm);
+        
+        .acu-result-label {
+          font-size: var(--acu-font-sm);
+          font-weight: var(--acu-font-weight-normal);
+          color: var(--acu-gray-500);
+          
+          .acu-theme-dark & {
+            color: var(--acu-gray-400);
+          }
+        }
+        
+        .acu-result-breakdown {
+          font-size: var(--acu-font-md);
+          color: var(--acu-gray-600);
+          font-weight: var(--acu-font-weight-normal);
+          
+          .acu-theme-dark & {
+            color: var(--acu-gray-400);
+          }
+        }
+      }
+      
+      /* DC 检定 */
+      .acu-result-dc {
+        margin-top: var(--acu-space-sm);
+        display: flex;
+        align-items: center;
+        gap: var(--acu-space-sm);
+        
+        .acu-dc-label {
+          font-size: var(--acu-font-sm);
+          color: var(--acu-gray-600);
+          
+          .acu-theme-dark & {
+            color: var(--acu-gray-400);
+          }
+        }
+        
+        .acu-dc-value {
+          font-size: var(--acu-font-md);
+          font-weight: var(--acu-font-weight-semibold);
+          padding: var(--acu-space-2xs) var(--acu-space-sm);
+          border-radius: var(--acu-radius-sm);
+          
+          &.acu-dc-success {
+            background: var(--acu-color-success-light);
+            color: var(--acu-color-success-dark);
+            
+            .acu-theme-dark & {
+              background: rgba(16, 185, 129, 0.2);
+              color: var(--acu-color-success);
+            }
+          }
+          
+          &.acu-dc-fail {
+            background: var(--acu-color-error-light);
+            color: var(--acu-color-error-dark);
+            
+            .acu-theme-dark & {
+              background: rgba(239, 68, 68, 0.2);
+              color: var(--acu-color-error);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ========== D20 检定类型标签 ========== */
+
+.acu-d20-check-type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--acu-space-xs);
+  padding: var(--acu-space-2xs) var(--acu-space-sm);
+  border-radius: var(--acu-radius-full);
+  font-size: var(--acu-font-xs);
+  font-weight: var(--acu-font-weight-semibold);
+  
+  /* 属性检定 */
+  &.acu-check-str {
+    background: #fed7d7;
+    color: #c53030;
+  }
+  
+  &.acu-check-dex {
+    background: #c6f6d5;
+    color: #276749;
+  }
+  
+  &.acu-check-con {
+    background: #feebc8;
+    color: #c05621;
+  }
+  
+  &.acu-check-int {
+    background: #bee3f8;
+    color: #2b6cb0;
+  }
+  
+  &.acu-check-wis {
+    background: #e9d8fd;
+    color: #6b46c1;
+  }
+  
+  &.acu-check-cha {
+    background: #fbb6ce;
+    color: #97266d;
+  }
+  
+  /* 技能检定 */
+  &.acu-check-skill {
+    background: var(--acu-gray-100);
+    color: var(--acu-gray-700);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+      color: var(--acu-gray-300);
+    }
+  }
+  
+  /* 豁免检定 */
+  &.acu-check-save {
+    background: rgba(var(--acu-accent-rgb), 0.1);
+    color: var(--acu-accent);
+  }
+}
+
+/* ========== D20 统计面板 ========== */
+
+.acu-d20-stats-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--acu-space-md);
+  padding: var(--acu-space-lg);
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  
+  .acu-stat-item {
+    text-align: center;
+    padding: var(--acu-space-md);
+    background: var(--acu-gray-50);
+    border-radius: var(--acu-radius-md);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+    
+    .acu-stat-label {
+      font-size: var(--acu-font-sm);
+      color: var(--acu-gray-600);
+      margin-bottom: var(--acu-space-xs);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+    
+    .acu-stat-value {
+      font-size: var(--acu-font-2xl);
+      font-weight: var(--acu-font-weight-bold);
+      color: var(--acu-text-main);
+      
+      &.acu-stat-critical {
+        color: #ed8936;
+      }
+      
+      &.acu-stat-fumble {
+        color: #c53030;
+      }
+    }
+    
+    .acu-stat-subtitle {
+      font-size: var(--acu-font-xs);
+      color: var(--acu-gray-500);
+      margin-top: var(--acu-space-2xs);
+      
+      .acu-theme-dark & {
+        color: var(--acu-gray-400);
+      }
+    }
+  }
+}
+
+/* ========== D20 历史记录 ========== */
+
+.acu-d20-history {
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  overflow: hidden;
+  
+  .acu-history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--acu-space-md) var(--acu-space-lg);
+    border-bottom: 1px solid var(--acu-border);
+    background: var(--acu-gray-50);
+    
+    .acu-theme-dark & {
+      background: var(--acu-gray-800);
+    }
+    
+    .acu-history-title {
+      font-size: var(--acu-font-lg);
+      font-weight: var(--acu-font-weight-semibold);
+      color: var(--acu-text-main);
+    }
+  }
+  
+  .acu-history-list {
+    max-height: 400px;
+    overflow-y: auto;
+    
+    .acu-history-item {
+      display: flex;
+      align-items: center;
+      gap: var(--acu-space-md);
+      padding: var(--acu-space-md) var(--acu-space-lg);
+      border-bottom: 1px solid var(--acu-border);
+      transition: background-color var(--acu-transition-fast);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:hover {
+        background: var(--acu-gray-50);
+        
+        .acu-theme-dark & {
+          background: var(--acu-gray-800);
+        }
+      }
+      
+      /* 暴击行 */
+      &.acu-history-critical {
+        background: rgba(237, 137, 54, 0.1);
+      }
+      
+      /* 失误行 */
+      &.acu-history-fumble {
+        background: rgba(197, 48, 48, 0.1);
+      }
+      
+      .acu-history-time {
+        font-size: var(--acu-font-xs);
+        color: var(--acu-gray-500);
+        min-width: 60px;
+        
+        .acu-theme-dark & {
+          color: var(--acu-gray-400);
+        }
+      }
+      
+      .acu-history-check {
+        min-width: 80px;
+      }
+      
+      .acu-history-dice {
+        flex-shrink: 0;
+      }
+      
+      .acu-history-formula {
+        flex: 1;
+        font-family: 'Courier New', monospace;
+        font-size: var(--acu-font-sm);
+        color: var(--acu-text-main);
+      }
+      
+      .acu-history-result {
+        font-size: var(--acu-font-xl);
+        font-weight: var(--acu-font-weight-bold);
+        min-width: 50px;
+        text-align: right;
+        
+        &.acu-result-critical {
+          color: #ed8936;
+        }
+        
+        &.acu-result-fumble {
+          color: #c53030;
+        }
+      }
+      
+      .acu-history-dc {
+        font-size: var(--acu-font-sm);
+        padding: var(--acu-space-2xs) var(--acu-space-xs);
+        border-radius: var(--acu-radius-sm);
+        
+        &.acu-dc-success {
+          background: var(--acu-color-success-light);
+          color: var(--acu-color-success-dark);
+        }
+        
+        &.acu-dc-fail {
+          background: var(--acu-color-error-light);
+          color: var(--acu-color-error-dark);
+        }
+      }
+    }
+  }
+}
+
+/* ========== D20 滚动动画 ========== */
+
+.acu-d20-rolling {
+  animation: acu-d20-roll 0.8s ease-in-out;
+}
+
+@keyframes acu-d20-roll {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+  }
+  25% {
+    transform: rotateX(90deg) rotateY(45deg) rotateZ(15deg);
+  }
+  50% {
+    transform: rotateX(180deg) rotateY(90deg) rotateZ(-15deg);
+  }
+  75% {
+    transform: rotateX(270deg) rotateY(135deg) rotateZ(15deg);
+  }
+  100% {
+    transform: rotateX(360deg) rotateY(180deg) rotateZ(0deg);
+  }
+}
+
+/* ========== 响应式优化 ========== */
+
+@media (max-width: 767px) {
+  .acu-d20 {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+    
+    &.acu-d20-lg {
+      width: 80px;
+      height: 80px;
+      font-size: 36px;
+    }
+  }
+  
+  .acu-d20-result-card {
+    .acu-d20-result-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  
+  .acu-d20-stats-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
