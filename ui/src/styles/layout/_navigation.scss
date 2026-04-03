@@ -1,0 +1,137 @@
+/* ===================================
+   导航样式
+   =================================== */
+
+/* ========== 导航容器 ========== */
+.acu-nav-container {
+    display: grid;
+    grid-template-columns: repeat(var(--acu-grid-cols, 3), 1fr);
+    gap: var(--acu-space-xs);
+    padding: var(--acu-space-6px);
+    background: var(--acu-bg-nav);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-10px);
+    align-items: center;
+    box-shadow: 0 2px 6px var(--acu-shadow);
+    position: relative;
+    z-index: 31001 !important;
+}
+
+/* ========== 导航按钮 ========== */
+.acu-nav-btn {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--acu-space-3px);
+    padding: var(--acu-space-xs) var(--acu-space-2xs);
+    border: 1px solid transparent;
+    border-radius: var(--acu-radius-md);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    font-weight: 600;
+    font-size: var(--acu-font-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    overflow: hidden;
+    height: var(--acu-btn-height-sm);
+}
+
+.acu-nav-btn span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-top: 1px;
+}
+
+.acu-nav-btn:hover {
+    background: var(--acu-btn-hover);
+    transform: translateY(-2px);
+}
+
+.acu-nav-btn:focus,
+.acu-nav-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--acu-accent) !important;
+}
+
+/* ========== 高度控制 ========== */
+.acu-height-control {
+    display: flex;
+    align-items: center;
+    margin-right: var(--acu-space-sm);
+    cursor: ns-resize;
+    padding: var(--acu-space-xs);
+    border-radius: var(--acu-radius-sm);
+    color: var(--acu-text-sub);
+    transition: all 0.2s;
+    touch-action: none;
+}
+
+.acu-height-control:hover,
+.acu-height-control.active {
+    color: var(--acu-accent);
+    background: var(--acu-table-hover);
+}
+
+.acu-height-drag-handle {
+    cursor: ns-resize;
+    touch-action: none;
+}
+
+/* ========== 导航切换按钮 ========== */
+.acu-nav-toggle-btn {
+    background: var(--acu-btn-bg);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-md);
+    padding: var(--acu-space-xs);
+    cursor: pointer;
+    color: var(--acu-text-main);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.acu-nav-toggle-btn:hover {
+    background: var(--acu-btn-hover);
+    color: var(--acu-accent);
+}
+
+/* ========== 导航编辑模式 ========== */
+.acu-nav-container.editing-order {
+    border: 2px dashed var(--acu-accent);
+    background: var(--acu-table-hover);
+}
+
+.acu-nav-container.editing-order .acu-nav-btn {
+    cursor: move;
+    border: 1px dashed var(--acu-border);
+}
+
+.acu-nav-container.editing-order .acu-nav-btn.acu-swap-selected {
+    border: 2px solid var(--acu-accent);
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+}
+
+/* ========== 导航排序指示器 ========== */
+.acu-nav-order-hint {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+    padding: var(--acu-space-2xs) var(--acu-space-sm);
+    border-radius: var(--acu-radius-sm);
+    font-size: var(--acu-font-xs);
+    white-space: nowrap;
+    z-index: 31002;
+    animation: acuFadeIn 0.3s ease;
+}

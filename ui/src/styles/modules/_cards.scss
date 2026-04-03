@@ -1,0 +1,354 @@
+/* ===================================
+   卡片样式
+   =================================== */
+
+/* ========== 数据卡片容器 ========== */
+.acu-data-card {
+    flex: 0 0 var(--acu-card-width, 260px);
+    width: var(--acu-card-width, 260px);
+    background: var(--acu-card-bg);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-lg);
+    height: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.acu-data-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--acu-shadow);
+    border-color: var(--acu-accent);
+}
+
+.acu-data-card.pending-deletion {
+    opacity: 0.6;
+    border: 1px dashed var(--acu-error-text, #e74c3c);
+}
+
+.acu-data-card.pending-deletion::after {
+    content: "待删除";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    color: var(--acu-error-text, #e74c3c);
+    font-size: var(--acu-font-7xl);
+    font-weight: bold;
+    border: 2px solid var(--acu-error-text, #e74c3c);
+    padding: var(--acu-space-5px) var(--acu-space-10px);
+    border-radius: var(--acu-radius-lg);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.acu-data-card.acu-card-locked {
+    border: 2px solid var(--acu-accent);
+    box-shadow: 0 0 8px rgba(var(--acu-accent-rgb, 59, 130, 246), 0.3);
+    position: relative;
+}
+
+.acu-data-card.acu-card-locked::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(var(--acu-accent-rgb, 59, 130, 246), 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: var(--acu-radius-lg);
+}
+
+/* ========== 卡片网格布局 ========== */
+.acu-card-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--acu-space-md);
+    align-items: flex-start;
+}
+
+.acu-wrapper .acu-layout-vertical .acu-card-grid {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-bottom: var(--acu-space-xl);
+    height: auto;
+}
+
+/* ========== 卡片头部 ========== */
+.acu-wrapper .acu-card-header {
+    flex: 0 0 auto;
+    padding: var(--acu-space-sm) var(--acu-space-10px);
+    background: var(--acu-table-head);
+    border-bottom: 1px dashed var(--acu-border);
+    font-weight: bold;
+    color: var(--acu-text-main);
+    font-size: var(--acu-font-xl);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--acu-space-sm);
+    min-height: var(--acu-size-40px);
+    height: auto;
+    position: relative;
+}
+
+.acu-editable-title {
+    flex: 1;
+    width: auto;
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    transition: all 0.2s;
+    white-space: pre-wrap;
+    overflow: visible;
+    word-break: break-word;
+    text-align: center;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.acu-editable-title:hover {
+    border-bottom-color: var(--acu-accent);
+    color: var(--acu-accent);
+}
+
+.acu-card-index {
+    position: static;
+    transform: none;
+    margin: 0;
+    flex-shrink: 0;
+    font-size: var(--acu-font-sm);
+    color: var(--acu-text-sub);
+    font-weight: normal;
+    background: var(--acu-badge-bg);
+    padding: var(--acu-space-2xs) var(--acu-space-6px);
+    border-radius: var(--acu-radius-sm);
+}
+
+.acu-bookmark-icon {
+    position: absolute;
+    top: var(--acu-space-sm);
+    right: var(--acu-space-sm);
+    color: var(--acu-accent);
+    cursor: pointer;
+    font-size: var(--acu-font-3xl);
+    opacity: 0.3;
+    transition: opacity 0.2s, color 0.2s, transform 0.2s;
+    z-index: 10;
+}
+
+.acu-bookmark-icon:hover {
+    opacity: 0.6;
+    transform: scale(1.1);
+}
+
+.acu-bookmark-icon.bookmarked {
+    color: var(--acu-accent);
+    opacity: 1;
+}
+
+/* ========== 卡片主体 ========== */
+.acu-card-body {
+    padding: var(--acu-space-6px) var(--acu-space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    font-size: var(--acu-table-font-size, var(--acu-font-size, 13px));
+    flex: 1;
+}
+
+.acu-card-row {
+    display: block;
+    padding: var(--acu-space-6px) 0;
+    border-bottom: 1px dashed var(--acu-border);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.acu-card-row:last-child {
+    border-bottom: none;
+}
+
+.acu-card-row:hover {
+    background: var(--acu-table-hover);
+}
+
+/* ========== 卡片标签和值 ========== */
+.acu-card-label {
+    float: left;
+    clear: left;
+    width: auto;
+    margin-right: var(--acu-space-sm);
+    color: var(--acu-text-sub);
+    font-size: 0.9em;
+    line-height: 1.5;
+    padding-top: 0;
+}
+
+.acu-hide-label .acu-card-label {
+    display: none;
+}
+
+.acu-wrapper .acu-hide-label .acu-card-value {
+    width: 100%;
+}
+
+.acu-card-value {
+    display: block;
+    width: auto;
+    margin: 0;
+    text-align: left;
+    word-break: break-all;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: var(--acu-text-main);
+    font-size: 1em;
+}
+
+/* ========== 卡片操作 ========== */
+.acu-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--acu-space-6px);
+    padding: var(--acu-space-sm) var(--acu-space-10px);
+    border-top: 1px dashed var(--acu-border);
+    background: var(--acu-table-head);
+}
+
+.acu-action-item {
+    padding: var(--acu-space-xs) var(--acu-space-10px);
+    font-size: var(--acu-font-sm);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-sm);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.acu-action-item:hover {
+    background: var(--acu-btn-hover);
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+    transform: translateY(-1px);
+}
+
+.acu-action-item:active {
+    transform: translateY(0);
+}
+
+.acu-action-item.check-type {
+    border-style: dashed;
+}
+
+.acu-action-item i {
+    font-size: var(--acu-font-xs);
+    opacity: 0.7;
+}
+
+/* ========== 徽章和标签 ========== */
+.acu-tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--acu-space-xs);
+    align-items: center;
+    margin-top: var(--acu-space-2xs);
+}
+
+.acu-multi-attr-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--acu-space-2xs) var(--acu-space-sm);
+}
+
+.acu-badge {
+    display: inline-block;
+    padding: var(--acu-space-2xs) var(--acu-space-sm);
+    border-radius: var(--acu-radius-xl);
+    font-size: 0.9em;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.acu-badge-green {
+    background: var(--acu-success-bg);
+    color: var(--acu-success-text);
+}
+
+.acu-badge-neutral {
+    background: var(--acu-badge-bg);
+    color: var(--acu-text-main);
+    border: 1px solid var(--acu-border);
+}
+
+/* ========== 面板底部和分页 ========== */
+.acu-panel-footer {
+    flex: 0 0 auto;
+    padding: var(--acu-space-sm);
+    border-top: 1px dashed var(--acu-border);
+    background: var(--acu-table-head);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--acu-space-5px);
+    flex-wrap: wrap;
+}
+
+.acu-page-btn {
+    padding: var(--acu-space-xs) var(--acu-space-10px);
+    min-width: var(--acu-size-32px);
+    height: var(--acu-btn-height-sm);
+    border-radius: var(--acu-radius-sm);
+    border: 1px solid var(--acu-border);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    cursor: pointer;
+    font-size: var(--acu-font-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.acu-page-btn:hover:not(.disabled):not(.active) {
+    background: var(--acu-btn-hover);
+    transform: translateY(-1px);
+}
+
+.acu-page-btn.active {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+    border-color: var(--acu-accent);
+    font-weight: bold;
+}
+
+.acu-page-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.acu-page-info {
+    font-size: var(--acu-font-md);
+    color: var(--acu-text-sub);
+    margin: 0 var(--acu-space-10px);
+}
+
+/* ========== 行锁定徽章 ========== */
+.acu-row-lock-badge {
+    color: var(--acu-accent);
+    font-size: var(--acu-font-xl);
+    opacity: 0.9;
+    margin-left: var(--acu-space-xs);
+    flex-shrink: 0;
+}

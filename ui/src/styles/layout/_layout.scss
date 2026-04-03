@@ -1,0 +1,109 @@
+/* ===================================
+   布局样式
+   =================================== */
+
+/* ========== 主容器布局 ========== */
+.acu-wrapper {
+    position: relative;
+    width: 100%;
+    margin: var(--acu-space-15px) 0;
+    z-index: 31000 !important;
+    font-family: 'Microsoft YaHei', sans-serif;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+/* ========== 嵌入模式布局 ========== */
+.acu-wrapper.acu-mode-embedded {
+    position: relative !important;
+    width: 100% !important;
+    margin-top: var(--acu-space-sm) !important;
+    z-index: 31001 !important;
+    clear: both;
+    display: flex;
+    flex-direction: column-reverse !important;
+    padding: 0;
+}
+
+.acu-wrapper.acu-mode-embedded .acu-nav-container {
+    position: relative !important;
+    z-index: 31002 !important;
+}
+
+.acu-wrapper.acu-mode-embedded .acu-data-display {
+    position: absolute !important;
+    bottom: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.25) !important;
+    border: 1px solid var(--acu-border);
+    margin-bottom: var(--acu-space-5px);
+    z-index: 31010 !important;
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+}
+
+/* ========== 视图切换布局 ========== */
+.acu-wrapper .acu-view-btn {
+    background: transparent;
+    border: none;
+    color: var(--acu-text-main);
+    cursor: pointer;
+    padding: var(--acu-space-xs);
+    margin-right: var(--acu-space-5px);
+    font-size: var(--acu-font-xl);
+    opacity: 0.7;
+}
+
+.acu-wrapper .acu-view-btn:hover {
+    opacity: 1;
+    color: var(--acu-accent);
+    background: var(--acu-table-hover);
+    border-radius: var(--acu-radius-sm);
+}
+
+.acu-wrapper .acu-view-btn.acu-reverse-btn.active,
+.acu-wrapper .acu-reverse-btn[data-reversed="true"] {
+    color: var(--acu-accent);
+    opacity: 1;
+}
+
+/* ========== Grid 视图布局 ========== */
+.acu-card-body.view-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--acu-space-sm);
+    padding: var(--acu-space-10px);
+}
+
+.acu-wrapper .acu-card-body.view-grid .acu-card-row {
+    display: flex;
+    height: auto;
+    min-height: fit-content;
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-md);
+    padding: var(--acu-space-xs) var(--acu-space-6px);
+    flex-direction: column;
+    align-items: flex-start;
+    background: rgba(0,0,0,0.02);
+    box-sizing: border-box;
+}
+
+.acu-card-body.view-grid .acu-card-row.acu-grid-span-full {
+    grid-column: 1 / -1;
+}
+
+.acu-wrapper .acu-card-body.view-grid .acu-card-label {
+    width: 100%;
+    font-size: 0.85em;
+    opacity: 0.8;
+    margin-bottom: var(--acu-space-2xs);
+}
+
+.acu-wrapper .acu-card-body.view-grid .acu-card-value {
+    width: 100%;
+}
+
+/* ========== List 视图布局 ========== */
+/* List 视图使用默认的单列布局 */
