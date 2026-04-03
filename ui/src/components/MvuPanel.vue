@@ -73,27 +73,156 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-.acu-mvu-panel { display: flex; flex-direction: column; height: 100%; }
-.acu-badge-source { font-size: 9px; background: var(--acu-accent); color: white; padding: 1px 6px; border-radius: 4px; margin-left: 8px; }
+.acu-mvu-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
 
-.acu-numeric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; padding: 12px; }
-.acu-num-card { 
-  background: var(--acu-bg-card); border: 1px solid var(--acu-border); border-radius: 8px; padding: 8px;
-  .path { font-size: 10px; color: var(--acu-text-sub); margin-bottom: 4px; font-weight: bold; }
-  .val-row { 
-    display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: 14px; font-weight: 800;
-    .old { text-decoration: line-through; opacity: 0.4; font-size: 11px; }
-    .new.up { color: #10b981; }
-    .new.down { color: #ef4444; }
-    .curr { color: var(--acu-accent); }
+.acu-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+}
+
+.acu-panel-title {
+  font-weight: 800;
+  color: var(--acu-text-main);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  i {
+    color: var(--acu-accent);
   }
 }
 
-.acu-tree-list { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
-.tree-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px 8px; background: var(--acu-bg-header); border-radius: 4px;
-  .name { font-weight: 700; color: var(--acu-text-main); }
-  .val { color: var(--acu-accent); font-family: monospace; margin-left: auto; }
+.acu-header-actions {
+  display: flex;
+  gap: 4px;
 }
 
-.acu-view-btn, .acu-close-btn { background: transparent; border: none; color: var(--acu-text-sub); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; &:hover { background: var(--acu-accent-light); color: var(--acu-accent); } &.active { color: var(--acu-accent); } }
+.acu-badge-source {
+  font-size: 9px;
+  background: var(--acu-accent);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.acu-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.acu-scroll-y {
+  overflow-y: auto;
+}
+
+.acu-numeric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+
+.acu-num-card {
+  background: var(--acu-bg-card);
+  border: 1px solid var(--acu-border);
+  border-radius: 8px;
+  padding: 8px;
+
+  .path {
+    font-size: 10px;
+    color: var(--acu-text-sub);
+    margin-bottom: 4px;
+    font-weight: bold;
+  }
+
+  .val-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: 800;
+
+    .old {
+      text-decoration: line-through;
+      opacity: 0.4;
+      font-size: 11px;
+    }
+
+    .new.up {
+      color: #10b981;
+    }
+
+    .new.down {
+      color: #ef4444;
+    }
+
+    .curr {
+      color: var(--acu-accent);
+    }
+  }
+}
+
+.acu-tree-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 8px;
+  background: var(--acu-bg-header);
+  border-radius: 4px;
+
+  .name {
+    font-weight: 700;
+    color: var(--acu-text-main);
+  }
+
+  .val {
+    color: var(--acu-accent);
+    font-family: monospace;
+    margin-left: auto;
+  }
+}
+
+.acu-view-btn,
+.acu-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--acu-accent-light);
+    color: var(--acu-accent);
+  }
+
+  &.active {
+    color: var(--acu-accent);
+  }
+}
 </style>
