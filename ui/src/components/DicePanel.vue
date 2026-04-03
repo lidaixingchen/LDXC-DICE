@@ -1478,7 +1478,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'standard' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1512,13 +1512,13 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">目标DC</div>
             <input
@@ -1528,9 +1528,6 @@ onMounted(() => {
               :placeholder="`留空=${getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0)}`"
             />
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label centered">难度调整</div>
             <select v-model="difficulty" class="acu-dice-select">
@@ -1560,7 +1557,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'contest' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1594,13 +1591,13 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">己方属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">
               <span>对方属性名</span>
@@ -1627,9 +1624,6 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">对方属性值</div>
             <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
@@ -1643,7 +1637,7 @@ onMounted(() => {
         <div class="acu-dice-section-title" style="margin-top: 8px;">
           <span><i class="fa-solid fa-plus-minus"></i> 优势/劣势调整</span>
         </div>
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">环境优势</div>
             <input v-model="envAdvantage" type="text" class="acu-dice-input" placeholder="0" />
@@ -1652,12 +1646,12 @@ onMounted(() => {
             <div class="acu-dice-form-label">环境劣势</div>
             <input v-model="envDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
           </div>
-        </div>
-        <div class="acu-dice-form-row cols-2">
           <div>
             <div class="acu-dice-form-label">状态优势</div>
             <input v-model="statusAdvantage" type="text" class="acu-dice-input" placeholder="0" />
           </div>
+        </div>
+        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">状态劣势</div>
             <input v-model="statusDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
@@ -1677,7 +1671,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'combat' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1711,22 +1705,19 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">攻击属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">攻击类型</div>
             <select v-model="attackType" class="acu-dice-select">
               <option v-for="o in ATTACK_TYPE_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">攻击力</div>
             <input v-model="attackPower" type="text" class="acu-dice-input" placeholder="10" />
@@ -1735,13 +1726,13 @@ onMounted(() => {
             <div class="acu-dice-form-label">目标防御</div>
             <input v-model="targetDefense" type="text" class="acu-dice-input" placeholder="5" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">魅力值</div>
             <input v-model="charisma" type="text" class="acu-dice-input" placeholder="10" />
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div>
             <div class="acu-dice-form-label">修正值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
@@ -1769,7 +1760,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'defense' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1803,20 +1794,17 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">闪避属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="敏捷/感知取高" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">闪避加值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">敌方攻击修正</div>
             <input v-model="enemyAtkMod" type="text" class="acu-dice-input" placeholder="0" />
@@ -1825,6 +1813,9 @@ onMounted(() => {
             <div class="acu-dice-form-label">敌方攻击力</div>
             <input v-model="enemyAttackPower" type="text" class="acu-dice-input" placeholder="10" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">我方防御</div>
             <input v-model="playerDefense" type="text" class="acu-dice-input" placeholder="5" />
@@ -1848,7 +1839,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'initiative' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1882,13 +1873,13 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">己方敏捷值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">
               <span>对方敏捷属性</span>
@@ -1915,9 +1906,6 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">对方敏捷值</div>
             <input v-model="oppAgility" type="text" class="acu-dice-input" placeholder="留空=10" />
@@ -1941,7 +1929,7 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'escape' && !isCustomMode">
-        <div class="acu-dice-form-row cols-2">
+        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
             <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
@@ -1975,6 +1963,10 @@ onMounted(() => {
               </div>
             </div>
           </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">己方敏捷值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
         </div>
 
         <div class="acu-dice-form-row cols-3">
@@ -1987,16 +1979,16 @@ onMounted(() => {
             </select>
           </div>
           <div>
-            <div class="acu-dice-form-label">己方敏捷值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-          <div>
             <div class="acu-dice-form-label">修正值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
           </div>
+          <div v-if="escapeType !== 'solo'">
+            <div class="acu-dice-form-label">敌方敏捷</div>
+            <input v-model="escapeEnemyAgility" type="text" class="acu-dice-input" placeholder="0（影响DC）" />
+          </div>
         </div>
 
-        <div v-if="escapeType !== 'solo'" class="acu-dice-form-row cols-2">
+        <div v-if="escapeType !== 'solo'" class="acu-dice-form-row cols-3">
           <div class="acu-dice-field" v-if="escapeType === 'surrounded'">
             <div class="acu-dice-form-label">敌人数量</div>
             <input v-model="escapeEnemyCount" type="text" class="acu-dice-input" placeholder="1" />
@@ -2004,10 +1996,6 @@ onMounted(() => {
           <div class="acu-dice-field" v-if="escapeType === 'obstacle'">
             <div class="acu-dice-form-label">环境修正</div>
             <input v-model="escapeObstacleMod" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">敌方敏捷</div>
-            <input v-model="escapeEnemyAgility" type="text" class="acu-dice-input" placeholder="0（影响DC）" />
           </div>
         </div>
 
