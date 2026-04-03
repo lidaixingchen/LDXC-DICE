@@ -1,0 +1,145 @@
+/* ===================================
+   主题生成器混合器
+   =================================== */
+
+/* 主题生成器混合器 */
+@mixin generate-theme($theme-name, $theme-vars, $mode: 'light') {
+  .acu-theme-#{$theme-name} {
+    /* ========== 核心颜色变量 ========== */
+    --acu-bg-panel: map-get($theme-vars, 'bg-panel');
+    --acu-bg-header: map-get($theme-vars, 'bg-header');
+    --acu-bg-card: map-get($theme-vars, 'bg-card');
+    --acu-bg-nav: map-get($theme-vars, 'bg-nav');
+    --acu-border: map-get($theme-vars, 'border');
+    
+    /* ========== 文本颜色 ========== */
+    --acu-text-main: map-get($theme-vars, 'text-main');
+    --acu-text-sub: map-get($theme-vars, 'text-sub');
+    
+    /* ========== 按钮颜色 ========== */
+    --acu-btn-bg: map-get($theme-vars, 'btn-bg');
+    --acu-btn-hover: map-get($theme-vars, 'btn-hover');
+    --acu-btn-active-bg: map-get($theme-vars, 'btn-active-bg');
+    --acu-btn-active-text: map-get($theme-vars, 'btn-active-text');
+    
+    /* ========== 强调色 ========== */
+    --acu-accent: map-get($theme-vars, 'accent');
+    --acu-accent-rgb: unquote(map-get($theme-vars, 'accent-rgb'));
+    --acu-accent-light: rgba(var(--acu-accent-rgb), 0.15);
+    
+    /* ========== 阴影 ========== */
+    --acu-shadow: map-get($theme-vars, 'shadow');
+    
+    /* ========== 表格和选项 ========== */
+    --acu-table-head: map-get($theme-vars, 'table-head');
+    --acu-table-hover: map-get($theme-vars, 'table-hover');
+    --acu-opt-hover: map-get($theme-vars, 'opt-hover');
+    --acu-opt-bg: map-get($theme-vars, 'opt-bg');
+    --acu-opt-bright-bg: map-get($theme-vars, 'opt-bright-bg');
+    
+    /* ========== 输入框 ========== */
+    --acu-input-bg: map-get($theme-vars, 'input-bg');
+    
+    /* ========== 高亮颜色 ========== */
+    --acu-hl-manual: map-get($theme-vars, 'hl-manual');
+    --acu-hl-manual-bg: rgba(map-get($theme-vars, 'hl-manual'), 0.15);
+    --acu-hl-diff: map-get($theme-vars, 'hl-diff');
+    --acu-hl-diff-bg: rgba(map-get($theme-vars, 'hl-diff'), 0.15);
+    
+    /* ========== 状态颜色 ========== */
+    --acu-error-text: map-get($theme-vars, 'error-text');
+    --acu-error-bg: rgba(map-get($theme-vars, 'error-text'), 0.15);
+    --acu-error-border: rgba(map-get($theme-vars, 'error-text'), 0.5);
+    
+    --acu-warning-icon: map-get($theme-vars, 'warning-icon');
+    --acu-warning-text: map-get($theme-vars, 'warning-text');
+    --acu-warning-bg: rgba(map-get($theme-vars, 'warning-icon'), 0.15);
+    
+    --acu-success-text: map-get($theme-vars, 'success-text');
+    --acu-success-bg: rgba(map-get($theme-vars, 'success-text'), 0.15);
+    
+    /* ========== 按钮文本 ========== */
+    --acu-button-text: map-get($theme-vars, 'button-text');
+    
+    /* ========== 卡片和徽章 ========== */
+    --acu-card-bg: map-get($theme-vars, 'card-bg');
+    --acu-badge-bg: map-get($theme-vars, 'badge-bg');
+    
+    /* ========== 菜单 ========== */
+    --acu-menu-bg: map-get($theme-vars, 'menu-bg');
+    --acu-menu-text: map-get($theme-vars, 'menu-text');
+    
+    /* ========== 滚动条 ========== */
+    --acu-scrollbar-track: map-get($theme-vars, 'scrollbar-track');
+    --acu-scrollbar-thumb: map-get($theme-vars, 'scrollbar-thumb');
+    
+    /* ========== 通用变量 - 从基础映射继承 ========== */
+    @each $var-name, $var-value in $theme-common-vars {
+      --acu-#{$var-name}: #{$var-value};
+    }
+    
+    /* ========== 根据主题模式添加特定变量 ========== */
+    @if $mode == 'light' {
+      @each $var-name, $var-value in $theme-light-common {
+        --acu-#{$var-name}: #{$var-value};
+      }
+    } @else {
+      @each $var-name, $var-value in $theme-dark-common {
+        --acu-#{$var-name}: #{$var-value};
+      }
+    }
+  }
+}
+
+/* 辅助函数: 创建主题变量映射 */
+@function create-theme-map(
+  $bg-panel, $bg-header, $bg-card, $bg-nav, $border,
+  $text-main, $text-sub,
+  $btn-bg, $btn-hover, $btn-active-bg, $btn-active-text,
+  $accent, $accent-rgb,
+  $shadow,
+  $table-head, $table-hover, $opt-hover, $opt-bg, $opt-bright-bg,
+  $input-bg,
+  $hl-manual, $hl-diff,
+  $error-text, $warning-icon, $warning-text, $success-text,
+  $button-text,
+  $card-bg, $badge-bg,
+  $menu-bg, $menu-text,
+  $scrollbar-track, $scrollbar-thumb
+) {
+  @return (
+    'bg-panel': $bg-panel,
+    'bg-header': $bg-header,
+    'bg-card': $bg-card,
+    'bg-nav': $bg-nav,
+    'border': $border,
+    'text-main': $text-main,
+    'text-sub': $text-sub,
+    'btn-bg': $btn-bg,
+    'btn-hover': $btn-hover,
+    'btn-active-bg': $btn-active-bg,
+    'btn-active-text': $btn-active-text,
+    'accent': $accent,
+    'accent-rgb': $accent-rgb,
+    'shadow': $shadow,
+    'table-head': $table-head,
+    'table-hover': $table-hover,
+    'opt-hover': $opt-hover,
+    'opt-bg': $opt-bg,
+    'opt-bright-bg': $opt-bright-bg,
+    'input-bg': $input-bg,
+    'hl-manual': $hl-manual,
+    'hl-diff': $hl-diff,
+    'error-text': $error-text,
+    'warning-icon': $warning-icon,
+    'warning-text': $warning-text,
+    'success-text': $success-text,
+    'button-text': $button-text,
+    'card-bg': $card-bg,
+    'badge-bg': $badge-bg,
+    'menu-bg': $menu-bg,
+    'menu-text': $menu-text,
+    'scrollbar-track': $scrollbar-track,
+    'scrollbar-thumb': $scrollbar-thumb,
+  );
+}

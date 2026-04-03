@@ -1,0 +1,109 @@
+/* ===================================
+   主题测试指南
+   =================================== */
+
+/*
+本文件用于验证主题系统优化后的所有主题是否正常工作。
+
+测试步骤:
+1. 在浏览器中打开应用
+2. 依次切换所有13个主题
+3. 检查每个主题的颜色显示是否正确
+4. 验证派生变量是否正确计算
+
+主题列表:
+1. acu-theme-retro (复古羊皮) - 浅色
+2. acu-theme-dark (极夜深空) - 深色
+3. acu-theme-modern (现代清爽) - 浅色
+4. acu-theme-forest (森林绿意) - 浅色
+5. acu-theme-ocean (海洋蓝调) - 浅色
+6. acu-theme-cyber (赛博霓虹) - 深色
+7. acu-theme-nightowl (深蓝磨砂) - 深色
+8. acu-theme-sakura (暖粉手账) - 浅色
+9. acu-theme-minepink (量产地雷) - 深色
+10. acu-theme-purple (紫罗兰) - 浅色
+11. acu-theme-wechat (绿色泡泡) - 浅色
+12. acu-theme-educational (教育黑板) - 深色
+13. acu-theme-vaporwave (蒸汽波) - 深色
+
+关键CSS变量验证:
+- --acu-bg-panel: 面板背景色
+- --acu-text-main: 主要文本颜色
+- --acu-accent: 强调色
+- --acu-accent-light: 强调色浅色版本(自动计算)
+- --acu-btn-bg: 按钮背景色
+- --acu-border: 边框颜色
+
+派生变量验证:
+- --acu-accent-light 应该是 rgba(--acu-accent-rgb, 0.15)
+- --acu-error-bg 应该是 rgba(--acu-error-text, 0.15)
+- --acu-warning-bg 应该是 rgba(--acu-warning-icon, 0.15)
+- --acu-success-bg 应该是 rgba(--acu-success-text, 0.15)
+
+通用变量验证:
+- --acu-overlay-bg 应该是 rgba(0, 0, 0, 0.6) (所有主题相同)
+- --acu-shadow-bg 应该是 rgba(0, 0, 0, 0.4) (所有主题相同)
+- --acu-gray-bg 应该是 rgba(128, 128, 128, 0.1) (所有主题相同)
+- --acu-button-text-on-accent 应该是 #fff (所有主题相同)
+
+模式变量验证:
+浅色主题:
+- --acu-light-bg 应该是 rgba(0, 0, 0, 0.1)
+- --acu-very-light-bg 应该是 rgba(0, 0, 0, 0.02)
+
+深色主题:
+- --acu-light-bg 应该是 rgba(255, 255, 255, 0.05)
+- --acu-very-light-bg 应该是 rgba(255, 255, 255, 0.02)
+
+浏览器开发者工具检查方法:
+1. 打开开发者工具 (F12)
+2. 切换到 Elements 面板
+3. 选择 <html> 或 <body> 元素
+4. 在 Styles 面板中查看 --acu-* 变量
+5. 使用 Console 执行:
+   getComputedStyle(document.documentElement).getPropertyValue('--acu-accent')
+*/
+
+/* 测试用例示例 */
+.test-theme-variables {
+  /* 应该显示主题的强调色 */
+  background-color: var(--acu-accent);
+  
+  /* 应该显示自动计算的浅色版本 */
+  background-color: var(--acu-accent-light);
+  
+  /* 应该显示主题的主要文本颜色 */
+  color: var(--acu-text-main);
+  
+  /* 应该显示主题的边框颜色 */
+  border: 1px solid var(--acu-border);
+  
+  /* 应该显示主题的按钮背景色 */
+  background-color: var(--acu-btn-bg);
+  
+  /* 应该显示所有主题共享的遮罩背景 */
+  background-color: var(--acu-overlay-bg);
+}
+
+/* 测试派生变量 */
+.test-derived-variables {
+  /* 错误背景色 - 应该是 error-text 的 15% 透明度 */
+  background-color: var(--acu-error-bg);
+  
+  /* 警告背景色 - 应该是 warning-icon 的 15% 透明度 */
+  background-color: var(--acu-warning-bg);
+  
+  /* 成功背景色 - 应该是 success-text 的 15% 透明度 */
+  background-color: var(--acu-success-bg);
+}
+
+/* 测试模式变量 */
+.test-mode-variables {
+  /* 浅色主题: rgba(0, 0, 0, 0.1) */
+  /* 深色主题: rgba(255, 255, 255, 0.05) */
+  background-color: var(--acu-light-bg);
+  
+  /* 浅色主题: rgba(0, 0, 0, 0.02) */
+  /* 深色主题: rgba(255, 255, 255, 0.02) */
+  background-color: var(--acu-very-light-bg);
+}

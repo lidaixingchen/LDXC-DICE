@@ -1,0 +1,80 @@
+/* ===================================
+   主题基础变量和通用变量
+   =================================== */
+
+/* 基础通用变量 - 所有主题共享 */
+:root {
+  --acu-accent: #89b4fa;
+  --acu-accent-rgb: 137, 180, 250;
+  --acu-success: #a6e3a1;
+  --acu-danger: #f38ba8;
+  --acu-text-main: #cdd6f4;
+  --acu-text-sub: #a6adc8;
+  --acu-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* 通用变量映射 - 所有主题都相同的变量 */
+$theme-common-vars: (
+  'overlay-bg': rgba(0, 0, 0, 0.6),
+  'overlay-bg-light': rgba(0, 0, 0, 0.5),
+  'shadow-bg': rgba(0, 0, 0, 0.4),
+  'gray-bg': rgba(128, 128, 128, 0.1),
+  'button-text-on-accent': #fff,
+);
+
+/* 浅色主题通用变量 */
+$theme-light-common: (
+  'light-bg': rgba(0, 0, 0, 0.1),
+  'very-light-bg': rgba(0, 0, 0, 0.02),
+);
+
+/* 深色主题通用变量 */
+$theme-dark-common: (
+  'light-bg': rgba(255, 255, 255, 0.05),
+  'very-light-bg': rgba(255, 255, 255, 0.02),
+);
+
+/* 设计令牌 - 间距系统 */
+$spacing: (
+  'xs': 4px,
+  'sm': 8px,
+  'md': 12px,
+  'lg': 16px,
+  'xl': 20px,
+  '2xl': 24px,
+);
+
+/* 设计令牌 - 圆角系统 */
+$radius: (
+  'sm': 4px,
+  'md': 6px,
+  'lg': 8px,
+  'xl': 12px,
+  'full': 9999px,
+);
+
+/* 设计令牌 - 字体大小 */
+$font-size: (
+  'xs': 10px,
+  'sm': 11px,
+  'md': 12px,
+  'lg': 13px,
+  'xl': 14px,
+  '2xl': 15px,
+  '3xl': 16px,
+);
+
+/* 设计令牌 - 过渡时间 */
+$transition: (
+  'fast': 0.15s,
+  'normal': 0.2s,
+  'slow': 0.3s,
+);
+
+/* 设计令牌 - 阴影层级 */
+$shadow: (
+  'sm': 0 2px 4px rgba(0, 0, 0, 0.1),
+  'md': 0 4px 12px rgba(0, 0, 0, 0.15),
+  'lg': 0 8px 24px rgba(0, 0, 0, 0.2),
+  'xl': 0 20px 60px rgba(0, 0, 0, 0.4),
+);
