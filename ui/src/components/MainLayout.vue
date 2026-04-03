@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { settingsManager, type LegacySettings } from '@data/settings-manager';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, provide } from 'vue';
 import { useDiceSystem, usePresets } from '../composables';
 import { useDashboard } from '../composables/useDashboard';
 import ChangesPanel from './ChangesPanel.vue';
@@ -19,6 +19,42 @@ import TableBrowser from './TableBrowser.vue';
 const { getTableData } = useDashboard();
 const { initialize } = useDiceSystem();
 const { loadPresets } = usePresets();
+
+interface StatusEffect {
+  id: number;
+  name: string;
+  type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
+  intensity: 'weak' | 'medium' | 'strong';
+  value: number;
+  remainingRounds: number;
+  description: string;
+}
+
+interface CombatState {
+  active: boolean;
+  round: number;
+  enemyName: string;
+  enemyMaxHP: number;
+  enemyCurrentHP: number;
+  playerMaxHP: number;
+  playerCurrentHP: number;
+  playerShield: number;
+}
+
+const activeStatuses = ref<StatusEffect[]>([]);
+const combat = ref<CombatState>({
+  active: false,
+  round: 1,
+  enemyName: '',
+  enemyMaxHP: 100,
+  enemyCurrentHP: 100,
+  playerMaxHP: 100,
+  playerCurrentHP: 100,
+  playerShield: 0,
+});
+
+provide('aidmStatuses', activeStatuses);
+provide('aidmCombat', combat);
 
 // 面板状态
 const activeTab = ref<string>('');

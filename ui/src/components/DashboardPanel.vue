@@ -279,20 +279,34 @@ function handleDice(name: string, val: any) {
             </div>
           </div>
 
-          <!-- 属性区 -->
-          <div class="acu-info-section">
+          <!-- 基础属性区 -->
+          <div v-if="playerInfo?.baseAttrs?.length" class="acu-info-section">
             <h4 class="acu-section-title">
               <i class="fa-solid fa-chart-bar"></i>
-              属性 ({{ (playerInfo?.baseAttrs?.length || 0) + (playerInfo?.specialAttrs?.length || 0) }})
+              基础属性 ({{ playerInfo?.baseAttrs?.length || 0 }})
             </h4>
-            <div v-if="playerInfo?.baseAttrs?.length || playerInfo?.specialAttrs?.length" class="acu-attr-grid">
-              <div v-for="attr in [...(playerInfo?.baseAttrs || []), ...(playerInfo?.specialAttrs || [])]" :key="attr.name" class="acu-attr-item">
+            <div class="acu-attr-grid">
+              <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-item">
                 <span class="label">{{ attr.name }}</span>
                 <span class="val">{{ attr.value }}</span>
                 <i class="fa-solid fa-dice-d20" @click="handleDice(attr.name, attr.value)"></i>
               </div>
             </div>
-            <div v-else class="acu-empty-hint">暂无属性</div>
+          </div>
+
+          <!-- 特有属性区 -->
+          <div v-if="playerInfo?.specialAttrs?.length" class="acu-info-section">
+            <h4 class="acu-section-title">
+              <i class="fa-solid fa-star"></i>
+              特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
+            </h4>
+            <div class="acu-attr-grid">
+              <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-item special">
+                <span class="label">{{ attr.name }}</span>
+                <span class="val">{{ attr.value }}</span>
+                <i class="fa-solid fa-dice-d20" @click="handleDice(attr.name, attr.value)"></i>
+              </div>
+            </div>
           </div>
 
           <!-- 战斗属性区 -->

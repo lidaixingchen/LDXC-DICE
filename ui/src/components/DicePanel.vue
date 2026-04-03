@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, ref, watch } from 'vue';
+import { computed, onMounted, provide, ref, watch, inject } from 'vue';
 import { useCharacterData, useDiceSystem, useDiceHistory, useDropdownSuggestions, usePresets } from '../composables';
 import type { AttributeButton } from '../composables/useCharacterData';
 import type { CheckResult } from '../types';
@@ -80,8 +80,19 @@ interface StatusEffect {
   description: string;
 }
 
+interface CombatState {
+  active: boolean;
+  round: number;
+  enemyName: string;
+  enemyMaxHP: number;
+  enemyCurrentHP: number;
+  playerMaxHP: number;
+  playerCurrentHP: number;
+  playerShield: number;
+}
+
 let statusIdCounter = 0;
-const activeStatuses = ref<StatusEffect[]>([]);
+const activeStatuses = inject<any>('aidmStatuses');
 const newStatusName = ref('');
 const newStatusType = ref<'buff' | 'debuff' | 'dot' | 'control' | 'shield'>('debuff');
 const newStatusIntensity = ref<'weak' | 'medium' | 'strong'>('medium');
@@ -117,27 +128,7 @@ const equipment = ref<EquipmentSlot>({
   dodgeBonus: 0,
 });
 
-interface CombatState {
-  active: boolean;
-  round: number;
-  enemyName: string;
-  enemyMaxHP: number;
-  enemyCurrentHP: number;
-  playerMaxHP: number;
-  playerCurrentHP: number;
-  playerShield: number;
-}
-
-const combat = ref<CombatState>({
-  active: false,
-  round: 1,
-  enemyName: '',
-  enemyMaxHP: 100,
-  enemyCurrentHP: 100,
-  playerMaxHP: 100,
-  playerCurrentHP: 100,
-  playerShield: 0,
-});
+const combat = inject<any>('aidmCombat');
 
 function startCombat(): void {
   const spv = getSPV(worldLevel.value);
@@ -1406,9 +1397,7 @@ function generateSkills(): void {
 
 provide('aidmInitiatorName', initiatorName);
 provide('aidmWorldLevel', worldLevel);
-provide('aidmCombat', combat);
 provide('aidmEquipment', equipment);
-provide('aidmStatuses', activeStatuses);
 provide('aidmCurrentCharacter', currentCharacter);
 
 loadSaveSlots();
