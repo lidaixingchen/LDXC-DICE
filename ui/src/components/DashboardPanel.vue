@@ -956,13 +956,14 @@ function handleDice(name: string, val: any) {
 .acu-player-core {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, 
-    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.15) 0%, 
-    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05) 100%);
-  border: 2px solid var(--acu-accent);
-  border-radius: var(--acu-radius-xl, 12px);
-  padding: var(--acu-space-lg, 16px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1) 0%, 
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.03) 100%);
+  border: 1px solid var(--acu-accent);
+  border-radius: var(--acu-radius-lg, 8px);
+  padding: var(--acu-space-md, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   position: relative;
+  overflow: visible;
   
   &::before {
     content: '';
@@ -970,24 +971,24 @@ function handleDice(name: string, val: any) {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2px;
     background: linear-gradient(90deg, var(--acu-accent), transparent 70%);
-    border-radius: var(--acu-radius-xl, 12px) var(--acu-radius-xl, 12px) 0 0;
+    border-radius: var(--acu-radius-lg, 8px) var(--acu-radius-lg, 8px) 0 0;
   }
 }
 
 .acu-core-combat {
-  margin-top: var(--acu-space-md, 12px);
-  padding-top: var(--acu-space-md, 12px);
+  margin-top: var(--acu-space-sm, 8px);
+  padding-top: var(--acu-space-sm, 8px);
   border-top: 1px dashed var(--acu-border);
 }
 
 .acu-combat-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--acu-space-sm, 8px);
-  margin-top: var(--acu-space-sm, 8px);
-  padding: var(--acu-space-sm, 8px);
+  gap: var(--acu-space-xs, 4px);
+  margin-top: var(--acu-space-xs, 4px);
+  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
   background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05);
   border-radius: var(--acu-radius-md, 6px);
   
@@ -1023,30 +1024,30 @@ function handleDice(name: string, val: any) {
 .acu-core-resources {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--acu-space-sm, 8px);
-  margin-top: var(--acu-space-md, 12px);
-  padding-top: var(--acu-space-md, 12px);
+  gap: var(--acu-space-xs, 4px);
+  margin-top: var(--acu-space-sm, 8px);
+  padding-top: var(--acu-space-sm, 8px);
   border-top: 1px dashed var(--acu-border);
 }
 
 .acu-core-resource-item {
   display: flex;
   align-items: center;
-  gap: var(--acu-space-xs, 4px);
-  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
+  gap: 2px;
+  padding: 2px 6px;
   background: var(--acu-card-bg);
   border: 1px solid var(--acu-border);
-  border-radius: var(--acu-radius-md, 6px);
+  border-radius: 4px;
   
   .label {
     color: var(--acu-text-sub);
-    font-size: var(--acu-font-sm, 12px);
+    font-size: 10px;
   }
   
   .val {
     color: var(--acu-accent);
-    font-size: var(--acu-font-md, 14px);
-    font-weight: bold;
+    font-size: 11px;
+    font-weight: 600;
   }
 }
 
@@ -1461,23 +1462,23 @@ function handleDice(name: string, val: any) {
 .acu-player-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 8px 10px;
   background: var(--acu-card-bg);
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--acu-border);
 }
 
 .acu-player-avatar {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--acu-accent) 0%, var(--acu-btn-active-bg) 100%);
   border: 2px solid var(--acu-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--acu-button-text-on-accent, #fff);
   flex-shrink: 0;
@@ -1511,8 +1512,9 @@ function handleDice(name: string, val: any) {
 .acu-level-tooltip {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%) translateY(8px);
+  top: calc(100% + 8px);
+  bottom: auto;
+  transform: translateX(-50%) translateY(-8px);
   min-width: 180px;
   padding: 10px 12px;
   background: var(--acu-card-bg);
@@ -1530,11 +1532,12 @@ function handleDice(name: string, val: any) {
   &::after {
     content: '';
     position: absolute;
-    top: 100%;
+    bottom: 100%;
+    top: auto;
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: var(--acu-card-bg);
+    border-bottom-color: var(--acu-card-bg);
   }
 }
 
@@ -1642,48 +1645,48 @@ function handleDice(name: string, val: any) {
 .acu-player-name-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .acu-player-name {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--acu-text-main);
 }
 
 .acu-world-level {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 3px;
+  font-size: 11px;
   font-weight: 600;
   
   i {
-    font-size: 10px;
+    font-size: 9px;
   }
 }
 
 .acu-player-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .acu-status-tag {
-  padding: 3px 10px;
+  padding: 2px 8px;
   background: var(--acu-accent);
   color: var(--acu-button-text-on-accent, #fff);
-  border-radius: 12px;
-  font-size: 11px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 500;
 }
 
 .acu-position-tag {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
+  gap: 3px;
+  padding: 2px 8px;
   background: var(--acu-badge-bg);
   color: var(--acu-text-sub);
   border-radius: 12px;
@@ -1806,22 +1809,22 @@ function handleDice(name: string, val: any) {
 }
 
 .acu-hp-bar-container {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .acu-hp-label {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--acu-text-main);
-  margin-bottom: 4px;
-  font-weight: bold;
+  margin-bottom: 2px;
+  font-weight: 600;
 }
 
 .acu-hp-bar {
-  height: 20px;
+  height: 14px;
   background: var(--acu-border);
-  border-radius: 10px;
+  border-radius: 7px;
   overflow: hidden;
   position: relative;
 }
@@ -1830,7 +1833,7 @@ function handleDice(name: string, val: any) {
   height: 100%;
   background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
   transition: width 0.3s ease;
-  border-radius: 10px;
+  border-radius: 7px;
 }
 
 .acu-shield-fill {
@@ -1840,25 +1843,25 @@ function handleDice(name: string, val: any) {
   height: 100%;
   background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
   transition: width 0.3s ease;
-  border-radius: 10px;
+  border-radius: 7px;
 }
 
 .acu-shield-label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 10px;
+  gap: 3px;
+  font-size: 9px;
   color: #3498db;
-  margin-top: 2px;
+  margin-top: 1px;
   
-  i { font-size: 9px; }
+  i { font-size: 8px; }
 }
 
 .acu-combat-info {
-  margin-top: 8px;
-  padding: 8px;
+  margin-top: 6px;
+  padding: 6px;
   background: var(--acu-card-bg);
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid var(--acu-border);
 }
 
