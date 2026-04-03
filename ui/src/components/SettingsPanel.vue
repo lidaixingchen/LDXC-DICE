@@ -574,6 +574,16 @@ onMounted(() => {
               @change="updateLegacy({ tableFontSize: parseInt(($event.target as any).value) })"
             />
           </div>
+          <div class="acu-setting-row">
+            <label>图表卡片大小 ({{ settings.chartCardSize }}px)</label>
+            <input
+              type="range"
+              min="120"
+              max="400"
+              :value="settings.chartCardSize"
+              @input="updateLegacy({ chartCardSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
           <div class="acu-group-label">掷骰安全</div>
           <div class="acu-setting-row checkbox">
             <label>隐藏本地投骰结果</label>

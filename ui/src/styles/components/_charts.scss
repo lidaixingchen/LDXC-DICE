@@ -10,6 +10,7 @@
   border: 1px solid var(--acu-border);
   border-radius: var(--acu-radius-lg);
   padding: var(--acu-space-lg);
+  --acu-chart-card-size: 200px;
   
   /* 图表标题 */
   .acu-chart-title {
@@ -477,6 +478,8 @@
   border-radius: var(--acu-radius-lg);
   padding: var(--acu-space-lg);
   transition: all var(--acu-transition-normal);
+  min-width: var(--acu-chart-card-size, 200px);
+  min-height: var(--acu-chart-card-size, 200px);
   
   &:hover {
     box-shadow: var(--acu-shadow-md);

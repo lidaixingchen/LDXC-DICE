@@ -531,7 +531,7 @@
 
 .acu-d20-stats-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--acu-chart-card-size, 200px), 1fr));
   gap: var(--acu-space-md);
   padding: var(--acu-space-lg);
   background: var(--acu-bg-panel);
@@ -543,6 +543,8 @@
     padding: var(--acu-space-md);
     background: var(--acu-gray-50);
     border-radius: var(--acu-radius-md);
+    min-width: var(--acu-chart-card-size, 200px);
+    min-height: var(--acu-chart-card-size, 200px);
     
     .acu-theme-dark & {
       background: var(--acu-gray-800);

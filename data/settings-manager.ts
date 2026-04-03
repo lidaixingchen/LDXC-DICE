@@ -36,6 +36,7 @@ export interface LegacySettings {
   hiddenTableKeys: string[];
   tableOrderKeys: string[];
   tableFontSize: number;
+  chartCardSize: number;
 }
 
 export interface GeneralSettings {
@@ -177,6 +178,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     hiddenTableKeys: [],
     tableOrderKeys: [],
     tableFontSize: 13,
+    chartCardSize: 200,
   },
   general: {
     defaultPresetId: 'aidm_standard_check',

@@ -370,6 +370,7 @@ onUnmounted(() => {
       '--acu-font-size': legacySettings.fontSize + 'px',
       '--acu-opt-font-size': legacySettings.optionFontSize + 'px',
       '--acu-table-font-size': legacySettings.tableFontSize + 'px',
+      '--acu-chart-card-size': legacySettings.chartCardSize + 'px',
       '--acu-bottom-offset': legacySettings.bottomOffset + 'px',
     }"
   >
