@@ -84,18 +84,18 @@
 /* ========== 卡片头部 ========== */
 .acu-wrapper .acu-card-header {
     flex: 0 0 auto;
-    padding: var(--acu-space-sm) var(--acu-space-10px);
+    padding: var(--acu-space-md) var(--acu-space-10px);
     background: var(--acu-table-head);
     border-bottom: 1px dashed var(--acu-border);
     font-weight: bold;
     color: var(--acu-text-main);
-    font-size: var(--acu-font-xl);
+    font-size: var(--acu-font-2xl);
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
     gap: var(--acu-space-sm);
-    min-height: var(--acu-size-40px);
+    min-height: var(--acu-size-44px);
     height: auto;
     position: relative;
 }
@@ -156,20 +156,21 @@
 
 /* ========== 卡片主体 ========== */
 .acu-card-body {
-    padding: var(--acu-space-6px) var(--acu-space-md);
+    padding: var(--acu-space-sm) var(--acu-space-md);
     display: flex;
     flex-direction: column;
     gap: 0;
-    font-size: var(--acu-table-font-size, var(--acu-font-size, 13px));
+    font-size: var(--acu-table-font-size, var(--acu-font-size, 14px));
     flex: 1;
 }
 
 .acu-card-row {
     display: block;
-    padding: var(--acu-space-6px) 0;
+    padding: var(--acu-space-sm) 0;
     border-bottom: 1px dashed var(--acu-border);
     cursor: pointer;
     overflow: hidden;
+    min-height: 24px;
 }
 
 .acu-card-row:last-child {
@@ -187,8 +188,8 @@
     width: auto;
     margin-right: var(--acu-space-sm);
     color: var(--acu-text-sub);
-    font-size: 0.9em;
-    line-height: 1.5;
+    font-size: 0.95em;
+    line-height: 1.6;
     padding-top: 0;
 }
 
@@ -207,9 +208,9 @@
     text-align: left;
     word-break: break-all;
     white-space: pre-wrap;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--acu-text-main);
-    font-size: 1em;
+    font-size: 1.05em;
 }
 
 /* ========== 卡片操作 ========== */

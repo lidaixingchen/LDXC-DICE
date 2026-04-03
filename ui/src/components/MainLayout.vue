@@ -7,6 +7,7 @@ import ChangesPanel from './ChangesPanel.vue';
 import DashboardPanel from './DashboardPanel.vue';
 import DicePanel from './DicePanel.vue';
 import FavoritesPanel from './FavoritesPanel.vue';
+import GeneratePanel from './GeneratePanel.vue';
 import MvuPanel from './MvuPanel.vue';
 import RelationGraph from './RelationGraph.vue';
 import SettingsPanel from './SettingsPanel.vue';
@@ -29,6 +30,7 @@ const showMvu = ref(false);
 const showFavorites = ref(false);
 const showSettings = ref(false);
 const showSave = ref(false);
+const showGenerate = ref(false);
 const showDiceHistory = ref(false);
 const showPresetManager = ref(false);
 const showOpposedCheck = ref(false);
@@ -43,6 +45,7 @@ const SPECIAL_NAV_ITEMS = [
   { key: '__changes__', icon: 'fa-code-compare', label: '审核', id: 'acu-btn-changes' },
   { key: '__mvu__', icon: 'fa-code-branch', label: '变量', id: 'acu-btn-mvu' },
   { key: '__favorites__', icon: 'fa-star', label: '收藏', id: 'acu-btn-favorites' },
+  { key: '__generate__', icon: 'fa-wand-magic-sparkles', label: '生成', id: 'acu-btn-generate-nav' },
   { key: '__save__', icon: 'fa-floppy-disk', label: '存档', id: 'acu-btn-save-nav' },
 ];
 
@@ -86,6 +89,7 @@ function handleNavClick(key: string) {
   else if (key === '__changes__') showChanges.value = true;
   else if (key === '__mvu__') showMvu.value = true;
   else if (key === '__favorites__') showFavorites.value = true;
+  else if (key === '__generate__') showGenerate.value = true;
   else if (key === '__save__') showSave.value = true;
   else activeTab.value = key;
 }
@@ -98,6 +102,7 @@ function closeAllPanels() {
   showFavorites.value = false;
   showSettings.value = false;
   showSave.value = false;
+  showGenerate.value = false;
   showDiceHistory.value = false;
   showPresetManager.value = false;
   showOpposedCheck.value = false;
@@ -109,6 +114,7 @@ function isNavItemActive(item: any): boolean {
   if (item.key === '__changes__') return showChanges.value;
   if (item.key === '__mvu__') return showMvu.value;
   if (item.key === '__favorites__') return showFavorites.value;
+  if (item.key === '__generate__') return showGenerate.value;
   if (item.key === '__save__') return showSave.value;
   if (item.key === '__dashboard__') return showDashboard.value;
   return false;
@@ -330,6 +336,7 @@ onUnmounted(() => {
       <FavoritesPanel v-else-if="showFavorites" @close="showFavorites = false" />
       <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
       <SavePanel v-else-if="showSave" @close="showSave = false" />
+      <GeneratePanel v-else-if="showGenerate" @close="showGenerate = false" />
       <DiceHistoryPanel v-else-if="showDiceHistory" @close="showDiceHistory = false" />
       <PresetManager v-else-if="showPresetManager" @close="showPresetManager = false" />
       <TableBrowser
