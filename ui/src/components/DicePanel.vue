@@ -1007,6 +1007,22 @@ ${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
   addCheckEntry(lastResult.value, { initiatorName: initiator });
 }
 
+function quickRoll(type: 'normal' | 'advantage' | 'disadvantage'): void {
+  if (isRolling.value) return;
+
+  let modifierValue = 0;
+  if (type === 'advantage') {
+    modifierValue = 5;
+  } else if (type === 'disadvantage') {
+    modifierValue = -5;
+  }
+
+  const currentModifier = modifier.value !== '' ? Number(modifier.value) : 0;
+  modifier.value = currentModifier + modifierValue;
+
+  handleRoll();
+}
+
 async function handleRoll(): Promise<void> {
   if (isRolling.value) return;
   isRolling.value = true;
@@ -1490,6 +1506,20 @@ onMounted(() => {
                 </select>
               </div>
             </div>
+            <div class="acu-quick-actions">
+              <button class="acu-quick-action-btn" title="普通检定" @click="quickRoll('normal')">
+                <i class="fa-solid fa-dice"></i>
+                <span>普通</span>
+              </button>
+              <button class="acu-quick-action-btn advantage" title="优势检定" @click="quickRoll('advantage')">
+                <i class="fa-solid fa-arrow-up"></i>
+                <span>优势</span>
+              </button>
+              <button class="acu-quick-action-btn disadvantage" title="劣势检定" @click="quickRoll('disadvantage')">
+                <i class="fa-solid fa-arrow-down"></i>
+                <span>劣势</span>
+              </button>
+            </div>
           </div>
 
           <div class="acu-section-card">
@@ -1594,6 +1624,28 @@ onMounted(() => {
           <div>
             <div class="acu-dice-form-label">修正值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="acu-calc-preview">
+          <div class="acu-calc-formula">
+            <span class="acu-calc-dice">1d20</span>
+            <span class="acu-calc-plus">+</span>
+            <span class="acu-calc-mod">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+            <span class="acu-calc-plus">+</span>
+            <span class="acu-calc-mastery">{{ getMasteryBonus(worldLevel) }}</span>
+            <span v-if="modifier !== '' && Number(modifier) !== 0">
+              <span class="acu-calc-plus">{{ Number(modifier) >= 0 ? '+' : '' }}</span>
+              <span class="acu-calc-bonus">{{ modifier }}</span>
+            </span>
+            <span class="acu-calc-vs">vs</span>
+            <span class="acu-calc-dc">DC {{ targetValue !== '' ? targetValue : getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
+          </div>
+          <div class="acu-calc-hint">
+            <span v-if="attrName">{{ attrName }}</span>
+            <span v-else>自由检定</span>
+            <span class="acu-calc-sep">|</span>
+            <span>{{ difficulty }}难度</span>
           </div>
         </div>
 
@@ -3226,6 +3278,137 @@ onMounted(() => {
   gap: 6px;
 }
 
+.acu-calc-preview {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.08), rgba(155, 89, 182, 0.08));
+  border: 1px solid rgba(52, 152, 219, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.acu-calc-formula {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.acu-calc-dice {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.acu-calc-plus {
+  color: var(--acu-text-sub);
+  font-weight: 400;
+}
+
+.acu-calc-mod {
+  color: var(--acu-success);
+  background: rgba(46, 204, 113, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.acu-calc-mastery {
+  color: #9b59b6;
+  background: rgba(155, 89, 182, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.acu-calc-bonus {
+  color: #f39c12;
+  background: rgba(243, 156, 18, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.acu-calc-vs {
+  color: var(--acu-text-sub);
+  font-weight: 400;
+  margin: 0 8px;
+  font-style: italic;
+}
+
+.acu-calc-dc {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.acu-calc-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--acu-text-sub);
+}
+
+.acu-calc-sep {
+  color: var(--acu-border);
+}
+
+.acu-quick-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--acu-border);
+}
+
+.acu-quick-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 14px;
+  }
+
+  &:hover {
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+    transform: translateY(-1px);
+  }
+
+  &.advantage {
+    &:hover {
+      border-color: #27ae60;
+      color: #27ae60;
+      background: rgba(46, 204, 113, 0.1);
+    }
+  }
+
+  &.disadvantage {
+    &:hover {
+      border-color: #e74c3c;
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+    }
+  }
+}
+
 .acu-info-card {
   background: linear-gradient(135deg, var(--acu-bg-header), var(--acu-bg-panel));
   border: 1px solid var(--acu-border);
@@ -3307,5 +3490,172 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 700;
   color: var(--acu-text-main);
+}
+
+@media (max-width: 768px) {
+  .acu-dual-column {
+    grid-template-columns: 1fr;
+  }
+
+  .acu-mode-selector {
+    flex-wrap: wrap;
+  }
+
+  .acu-primary-modes {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .acu-mode-btn {
+    padding: 6px 4px;
+    font-size: 9px;
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  .acu-info-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .acu-dice-form-row.cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .acu-dice-roll-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .acu-dice-panel-header {
+    padding: 6px 10px;
+  }
+
+  .acu-dice-panel-title {
+    font-size: 12px;
+  }
+
+  .acu-dice-panel-body {
+    padding: 8px;
+    gap: 6px;
+  }
+
+  .acu-mode-selector {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .acu-primary-modes {
+    flex-direction: row;
+  }
+
+  .acu-more-modes {
+    width: 100%;
+  }
+
+  .acu-mode-btn.more {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .acu-mode-dropdown {
+    position: static;
+    margin-top: 4px;
+    width: 100%;
+  }
+
+  .acu-section-card {
+    padding: 8px;
+  }
+
+  .acu-card-header {
+    font-size: 10px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .acu-info-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .acu-info-card {
+    padding: 6px 4px;
+
+    .label {
+      font-size: 8px;
+    }
+
+    .value {
+      font-size: 14px;
+    }
+  }
+
+  .acu-dice-form-row {
+    gap: 6px;
+
+    &.cols-2,
+    &.cols-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .acu-dice-input,
+  .acu-dice-select {
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .acu-dice-form-label {
+    font-size: 10px;
+  }
+
+  .acu-dice-quick-compact {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+
+  .acu-stat-chip {
+    padding: 6px 4px;
+
+    .label {
+      font-size: 9px;
+    }
+
+    .val {
+      font-size: 12px;
+    }
+
+    .mod {
+      font-size: 8px;
+    }
+  }
+
+  .acu-dice-roll-btn {
+    height: 40px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .acu-dice-result-value {
+    font-size: 18px;
+  }
+
+  .acu-dice-result-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .acu-dice-char-buttons {
+    gap: 3px;
+  }
+
+  .acu-dice-char-btn {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
 }
 </style>
