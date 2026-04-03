@@ -1505,7 +1505,7 @@ onMounted(() => {
       </div>
 
       <div class="acu-dual-column">
-        <div class="acu-quick-panel">
+        <div v-if="checkMode === 'standard' && !isCustomMode" class="acu-quick-panel">
           <div class="acu-section-card">
             <div class="acu-card-header">
               <span class="acu-card-title"><i class="fa-solid fa-globe"></i> 世界设定</span>
@@ -1700,125 +1700,125 @@ onMounted(() => {
           </div>
         </div>
           </div>
-        </div>
-      </div>
 
-      <div v-if="checkMode === 'contest' && !isCustomMode" class="acu-section-card">
-        <div class="acu-card-header">
-          <span class="acu-card-title"><i class="fa-solid fa-dice-d20"></i> 对抗检定</span>
-        </div>
-        <div class="acu-dice-form-row cols-3">
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">名字</div>
-            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">
-              <span>己方属性名</span>
-              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
-                <i class="fa-solid fa-dice"></i>
-              </button>
+          <div v-if="checkMode === 'contest' && !isCustomMode" class="acu-section-card">
+            <div class="acu-card-header">
+              <span class="acu-card-title"><i class="fa-solid fa-dice-d20"></i> 对抗检定</span>
             </div>
-            <div class="acu-dice-input-wrapper">
-              <input 
-                v-model="attrName" 
-                type="text" 
-                class="acu-dice-input" 
-                placeholder="自由检定"
-                @focus="attrDropdown.update(attributeButtons)"
-                @blur="attrDropdown.close()"
-              />
-              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
-                <div 
-                  v-for="a in attrDropdown.suggestions.value" 
-                  :key="a.name"
-                  class="acu-dropdown-item"
-                  @mousedown.prevent="handleSelectAttribute(a)"
-                >
-                  <span class="acu-dropdown-label">{{ a.name }}</span>
-                  <span class="acu-dropdown-value">{{ a.value }}</span>
+            <div class="acu-dice-form-row cols-3">
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">名字</div>
+                <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+              </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">
+                  <span>己方属性名</span>
+                  <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                    <i class="fa-solid fa-dice"></i>
+                  </button>
+                </div>
+                <div class="acu-dice-input-wrapper">
+                  <input 
+                    v-model="attrName" 
+                    type="text" 
+                    class="acu-dice-input" 
+                    placeholder="自由检定"
+                    @focus="attrDropdown.update(attributeButtons)"
+                    @blur="attrDropdown.close()"
+                  />
+                  <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                    <div 
+                      v-for="a in attrDropdown.suggestions.value" 
+                      :key="a.name"
+                      class="acu-dropdown-item"
+                      @mousedown.prevent="handleSelectAttribute(a)"
+                    >
+                      <span class="acu-dropdown-label">{{ a.name }}</span>
+                      <span class="acu-dropdown-value">{{ a.value }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">己方属性值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">
-              <span>对方属性名</span>
-            </div>
-            <div class="acu-dice-input-wrapper">
-              <input 
-                v-model="oppAttrName" 
-                type="text" 
-                class="acu-dice-input" 
-                placeholder="对方属性"
-                @focus="attrDropdown.update(attributeButtons)"
-                @blur="attrDropdown.close()"
-              />
-              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
-                <div 
-                  v-for="a in attrDropdown.suggestions.value" 
-                  :key="a.name"
-                  class="acu-dropdown-item"
-                  @mousedown.prevent="handleSelectOpponentAttribute(a)"
-                >
-                  <span class="acu-dropdown-label">{{ a.name }}</span>
-                  <span class="acu-dropdown-value">{{ a.value }}</span>
-                </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">己方属性值</div>
+                <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
               </div>
             </div>
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">对方属性值</div>
-            <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">对方投骰值</div>
-            <input v-model="oppRoll" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-        </div>
 
-        <div class="acu-dice-section-title" style="margin-top: 8px;">
-          <span><i class="fa-solid fa-plus-minus"></i> 优势/劣势调整</span>
-        </div>
-        <div class="acu-dice-form-row cols-3">
-          <div>
-            <div class="acu-dice-form-label">环境优势</div>
-            <input v-model="envAdvantage" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-          <div>
-            <div class="acu-dice-form-label">环境劣势</div>
-            <input v-model="envDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-          <div>
-            <div class="acu-dice-form-label">状态优势</div>
-            <input v-model="statusAdvantage" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-        </div>
-        <div class="acu-dice-form-row cols-3">
-          <div>
-            <div class="acu-dice-form-label">状态劣势</div>
-            <input v-model="statusDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-        </div>
-
-        <div class="acu-info-cards">
-          <div class="acu-info-card">
-            <div class="label">己方加成</div>
-            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
-              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            <div class="acu-dice-form-row cols-3">
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">
+                  <span>对方属性名</span>
+                </div>
+                <div class="acu-dice-input-wrapper">
+                  <input 
+                    v-model="oppAttrName" 
+                    type="text" 
+                    class="acu-dice-input" 
+                    placeholder="对方属性"
+                    @focus="attrDropdown.update(attributeButtons)"
+                    @blur="attrDropdown.close()"
+                  />
+                  <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                    <div 
+                      v-for="a in attrDropdown.suggestions.value" 
+                      :key="a.name"
+                      class="acu-dropdown-item"
+                      @mousedown.prevent="handleSelectOpponentAttribute(a)"
+                    >
+                      <span class="acu-dropdown-label">{{ a.name }}</span>
+                      <span class="acu-dropdown-value">{{ a.value }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">对方属性值</div>
+                <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
+              </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">对方投骰值</div>
+                <input v-model="oppRoll" type="text" class="acu-dice-input" placeholder="留空=10" />
+              </div>
             </div>
-          </div>
-          <div class="acu-info-card">
-            <div class="label">对方加成</div>
-            <div class="value" :class="{ positive: computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 }">
-              {{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}
+
+            <div class="acu-dice-section-title" style="margin-top: 8px;">
+              <span><i class="fa-solid fa-plus-minus"></i> 优势/劣势调整</span>
+            </div>
+            <div class="acu-dice-form-row cols-3">
+              <div>
+                <div class="acu-dice-form-label">环境优势</div>
+                <input v-model="envAdvantage" type="text" class="acu-dice-input" placeholder="0" />
+              </div>
+              <div>
+                <div class="acu-dice-form-label">环境劣势</div>
+                <input v-model="envDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
+              </div>
+              <div>
+                <div class="acu-dice-form-label">状态优势</div>
+                <input v-model="statusAdvantage" type="text" class="acu-dice-input" placeholder="0" />
+              </div>
+            </div>
+            <div class="acu-dice-form-row cols-3">
+              <div>
+                <div class="acu-dice-form-label">状态劣势</div>
+                <input v-model="statusDisadvantage" type="text" class="acu-dice-input" placeholder="0" />
+              </div>
+            </div>
+
+            <div class="acu-info-cards">
+              <div class="acu-info-card">
+                <div class="label">己方加成</div>
+                <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+                  {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+                </div>
+              </div>
+              <div class="acu-info-card">
+                <div class="label">对方加成</div>
+                <div class="value" :class="{ positive: computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 }">
+                  {{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
