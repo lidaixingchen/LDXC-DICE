@@ -966,12 +966,12 @@ const questList = computed(() => {
 .acu-player-core {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, 
-    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1) 0%, 
-    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.03) 100%);
-  border: 1px solid var(--acu-accent);
-  border-radius: var(--acu-radius-lg, 8px);
-  padding: var(--acu-space-md, 12px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.08) 0%, 
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.02) 100%);
+  border: 1px solid rgba(var(--acu-accent-rgb, 137, 180, 250), 0.5);
+  border-radius: var(--acu-radius-md, 6px);
+  padding: 8px 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   position: relative;
   overflow: visible;
   
@@ -981,52 +981,46 @@ const questList = computed(() => {
     top: 0;
     left: 0;
     right: 0;
-    height: 2px;
+    height: 1px;
     background: linear-gradient(90deg, var(--acu-accent), transparent 70%);
-    border-radius: var(--acu-radius-lg, 8px) var(--acu-radius-lg, 8px) 0 0;
   }
 }
 
 .acu-core-combat {
-  margin-top: var(--acu-space-sm, 8px);
-  padding-top: var(--acu-space-sm, 8px);
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px dashed var(--acu-border);
 }
 
 .acu-combat-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--acu-space-xs, 4px);
-  margin-top: var(--acu-space-xs, 4px);
-  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
-  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05);
-  border-radius: var(--acu-radius-md, 6px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 4px;
   
   @media (max-width: 480px) {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 8px;
   }
 }
 
 .acu-stat-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: var(--acu-space-xs, 4px);
+  gap: 3px;
   
   i {
-    font-size: 14px;
+    font-size: 10px;
     color: var(--acu-accent);
   }
   
   .acu-stat-label {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--acu-text-sub);
   }
   
   .acu-stat-value {
-    font-size: 13px;
-    font-weight: bold;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--acu-text-main);
   }
 }
@@ -1034,9 +1028,9 @@ const questList = computed(() => {
 .acu-core-resources {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--acu-space-xs, 4px);
-  margin-top: var(--acu-space-sm, 8px);
-  padding-top: var(--acu-space-sm, 8px);
+  gap: 3px;
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px dashed var(--acu-border);
 }
 
@@ -1595,23 +1589,23 @@ const questList = computed(() => {
 .acu-player-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 6px 8px;
   background: var(--acu-card-bg);
-  border-radius: 6px;
+  border-radius: 4px;
   border: 1px solid var(--acu-border);
 }
 
 .acu-player-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--acu-accent) 0%, var(--acu-btn-active-bg) 100%);
-  border: 2px solid var(--acu-accent);
+  border: 1px solid var(--acu-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: bold;
   color: var(--acu-button-text-on-accent, #fff);
   flex-shrink: 0;
@@ -1620,14 +1614,14 @@ const questList = computed(() => {
 
 .acu-level-badge {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 9px;
+  bottom: -3px;
+  right: -3px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-size: 8px;
   font-weight: bold;
   color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
   cursor: default;
   
@@ -1942,22 +1936,22 @@ const questList = computed(() => {
 }
 
 .acu-hp-bar-container {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .acu-hp-label {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 9px;
   color: var(--acu-text-main);
-  margin-bottom: 2px;
-  font-weight: 600;
+  margin-bottom: 1px;
+  font-weight: 500;
 }
 
 .acu-hp-bar {
-  height: 14px;
+  height: 10px;
   background: var(--acu-border);
-  border-radius: 7px;
+  border-radius: 5px;
   overflow: hidden;
   position: relative;
 }
@@ -1966,7 +1960,7 @@ const questList = computed(() => {
   height: 100%;
   background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
   transition: width 0.3s ease;
-  border-radius: 7px;
+  border-radius: 5px;
 }
 
 .acu-shield-fill {
@@ -1976,18 +1970,18 @@ const questList = computed(() => {
   height: 100%;
   background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
   transition: width 0.3s ease;
-  border-radius: 7px;
+  border-radius: 5px;
 }
 
 .acu-shield-label {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 9px;
+  gap: 2px;
+  font-size: 8px;
   color: #3498db;
   margin-top: 1px;
   
-  i { font-size: 8px; }
+  i { font-size: 7px; }
 }
 
 .acu-combat-info {
