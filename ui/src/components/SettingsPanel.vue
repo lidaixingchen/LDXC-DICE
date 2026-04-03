@@ -12,6 +12,7 @@ import { validationPresetManager } from '@data/validation-preset-manager';
 import type { ValidationRuleConfig } from '@data/validation-presets';
 import { computed, onMounted, ref } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
+import AttributeRuleManager from './AttributeRuleManager.vue';
 import InteractionManager from './InteractionManager.vue';
 import PresetManager from './PresetManager.vue';
 import RegexManager from './RegexManager.vue';
@@ -59,6 +60,7 @@ const showRegexEditor = ref(false);
 const showPresetManager = ref(false);
 const showInteractionManager = ref(false);
 const showRegexManager = ref(false);
+const showAttributeRuleManager = ref(false);
 const showBlacklistManager = ref(false);
 const showBookmarkManager = ref(false);
 const showDebugConsole = ref(false);
@@ -368,6 +370,9 @@ function openAdvancedManager(type: string) {
       break;
     case '正则规则':
       showRegexManager.value = true;
+      break;
+    case '属性规则':
+      showAttributeRuleManager.value = true;
       break;
     case '变量过滤':
       showBlacklistManager.value = true;
@@ -844,6 +849,7 @@ onMounted(() => {
     <PresetManager v-if="showPresetManager" @close="showPresetManager = false" />
     <InteractionManager v-if="showInteractionManager" @close="showInteractionManager = false" />
     <RegexManager v-if="showRegexManager" @close="showRegexManager = false" />
+    <AttributeRuleManager v-if="showAttributeRuleManager" @close="showAttributeRuleManager = false" />
     <BlacklistManager v-if="showBlacklistManager" @close="showBlacklistManager = false" />
     <BookmarkManager v-if="showBookmarkManager" @close="showBookmarkManager = false" />
     <DebugConsole v-if="showDebugConsole" @close="showDebugConsole = false" />

@@ -1,4 +1,5 @@
 export { default as AttributeInput } from './AttributeInput.vue';
+export { default as AttributeRuleManager } from './AttributeRuleManager.vue';
 export { default as AvatarSelector } from './AvatarSelector.vue';
 export { default as BlacklistManager } from './BlacklistManager.vue';
 export { default as BookmarkManager } from './BookmarkManager.vue';

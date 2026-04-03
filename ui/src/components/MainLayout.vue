@@ -448,7 +448,7 @@ onUnmounted(() => {
 .acu-data-display {
   display: none;
   position: absolute;
-  bottom: calc(100% + 10px); /* 向上弹出，底部锚定在导航栏上方 */
+  bottom: calc(100% + 10px);
   left: 0;
   right: 0;
   width: var(--acu-card-width, 380px);
@@ -466,8 +466,10 @@ onUnmounted(() => {
   display: flex;
 }
 .acu-wrapper.acu-mode-embedded .acu-data-display {
-  bottom: calc(100% + 12px) !important;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25) !important;
+  position: relative !important;
+  bottom: auto !important;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* 选项面板 */
@@ -510,6 +512,10 @@ onUnmounted(() => {
     font-size: var(--acu-opt-font-size, 12px);
     cursor: pointer;
   }
+}
+
+.acu-wrapper.acu-mode-embedded .acu-option-panel {
+  margin-bottom: 12px;
 }
 
 /* 导航容器 */
