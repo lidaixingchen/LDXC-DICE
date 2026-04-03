@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue';
+import { computed, inject, ref, onMounted, onUnmounted } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 
 const emit = defineEmits<{
@@ -7,6 +7,22 @@ const emit = defineEmits<{
 }>();
 
 const { getTableData } = useDashboard();
+
+const activeMobileTab = ref<'player' | 'world' | 'items'>('player');
+const isMobile = ref(false);
+
+function checkMobile() {
+  isMobile.value = window.innerWidth < 768;
+}
+
+onMounted(() => {
+  checkMobile();
+  window.addEventListener('resize', checkMobile);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile);
+});
 
 interface CombatState {
   active: boolean;
@@ -174,7 +190,7 @@ function handleDice(name: string, val: any) {
 </script>
 
 <template>
-  <div class="acu-dashboard">
+  <div class="acu-dashboard" :class="{ 'acu-in-combat': combat?.value?.active }">
     <div class="acu-panel-header">
       <div class="acu-panel-title">
         <div class="acu-title-main"><i class="fa-solid fa-chart-line"></i> <span class="acu-title-text">仪表盘</span></div>
@@ -187,76 +203,25 @@ function handleDice(name: string, val: any) {
 
     <div class="acu-panel-content acu-scroll-y">
       <div class="acu-dash-body">
-        <!-- 主角信息（扁平化展开） -->
-        <div class="acu-player-info">
+        <!-- 主角核心区（全宽突出显示） -->
+        <div class="acu-player-core">
           <!-- 基本信息区 -->
-          <div class="acu-info-section">
-            <div class="acu-player-header">
-              <div class="acu-player-avatar">{{ playerInfo?.name?.charAt(0) || '主' }}</div>
-              <div class="acu-player-basic">
-                <div class="acu-player-name">{{ playerInfo?.name || '主角' }}</div>
-                <div class="acu-player-status">
-                  <span class="acu-status-tag">{{ playerInfo?.status || '正常' }}</span>
-                  <span v-if="playerInfo?.position" class="acu-position-tag">
-                    <i class="fa-solid fa-location-dot"></i>
-                    {{ playerInfo.position }}
-                  </span>
-                </div>
+          <div class="acu-player-header">
+            <div class="acu-player-avatar">{{ playerInfo?.name?.charAt(0) || '主' }}</div>
+            <div class="acu-player-basic">
+              <div class="acu-player-name">{{ playerInfo?.name || '主角' }}</div>
+              <div class="acu-player-status">
+                <span class="acu-status-tag">{{ playerInfo?.status || '正常' }}</span>
+                <span v-if="playerInfo?.position" class="acu-position-tag">
+                  <i class="fa-solid fa-location-dot"></i>
+                  {{ playerInfo.position }}
+                </span>
               </div>
             </div>
           </div>
 
-          <!-- 资源区 -->
-          <div v-if="playerInfo?.resources?.length" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-coins"></i>
-              资源
-            </h4>
-            <div class="acu-resource-grid">
-              <div v-for="res in playerInfo.resources" :key="res.name" class="acu-resource-item">
-                <span class="label">{{ res.name }}</span>
-                <span class="val">{{ res.value }}</span>
-                <i class="fa-solid fa-dice-d20" @click="handleDice(res.name, res.value)"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- 基础属性区 -->
-          <div v-if="playerInfo?.baseAttrs?.length" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-chart-bar"></i>
-              基础属性 ({{ playerInfo?.baseAttrs?.length || 0 }})
-            </h4>
-            <div class="acu-attr-grid">
-              <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-item">
-                <span class="label">{{ attr.name }}</span>
-                <span class="val">{{ attr.value }}</span>
-                <i class="fa-solid fa-dice-d20" @click="handleDice(attr.name, attr.value)"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- 特有属性区 -->
-          <div v-if="playerInfo?.specialAttrs?.length" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-star"></i>
-              特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
-            </h4>
-            <div class="acu-attr-grid">
-              <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-item special">
-                <span class="label">{{ attr.name }}</span>
-                <span class="val">{{ attr.value }}</span>
-                <i class="fa-solid fa-dice-d20" @click="handleDice(attr.name, attr.value)"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- 战斗属性区 -->
-          <div v-if="combat && combat.value" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-heart"></i>
-              战斗属性
-            </h4>
+          <!-- 战斗属性区（核心区突出显示） -->
+          <div v-if="combat && combat.value" class="acu-core-combat">
             <div class="acu-hp-bar-container">
               <div class="acu-hp-label">
                 <span>HP</span>
@@ -297,10 +262,83 @@ function handleDice(name: string, val: any) {
               </div>
             </div>
           </div>
+
+          <!-- 资源区（核心区紧凑显示） -->
+          <div v-if="playerInfo?.resources?.length" class="acu-core-resources">
+            <div v-for="res in playerInfo.resources" :key="res.name" class="acu-core-resource-item">
+              <span class="label">{{ res.name }}</span>
+              <span class="val">{{ res.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 移动端 Tab 导航 -->
+        <div v-if="isMobile" class="acu-mobile-tabs">
+          <button 
+            class="acu-tab-btn" 
+            :class="{ active: activeMobileTab === 'player' }"
+            @click="activeMobileTab = 'player'"
+          >
+            <i class="fa-solid fa-user"></i>
+            <span>属性</span>
+          </button>
+          <button 
+            class="acu-tab-btn" 
+            :class="{ active: activeMobileTab === 'world' }"
+            @click="activeMobileTab = 'world'"
+          >
+            <i class="fa-solid fa-map"></i>
+            <span>世界</span>
+          </button>
+          <button 
+            class="acu-tab-btn" 
+            :class="{ active: activeMobileTab === 'items' }"
+            @click="activeMobileTab = 'items'"
+          >
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>物品</span>
+          </button>
+        </div>
+
+        <!-- 属性区 -->
+        <div class="acu-dash-player" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'player' }">
+          <!-- 基础属性区 -->
+          <div v-if="playerInfo?.baseAttrs?.length" class="acu-info-section">
+            <h4 class="acu-section-title">
+              <i class="fa-solid fa-chart-bar"></i>
+              基础属性 ({{ playerInfo?.baseAttrs?.length || 0 }})
+            </h4>
+            <div class="acu-attr-grid">
+              <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-item">
+                <span class="label">{{ attr.name }}</span>
+                <span class="val">{{ attr.value }}</span>
+                <button class="acu-dice-btn" @click="handleDice(attr.name, attr.value)" :title="`投掷 ${attr.name}`">
+                  <i class="fa-solid fa-dice-d20"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 特有属性区 -->
+          <div v-if="playerInfo?.specialAttrs?.length" class="acu-info-section">
+            <h4 class="acu-section-title">
+              <i class="fa-solid fa-star"></i>
+              特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
+            </h4>
+            <div class="acu-attr-grid">
+              <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-item special">
+                <span class="label">{{ attr.name }}</span>
+                <span class="val">{{ attr.value }}</span>
+                <button class="acu-dice-btn" @click="handleDice(attr.name, attr.value)" :title="`投掷 ${attr.name}`">
+                  <i class="fa-solid fa-dice-d20"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 地点与角色 -->
-        <div class="acu-dash-locations">
+        <div class="acu-dash-locations" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'world' }">
           <h3 class="acu-dash-section-title">
             <i class="fa-solid fa-map"></i>
             地点 ({{ locationList.length }})
@@ -334,7 +372,7 @@ function handleDice(name: string, val: any) {
         </div>
 
         <!-- 物品、装备、任务 -->
-        <div class="acu-dash-intel">
+        <div class="acu-dash-intel" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'items' }">
           <h3 class="acu-dash-section-title">
             <i class="fa-solid fa-bag-shopping"></i>
             物品 ({{ bagList.length }})
@@ -384,16 +422,132 @@ function handleDice(name: string, val: any) {
   display: flex; 
   flex-direction: column; 
   height: 100%; 
+  position: relative;
 }
 
 .acu-dash-body {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1fr;
-  gap: 15px;
-  padding: 15px;
+  grid-template-columns: 1fr;
+  gap: var(--acu-space-md, 12px);
+  padding: var(--acu-space-md, 12px);
 }
 
-/* 主角信息（扁平化） */
+/* ========== 主角核心区（视觉强调） ========== */
+.acu-player-core {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, 
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.15) 0%, 
+    rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05) 100%);
+  border: 2px solid var(--acu-accent);
+  border-radius: var(--acu-radius-xl, 12px);
+  padding: var(--acu-space-lg, 16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--acu-accent), transparent 70%);
+    border-radius: var(--acu-radius-xl, 12px) var(--acu-radius-xl, 12px) 0 0;
+  }
+}
+
+.acu-core-combat {
+  margin-top: var(--acu-space-md, 12px);
+  padding-top: var(--acu-space-md, 12px);
+  border-top: 1px dashed var(--acu-border);
+}
+
+.acu-core-resources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--acu-space-sm, 8px);
+  margin-top: var(--acu-space-md, 12px);
+  padding-top: var(--acu-space-md, 12px);
+  border-top: 1px dashed var(--acu-border);
+}
+
+.acu-core-resource-item {
+  display: flex;
+  align-items: center;
+  gap: var(--acu-space-xs, 4px);
+  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
+  background: var(--acu-card-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md, 6px);
+  
+  .label {
+    color: var(--acu-text-sub);
+    font-size: var(--acu-font-sm, 12px);
+  }
+  
+  .val {
+    color: var(--acu-accent);
+    font-size: var(--acu-font-md, 14px);
+    font-weight: bold;
+  }
+}
+
+/* ========== 移动端 Tab 导航 ========== */
+.acu-mobile-tabs {
+  display: flex;
+  gap: var(--acu-space-xs, 4px);
+  padding: var(--acu-space-xs, 4px);
+  background: var(--acu-bg-nav);
+  border-radius: var(--acu-radius-lg, 8px);
+  margin-bottom: var(--acu-space-sm, 8px);
+  
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.acu-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--acu-space-2xs, 2px);
+  padding: var(--acu-space-sm, 8px);
+  border: none;
+  background: transparent;
+  color: var(--acu-text-sub);
+  font-size: var(--acu-font-xs, 11px);
+  cursor: pointer;
+  border-radius: var(--acu-radius-md, 6px);
+  transition: all 0.2s ease;
+  
+  i {
+    font-size: var(--acu-font-lg, 16px);
+  }
+  
+  &:hover {
+    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1);
+    color: var(--acu-text-main);
+  }
+  
+  &.active {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+  }
+}
+
+.acu-mobile-hidden {
+  display: none !important;
+}
+
+/* ========== 属性区 ========== */
+.acu-dash-player {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-sm, 8px);
+}
+
+/* ========== 主角信息（扁平化） ========== */
 .acu-player-info {
   width: 100%;
 }
@@ -974,6 +1128,147 @@ function handleDice(name: string, val: any) {
 @media (max-width: 768px) {
   .acu-dash-body {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ========== 骰子按钮 ========== */
+.acu-dice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--acu-space-2xs, 2px) var(--acu-space-xs, 4px);
+  border: 1px solid transparent;
+  border-radius: var(--acu-radius-sm, 4px);
+  background: transparent;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  i {
+    font-size: 11px;
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+  }
+  
+  &:hover {
+    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.15);
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+    
+    i {
+      opacity: 1;
+    }
+  }
+  
+  &:active {
+    transform: scale(0.9);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid var(--acu-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ========== 战斗状态视觉区分 ========== */
+.acu-dashboard.acu-in-combat {
+  .acu-player-core {
+    border-color: #ef4444;
+    animation: acuCombatPulse 2s ease infinite;
+  }
+  
+  .acu-player-avatar {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+}
+
+@keyframes acuCombatPulse {
+  0%, 100% { 
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+  }
+  50% { 
+    box-shadow: 0 4px 24px rgba(239, 68, 68, 0.4);
+  }
+}
+
+/* ========== 响应式断点 ========== */
+
+/* 小屏幕 (480px - 767px): 双列布局 */
+@media (min-width: 480px) {
+  .acu-dash-body {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .acu-player-core {
+    grid-column: 1 / -1;
+  }
+  
+  .acu-dash-player {
+    grid-column: 1 / -1;
+  }
+}
+
+/* 中等屏幕 (768px - 1023px): 双列布局，隐藏移动端 Tab */
+@media (min-width: 768px) {
+  .acu-dash-body {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--acu-space-lg, 16px);
+  }
+  
+  .acu-player-core {
+    grid-column: 1 / -1;
+  }
+  
+  .acu-dash-player,
+  .acu-dash-locations,
+  .acu-dash-intel {
+    display: flex !important;
+  }
+  
+  .acu-mobile-tabs {
+    display: none;
+  }
+}
+
+/* 大屏幕 (≥ 1024px): 三列布局 */
+@media (min-width: 1024px) {
+  .acu-dash-body {
+    grid-template-columns: 280px 1fr 280px;
+    gap: var(--acu-space-lg, 16px);
+    padding: var(--acu-space-lg, 16px);
+  }
+  
+  .acu-player-core {
+    grid-column: 1 / -1;
+  }
+  
+  .acu-dash-player {
+    grid-column: 1;
+  }
+  
+  .acu-dash-locations {
+    grid-column: 2;
+  }
+  
+  .acu-dash-intel {
+    grid-column: 3;
+  }
+}
+
+/* 超大屏幕 (≥ 1280px): 更宽的三列布局 */
+@media (min-width: 1280px) {
+  .acu-dash-body {
+    grid-template-columns: 300px 1fr 300px;
+  }
+}
+
+/* 超超大屏幕 (≥ 1536px): 最宽的三列布局 */
+@media (min-width: 1536px) {
+  .acu-dash-body {
+    grid-template-columns: 320px 1fr 320px;
+    max-width: 1600px;
+    margin: 0 auto;
   }
 }
 </style>
