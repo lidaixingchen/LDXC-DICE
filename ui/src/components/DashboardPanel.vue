@@ -155,6 +155,7 @@ const playerInfo = computed(() => {
   let baseAttrs: Array<{name: string, value: string}> = [];
   let specialAttrs: Array<{name: string, value: string}> = [];
   let resources: Array<{name: string, value: string}> = [];
+  let combatAttrs: { hp?: number; maxHp?: number; shield?: number } = {};
   
   headers.forEach((h: string, idx: number) => {
     if (!h) return;
@@ -167,10 +168,40 @@ const playerInfo = computed(() => {
       specialAttrs = specialAttrs.concat(parseAttrs(val));
     } else if (h.includes('资源') || h.includes('金钱')) {
       resources = resources.concat(parseResources(val));
+    } else if (h.includes('战斗属性')) {
+      const hpMatch = String(val).match(/HP[:：]?\s*(\d+)\s*[\/\\]\s*(\d+)/i);
+      if (hpMatch) {
+        combatAttrs.hp = parseInt(hpMatch[1], 10);
+        combatAttrs.maxHp = parseInt(hpMatch[2], 10);
+      }
+      const shieldMatch = String(val).match(/护盾|盾|shield[:：]?\s*(\d+)/i);
+      if (shieldMatch) {
+        combatAttrs.shield = parseInt(shieldMatch[1], 10);
+      }
     }
   });
   
-  return { name, status, position, baseAttrs, specialAttrs, resources };
+  return { name, status, position, baseAttrs, specialAttrs, resources, combatAttrs };
+});
+
+const playerHP = computed(() => {
+  if (combat?.value?.playerMaxHP) {
+    return {
+      current: combat.value.playerCurrentHP,
+      max: combat.value.playerMaxHP,
+      shield: combat.value.playerShield || 0,
+      inCombat: combat.value.active
+    };
+  }
+  if (playerInfo.value?.combatAttrs?.maxHp) {
+    return {
+      current: playerInfo.value.combatAttrs.hp || 0,
+      max: playerInfo.value.combatAttrs.maxHp,
+      shield: playerInfo.value.combatAttrs.shield || 0,
+      inCombat: false
+    };
+  }
+  return null;
 });
 
 const currentLocation = computed(() => {
@@ -291,30 +322,30 @@ function handleDice(name: string, val: any) {
             </div>
           </div>
 
-          <!-- 战斗属性区（核心区突出显示） -->
-          <div v-if="combat && combat.value" class="acu-core-combat">
+          <!-- HP属性区（核心区突出显示） -->
+          <div v-if="playerHP" class="acu-core-combat" :class="{ 'acu-in-active-combat': playerHP.inCombat }">
             <div class="acu-hp-bar-container">
               <div class="acu-hp-label">
                 <span>HP</span>
-                <span>{{ combat.value.playerCurrentHP }} / {{ combat.value.playerMaxHP }}</span>
+                <span>{{ playerHP.current }} / {{ playerHP.max }}</span>
               </div>
               <div class="acu-hp-bar">
                 <div 
                   class="acu-hp-fill" 
-                  :style="{ width: (combat.value.playerCurrentHP / combat.value.playerMaxHP * 100) + '%' }"
+                  :style="{ width: (playerHP.current / playerHP.max * 100) + '%' }"
                 ></div>
                 <div 
-                  v-if="combat.value.playerShield > 0"
+                  v-if="playerHP.shield > 0"
                   class="acu-shield-fill"
-                  :style="{ width: Math.min(combat.value.playerShield / combat.value.playerMaxHP * 100, 100 - (combat.value.playerCurrentHP / combat.value.playerMaxHP * 100)) + '%' }"
+                  :style="{ width: Math.min(playerHP.shield / playerHP.max * 100, 100 - (playerHP.current / playerHP.max * 100)) + '%' }"
                 ></div>
               </div>
-              <div v-if="combat.value.playerShield > 0" class="acu-shield-label">
+              <div v-if="playerHP.shield > 0" class="acu-shield-label">
                 <i class="fa-solid fa-shield-halved"></i>
-                <span>{{ combat.value.playerShield }}</span>
+                <span>{{ playerHP.shield }}</span>
               </div>
             </div>
-            <div v-if="combat.value.active" class="acu-combat-info">
+            <div v-if="playerHP.inCombat && combat?.value" class="acu-combat-info">
               <div class="acu-combat-round">
                 <i class="fa-solid fa-swords"></i>
                 <span>回合 {{ combat.value.round }}</span>
