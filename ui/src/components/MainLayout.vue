@@ -175,20 +175,36 @@ async function handleOptionClick(optionValue: string) {
 
   if (!config.clickOptionToAutoSend) {
     try {
-      const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
-      if (textarea) {
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-        if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(textarea, textarea.value + (textarea.value ? ' ' : '') + optionValue);
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
-          textarea.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-          textarea.value += (textarea.value ? ' ' : '') + optionValue;
-          textarea.dispatchEvent(new Event('input', { bubbles: true }));
-          textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      let win: Window = window;
+      try {
+        while (win.parent && win.parent !== win) {
+          win = win.parent;
         }
-        textarea.focus();
+      } catch {}
+
+      const $ = (win as any).jQuery;
+      if (!$) return;
+
+      const textarea = $('#send_textarea');
+      if (textarea.length === 0) return;
+
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+
+      if (nativeInputValueSetter) {
+        const currentText = textarea.val() || '';
+        const newText = currentText ? `${currentText} ${optionValue}` : optionValue;
+        nativeInputValueSetter.call(textarea[0], newText);
+        textarea[0].dispatchEvent(new Event('input', { bubbles: true }));
+        textarea[0].dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        const currentText = textarea.val() || '';
+        const newText = currentText ? `${currentText} ${optionValue}` : optionValue;
+        textarea.val(newText);
+        textarea.trigger('input');
+        textarea.trigger('change');
       }
+
+      textarea.focus();
     } catch (err) {
       console.error('[DICE]ACU 填充选项失败', err);
     }
