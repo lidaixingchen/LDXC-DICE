@@ -1,0 +1,238 @@
+/* ===================================
+   按钮组件样式
+   =================================== */
+
+/* ========== 按钮基础类 ========== */
+.acu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--acu-space-sm);
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  font-family: inherit;
+  font-size: var(--acu-font-md);
+  font-weight: var(--acu-font-weight-medium);
+  line-height: var(--acu-line-height-normal);
+  cursor: pointer;
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  background: var(--acu-btn-bg);
+  color: var(--acu-text-main);
+  transition: all var(--acu-transition-normal) var(--acu-ease-cubic);
+  outline: none;
+  user-select: none;
+  text-decoration: none;
+  white-space: nowrap;
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+    text-decoration: none;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+  
+  &:disabled {
+    opacity: var(--acu-opacity-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ========== 按钮尺寸变体 ========== */
+.acu-btn-sm {
+  padding: var(--acu-space-xs) var(--acu-space-sm);
+  font-size: var(--acu-font-sm);
+  height: var(--acu-btn-height-sm);
+}
+
+.acu-btn-md {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  font-size: var(--acu-font-md);
+  height: var(--acu-btn-height-md);
+}
+
+.acu-btn-lg {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  font-size: var(--acu-font-lg);
+  height: var(--acu-btn-height-lg);
+}
+
+.acu-btn-xl {
+  padding: var(--acu-space-md) var(--acu-space-xl);
+  font-size: var(--acu-font-xl);
+  height: var(--acu-btn-height-xl);
+}
+
+/* ========== 按钮颜色变体 ========== */
+.acu-btn-primary {
+  background: var(--acu-accent);
+  color: var(--acu-button-text-on-accent, #fff);
+  border-color: var(--acu-accent);
+  
+  &:hover {
+    filter: brightness(1.1);
+    background: var(--acu-accent);
+  }
+}
+
+.acu-btn-secondary {
+  background: var(--acu-btn-bg);
+  color: var(--acu-text-main);
+  border-color: var(--acu-border);
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+  }
+}
+
+.acu-btn-success {
+  background: var(--acu-success-text);
+  color: var(--acu-button-text-on-accent, #fff);
+  border-color: var(--acu-success-text);
+  
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.acu-btn-danger {
+  background: var(--acu-error-text);
+  color: var(--acu-button-text-on-accent, #fff);
+  border-color: var(--acu-error-text);
+  
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+.acu-btn-warning {
+  background: var(--acu-warning-text);
+  color: var(--acu-button-text-on-accent, #fff);
+  border-color: var(--acu-warning-text);
+  
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* ========== 按钮样式变体 ========== */
+.acu-btn-outline {
+  background: transparent;
+  color: var(--acu-accent);
+  border-color: var(--acu-accent);
+  
+  &:hover {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+  }
+}
+
+.acu-btn-ghost {
+  background: transparent;
+  color: var(--acu-text-main);
+  border-color: transparent;
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+  }
+}
+
+.acu-btn-link {
+  background: transparent;
+  color: var(--acu-accent);
+  border-color: transparent;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* ========== 按钮形状变体 ========== */
+.acu-btn-rounded {
+  border-radius: var(--acu-radius-full);
+}
+
+.acu-btn-circle {
+  border-radius: 50%;
+  padding: var(--acu-space-sm);
+  width: var(--acu-btn-height-md);
+  height: var(--acu-btn-height-md);
+}
+
+/* ========== 按钮组 ========== */
+.acu-btn-group {
+  display: inline-flex;
+  gap: 0;
+  
+  .acu-btn {
+    border-radius: 0;
+    
+    &:first-child {
+      border-top-left-radius: var(--acu-radius-md);
+      border-bottom-left-radius: var(--acu-radius-md);
+    }
+    
+    &:last-child {
+      border-top-right-radius: var(--acu-radius-md);
+      border-bottom-right-radius: var(--acu-radius-md);
+    }
+    
+    &:not(:last-child) {
+      border-right: none;
+    }
+  }
+}
+
+/* ========== 图标按钮 ========== */
+.acu-btn-icon {
+  padding: var(--acu-space-sm);
+  width: var(--acu-btn-height-md);
+  height: var(--acu-btn-height-md);
+  
+  i {
+    font-size: var(--acu-font-lg);
+  }
+}
+
+/* ========== 加载状态按钮 ========== */
+.acu-btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: acu-btn-spin 0.75s linear infinite;
+  }
+}
+
+@keyframes acu-btn-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== 全宽按钮 ========== */
+.acu-btn-block {
+  display: flex;
+  width: 100%;
+}

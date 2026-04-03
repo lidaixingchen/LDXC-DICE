@@ -1,0 +1,261 @@
+/* ===================================
+   输入框组件样式
+   =================================== */
+
+/* ========== 输入框基础类 ========== */
+.acu-input {
+  display: block;
+  width: 100%;
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  font-family: inherit;
+  font-size: var(--acu-font-md);
+  font-weight: var(--acu-font-weight-normal);
+  line-height: var(--acu-line-height-normal);
+  color: var(--acu-text-main);
+  background: var(--acu-input-bg, var(--acu-btn-bg));
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-sm);
+  outline: none;
+  transition: border-color var(--acu-transition-normal) var(--acu-ease-cubic), 
+              box-shadow var(--acu-transition-normal) var(--acu-ease-cubic);
+  box-sizing: border-box;
+  
+  &:focus {
+    border-color: var(--acu-accent);
+    box-shadow: 0 0 0 2px rgba(var(--acu-accent-rgb), 0.1);
+    outline: none;
+  }
+  
+  &:disabled {
+    opacity: var(--acu-opacity-disabled);
+    cursor: not-allowed;
+    background: var(--acu-btn-bg);
+  }
+  
+  &::placeholder {
+    color: var(--acu-text-sub);
+    opacity: 0.7;
+  }
+}
+
+/* ========== 输入框尺寸变体 ========== */
+.acu-input-sm {
+  padding: var(--acu-space-xs) var(--acu-space-sm);
+  font-size: var(--acu-font-sm);
+  height: var(--acu-input-height-sm);
+}
+
+.acu-input-md {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  font-size: var(--acu-font-md);
+  height: var(--acu-input-height-md);
+}
+
+.acu-input-lg {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  font-size: var(--acu-font-lg);
+  height: var(--acu-input-height-lg);
+}
+
+.acu-input-xl {
+  padding: var(--acu-space-md) var(--acu-space-xl);
+  font-size: var(--acu-font-xl);
+  height: var(--acu-input-height-xl);
+}
+
+/* ========== 输入框状态变体 ========== */
+.acu-input-success {
+  border-color: var(--acu-success-text);
+  
+  &:focus {
+    border-color: var(--acu-success-text);
+    box-shadow: 0 0 0 2px rgba(var(--acu-success-text), 0.1);
+  }
+}
+
+.acu-input-danger {
+  border-color: var(--acu-error-text);
+  
+  &:focus {
+    border-color: var(--acu-error-text);
+    box-shadow: 0 0 0 2px rgba(var(--acu-error-text), 0.1);
+  }
+}
+
+.acu-input-warning {
+  border-color: var(--acu-warning-text);
+  
+  &:focus {
+    border-color: var(--acu-warning-text);
+    box-shadow: 0 0 0 2px rgba(var(--acu-warning-text), 0.1);
+  }
+}
+
+/* ========== 输入框样式变体 ========== */
+.acu-input-outline {
+  background: transparent;
+  border-color: var(--acu-border);
+  
+  &:focus {
+    background: transparent;
+  }
+}
+
+.acu-input-filled {
+  background: var(--acu-btn-bg);
+  border-color: transparent;
+  
+  &:focus {
+    border-color: var(--acu-accent);
+    background: var(--acu-btn-bg);
+  }
+}
+
+.acu-input-underline {
+  background: transparent;
+  border: none;
+  border-bottom: var(--acu-border-width-medium) solid var(--acu-border);
+  border-radius: 0;
+  
+  &:focus {
+    border-bottom-color: var(--acu-accent);
+    box-shadow: none;
+  }
+}
+
+/* ========== 输入框形状变体 ========== */
+.acu-input-rounded {
+  border-radius: var(--acu-radius-full);
+}
+
+/* ========== 输入框组 ========== */
+.acu-input-group {
+  display: flex;
+  align-items: stretch;
+  
+  .acu-input {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .acu-input-group-addon {
+    display: flex;
+    align-items: center;
+    padding: 0 var(--acu-space-md);
+    background: var(--acu-btn-bg);
+    border: var(--acu-border-width-thin) solid var(--acu-border);
+    color: var(--acu-text-sub);
+    font-size: var(--acu-font-md);
+    white-space: nowrap;
+    
+    &:first-child {
+      border-right: none;
+      border-radius: var(--acu-radius-sm) 0 0 var(--acu-radius-sm);
+    }
+    
+    &:last-child {
+      border-left: none;
+      border-radius: 0 var(--acu-radius-sm) var(--acu-radius-sm) 0;
+    }
+  }
+  
+  .acu-input:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  
+  .acu-input:last-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+
+/* ========== 文本域 ========== */
+.acu-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ========== 选择框 ========== */
+.acu-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--acu-space-md) center;
+  padding-right: calc(var(--acu-space-md) * 2 + 12px);
+  cursor: pointer;
+  
+  option {
+    background: var(--acu-bg-panel);
+    color: var(--acu-text-main);
+  }
+}
+
+/* ========== 数字输入框 ========== */
+.acu-input[type="number"] {
+  appearance: textfield;
+  
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}
+
+/* ========== 输入框图标 ========== */
+.acu-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  
+  .acu-input {
+    padding-right: calc(var(--acu-space-md) + 20px);
+  }
+  
+  .acu-input-icon {
+    position: absolute;
+    right: var(--acu-space-md);
+    color: var(--acu-text-sub);
+    pointer-events: none;
+  }
+  
+  .acu-input-clear {
+    position: absolute;
+    right: var(--acu-space-sm);
+    background: transparent;
+    border: none;
+    color: var(--acu-text-sub);
+    cursor: pointer;
+    padding: var(--acu-space-xs);
+    opacity: 0.5;
+    transition: opacity var(--acu-transition-fast);
+    
+    &:hover {
+      opacity: 1;
+      color: var(--acu-accent);
+    }
+  }
+}
+
+/* ========== 输入框标签 ========== */
+.acu-form-label {
+  display: block;
+  margin-bottom: var(--acu-space-xs);
+  font-size: var(--acu-font-sm);
+  font-weight: var(--acu-font-weight-medium);
+  color: var(--acu-text-sub);
+}
+
+/* ========== 输入框帮助文本 ========== */
+.acu-form-help {
+  margin-top: var(--acu-space-xs);
+  font-size: var(--acu-font-xs);
+  color: var(--acu-text-sub);
+}
+
+/* ========== 输入框错误信息 ========== */
+.acu-form-error {
+  margin-top: var(--acu-space-xs);
+  font-size: var(--acu-font-xs);
+  color: var(--acu-error-text);
+}

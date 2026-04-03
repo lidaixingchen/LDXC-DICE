@@ -1,0 +1,266 @@
+/* ===================================
+   工具类
+   =================================== */
+
+/* ========== 显示工具 ========== */
+.d-none { display: none !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+.d-block { display: block !important; }
+.d-flex { display: flex !important; }
+.d-inline-flex { display: inline-flex !important; }
+.d-grid { display: grid !important; }
+
+/* ========== Flex布局工具 ========== */
+.flex-row { flex-direction: row !important; }
+.flex-column { flex-direction: column !important; }
+.flex-row-reverse { flex-direction: row-reverse !important; }
+.flex-column-reverse { flex-direction: column-reverse !important; }
+
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+.flex-wrap-reverse { flex-wrap: wrap-reverse !important; }
+
+.justify-start { justify-content: flex-start !important; }
+.justify-end { justify-content: flex-end !important; }
+.justify-center { justify-content: center !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-around { justify-content: space-around !important; }
+.justify-evenly { justify-content: space-evenly !important; }
+
+.align-start { align-items: flex-start !important; }
+.align-end { align-items: flex-end !important; }
+.align-center { align-items: center !important; }
+.align-baseline { align-items: baseline !important; }
+.align-stretch { align-items: stretch !important; }
+
+.align-self-start { align-self: flex-start !important; }
+.align-self-end { align-self: flex-end !important; }
+.align-self-center { align-self: center !important; }
+.align-self-baseline { align-self: baseline !important; }
+.align-self-stretch { align-self: stretch !important; }
+
+.flex-1 { flex: 1 !important; }
+.flex-auto { flex: auto !important; }
+.flex-none { flex: none !important; }
+
+.flex-grow-0 { flex-grow: 0 !important; }
+.flex-grow-1 { flex-grow: 1 !important; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-shrink-1 { flex-shrink: 1 !important; }
+
+/* ========== 间距工具 ========== */
+.gap-xs { gap: var(--acu-space-xs) !important; }
+.gap-sm { gap: var(--acu-space-sm) !important; }
+.gap-md { gap: var(--acu-space-md) !important; }
+.gap-lg { gap: var(--acu-space-lg) !important; }
+.gap-xl { gap: var(--acu-space-xl) !important; }
+.gap-2xl { gap: var(--acu-space-2xl) !important; }
+
+.m-0 { margin: 0 !important; }
+.m-xs { margin: var(--acu-space-xs) !important; }
+.m-sm { margin: var(--acu-space-sm) !important; }
+.m-md { margin: var(--acu-space-md) !important; }
+.m-lg { margin: var(--acu-space-lg) !important; }
+.m-xl { margin: var(--acu-space-xl) !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-xs { margin-top: var(--acu-space-xs) !important; }
+.mt-sm { margin-top: var(--acu-space-sm) !important; }
+.mt-md { margin-top: var(--acu-space-md) !important; }
+.mt-lg { margin-top: var(--acu-space-lg) !important; }
+.mt-xl { margin-top: var(--acu-space-xl) !important; }
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-xs { margin-bottom: var(--acu-space-xs) !important; }
+.mb-sm { margin-bottom: var(--acu-space-sm) !important; }
+.mb-md { margin-bottom: var(--acu-space-md) !important; }
+.mb-lg { margin-bottom: var(--acu-space-lg) !important; }
+.mb-xl { margin-bottom: var(--acu-space-xl) !important; }
+
+.ml-0 { margin-left: 0 !important; }
+.ml-xs { margin-left: var(--acu-space-xs) !important; }
+.ml-sm { margin-left: var(--acu-space-sm) !important; }
+.ml-md { margin-left: var(--acu-space-md) !important; }
+.ml-lg { margin-left: var(--acu-space-lg) !important; }
+.ml-xl { margin-left: var(--acu-space-xl) !important; }
+
+.mr-0 { margin-right: 0 !important; }
+.mr-xs { margin-right: var(--acu-space-xs) !important; }
+.mr-sm { margin-right: var(--acu-space-sm) !important; }
+.mr-md { margin-right: var(--acu-space-md) !important; }
+.mr-lg { margin-right: var(--acu-space-lg) !important; }
+.mr-xl { margin-right: var(--acu-space-xl) !important; }
+
+.p-0 { padding: 0 !important; }
+.p-xs { padding: var(--acu-space-xs) !important; }
+.p-sm { padding: var(--acu-space-sm) !important; }
+.p-md { padding: var(--acu-space-md) !important; }
+.p-lg { padding: var(--acu-space-lg) !important; }
+.p-xl { padding: var(--acu-space-xl) !important; }
+
+.pt-0 { padding-top: 0 !important; }
+.pt-xs { padding-top: var(--acu-space-xs) !important; }
+.pt-sm { padding-top: var(--acu-space-sm) !important; }
+.pt-md { padding-top: var(--acu-space-md) !important; }
+.pt-lg { padding-top: var(--acu-space-lg) !important; }
+.pt-xl { padding-top: var(--acu-space-xl) !important; }
+
+.pb-0 { padding-bottom: 0 !important; }
+.pb-xs { padding-bottom: var(--acu-space-xs) !important; }
+.pb-sm { padding-bottom: var(--acu-space-sm) !important; }
+.pb-md { padding-bottom: var(--acu-space-md) !important; }
+.pb-lg { padding-bottom: var(--acu-space-lg) !important; }
+.pb-xl { padding-bottom: var(--acu-space-xl) !important; }
+
+.pl-0 { padding-left: 0 !important; }
+.pl-xs { padding-left: var(--acu-space-xs) !important; }
+.pl-sm { padding-left: var(--acu-space-sm) !important; }
+.pl-md { padding-left: var(--acu-space-md) !important; }
+.pl-lg { padding-left: var(--acu-space-lg) !important; }
+.pl-xl { padding-left: var(--acu-space-xl) !important; }
+
+.pr-0 { padding-right: 0 !important; }
+.pr-xs { padding-right: var(--acu-space-xs) !important; }
+.pr-sm { padding-right: var(--acu-space-sm) !important; }
+.pr-md { padding-right: var(--acu-space-md) !important; }
+.pr-lg { padding-right: var(--acu-space-lg) !important; }
+.pr-xl { padding-right: var(--acu-space-xl) !important; }
+
+/* ========== 文本工具 ========== */
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+.text-lowercase { text-transform: lowercase !important; }
+.text-uppercase { text-transform: uppercase !important; }
+.text-capitalize { text-transform: capitalize !important; }
+
+.font-normal { font-weight: var(--acu-font-weight-normal) !important; }
+.font-medium { font-weight: var(--acu-font-weight-medium) !important; }
+.font-semibold { font-weight: var(--acu-font-weight-semibold) !important; }
+.font-bold { font-weight: var(--acu-font-weight-bold) !important; }
+
+.text-xs { font-size: var(--acu-font-xs) !important; }
+.text-sm { font-size: var(--acu-font-sm) !important; }
+.text-md { font-size: var(--acu-font-md) !important; }
+.text-lg { font-size: var(--acu-font-lg) !important; }
+.text-xl { font-size: var(--acu-font-xl) !important; }
+.text-2xl { font-size: var(--acu-font-2xl) !important; }
+.text-3xl { font-size: var(--acu-font-3xl) !important; }
+
+.text-main { color: var(--acu-text-main) !important; }
+.text-sub { color: var(--acu-text-sub) !important; }
+.text-accent { color: var(--acu-accent) !important; }
+.text-success { color: var(--acu-success-text) !important; }
+.text-danger { color: var(--acu-error-text) !important; }
+.text-warning { color: var(--acu-warning-text) !important; }
+
+.text-truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.text-wrap { white-space: normal !important; }
+.text-nowrap { white-space: nowrap !important; }
+
+/* ========== 背景工具 ========== */
+.bg-transparent { background-color: transparent !important; }
+.bg-panel { background-color: var(--acu-bg-panel) !important; }
+.bg-card { background-color: var(--acu-bg-card) !important; }
+.bg-header { background-color: var(--acu-bg-header) !important; }
+.bg-nav { background-color: var(--acu-bg-nav) !important; }
+.bg-accent { background-color: var(--acu-accent) !important; }
+.bg-light { background-color: var(--acu-light-bg) !important; }
+.bg-very-light { background-color: var(--acu-very-light-bg) !important; }
+
+/* ========== 边框工具 ========== */
+.border { border: var(--acu-border-width-thin) solid var(--acu-border) !important; }
+.border-0 { border: 0 !important; }
+.border-top { border-top: var(--acu-border-width-thin) solid var(--acu-border) !important; }
+.border-bottom { border-bottom: var(--acu-border-width-thin) solid var(--acu-border) !important; }
+.border-left { border-left: var(--acu-border-width-thin) solid var(--acu-border) !important; }
+.border-right { border-right: var(--acu-border-width-thin) solid var(--acu-border) !important; }
+
+.border-accent { border-color: var(--acu-accent) !important; }
+.border-success { border-color: var(--acu-success-text) !important; }
+.border-danger { border-color: var(--acu-error-text) !important; }
+.border-warning { border-color: var(--acu-warning-text) !important; }
+
+.rounded { border-radius: var(--acu-radius-md) !important; }
+.rounded-sm { border-radius: var(--acu-radius-sm) !important; }
+.rounded-lg { border-radius: var(--acu-radius-lg) !important; }
+.rounded-xl { border-radius: var(--acu-radius-xl) !important; }
+.rounded-full { border-radius: var(--acu-radius-full) !important; }
+.rounded-0 { border-radius: 0 !important; }
+
+/* ========== 圆角工具 ========== */
+.shadow-none { box-shadow: none !important; }
+.shadow-sm { box-shadow: var(--acu-shadow-sm) !important; }
+.shadow-md { box-shadow: var(--acu-shadow-md) !important; }
+.shadow-lg { box-shadow: var(--acu-shadow-lg) !important; }
+.shadow-xl { box-shadow: var(--acu-shadow-xl) !important; }
+
+/* ========== 宽度高度工具 ========== */
+.w-25 { width: 25% !important; }
+.w-50 { width: 50% !important; }
+.w-75 { width: 75% !important; }
+.w-100 { width: 100% !important; }
+.w-auto { width: auto !important; }
+
+.h-25 { height: 25% !important; }
+.h-50 { height: 50% !important; }
+.h-75 { height: 75% !important; }
+.h-100 { height: 100% !important; }
+.h-auto { height: auto !important; }
+
+.mw-100 { max-width: 100% !important; }
+.mh-100 { max-height: 100% !important; }
+
+/* ========== 定位工具 ========== */
+.position-static { position: static !important; }
+.position-relative { position: relative !important; }
+.position-absolute { position: absolute !important; }
+.position-fixed { position: fixed !important; }
+.position-sticky { position: sticky !important; }
+
+.top-0 { top: 0 !important; }
+.bottom-0 { bottom: 0 !important; }
+.left-0 { left: 0 !important; }
+.right-0 { right: 0 !important; }
+
+/* ========== 溢出工具 ========== */
+.overflow-auto { overflow: auto !important; }
+.overflow-hidden { overflow: hidden !important; }
+.overflow-visible { overflow: visible !important; }
+.overflow-scroll { overflow: scroll !important; }
+.overflow-x-auto { overflow-x: auto !important; }
+.overflow-y-auto { overflow-y: auto !important; }
+.overflow-x-hidden { overflow-x: hidden !important; }
+.overflow-y-hidden { overflow-y: hidden !important; }
+
+/* ========== 可见性工具 ========== */
+.visible { visibility: visible !important; }
+.invisible { visibility: hidden !important; }
+.opacity-0 { opacity: 0 !important; }
+.opacity-25 { opacity: 0.25 !important; }
+.opacity-50 { opacity: 0.5 !important; }
+.opacity-75 { opacity: 0.75 !important; }
+.opacity-100 { opacity: 1 !important; }
+
+/* ========== 光标工具 ========== */
+.cursor-pointer { cursor: pointer !important; }
+.cursor-default { cursor: default !important; }
+.cursor-not-allowed { cursor: not-allowed !important; }
+.cursor-move { cursor: move !important; }
+
+/* ========== 用户选择工具 ========== */
+.user-select-all { user-select: all !important; }
+.user-select-auto { user-select: auto !important; }
+.user-select-none { user-select: none !important; }
+
+/* ========== 指针事件工具 ========== */
+.pointer-events-auto { pointer-events: auto !important; }
+.pointer-events-none { pointer-events: none !important; }

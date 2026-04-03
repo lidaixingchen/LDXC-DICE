@@ -1,0 +1,351 @@
+/* ===================================
+   弹窗组件样式
+   =================================== */
+
+/* ========== 遮罩层基础类 ========== */
+.acu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--acu-overlay-bg);
+  z-index: var(--acu-z-modal-backdrop);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--acu-space-lg);
+  backdrop-filter: blur(2px);
+  animation: acu-overlay-fade-in var(--acu-transition-normal) var(--acu-ease-cubic);
+}
+
+@keyframes acu-overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========== 弹窗基础类 ========== */
+.acu-modal {
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-xl);
+  box-shadow: var(--acu-shadow-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100vw - var(--acu-space-3xl));
+  max-height: calc(100vh - var(--acu-space-3xl));
+  animation: acu-modal-slide-in var(--acu-transition-normal) var(--acu-ease-cubic);
+}
+
+@keyframes acu-modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========== 弹窗头部 ========== */
+.acu-modal-header {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  background: var(--acu-table-head);
+  border-bottom: var(--acu-border-width-thin) solid var(--acu-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--acu-space-md);
+}
+
+.acu-modal-title {
+  font-size: var(--acu-font-2xl);
+  font-weight: var(--acu-font-weight-bold);
+  color: var(--acu-accent);
+  margin: 0;
+}
+
+.acu-modal-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub);
+  font-size: var(--acu-font-xl);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--acu-radius-sm);
+  transition: all var(--acu-transition-fast);
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+    color: var(--acu-accent);
+  }
+}
+
+/* ========== 弹窗主体 ========== */
+.acu-modal-body {
+  padding: var(--acu-space-lg);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ========== 弹窗底部 ========== */
+.acu-modal-footer {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  background: var(--acu-table-head);
+  border-top: var(--acu-border-width-thin) solid var(--acu-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--acu-space-sm);
+}
+
+/* ========== 弹窗尺寸变体 ========== */
+.acu-modal-sm {
+  width: 400px;
+}
+
+.acu-modal-md {
+  width: 600px;
+}
+
+.acu-modal-lg {
+  width: 800px;
+}
+
+.acu-modal-xl {
+  width: 1000px;
+}
+
+.acu-modal-full {
+  width: calc(100vw - var(--acu-space-3xl));
+  height: calc(100vh - var(--acu-space-3xl));
+}
+
+/* ========== 弹窗样式变体 ========== */
+.acu-modal-flat {
+  box-shadow: var(--acu-shadow-md);
+}
+
+.acu-modal-centered {
+  margin: auto;
+}
+
+/* ========== 确认对话框 ========== */
+.acu-confirm-dialog {
+  width: 400px;
+  max-width: calc(100vw - var(--acu-space-3xl));
+  
+  .acu-modal-body {
+    text-align: center;
+    padding: var(--acu-space-2xl);
+  }
+  
+  .acu-confirm-icon {
+    font-size: 48px;
+    margin-bottom: var(--acu-space-md);
+    
+    &.success {
+      color: var(--acu-success-text);
+    }
+    
+    &.warning {
+      color: var(--acu-warning-text);
+    }
+    
+    &.danger {
+      color: var(--acu-error-text);
+    }
+    
+    &.info {
+      color: var(--acu-accent);
+    }
+  }
+  
+  .acu-confirm-message {
+    font-size: var(--acu-font-lg);
+    color: var(--acu-text-main);
+    margin-bottom: var(--acu-space-sm);
+  }
+  
+  .acu-confirm-description {
+    font-size: var(--acu-font-md);
+    color: var(--acu-text-sub);
+  }
+}
+
+/* ========== 抽屉 ========== */
+.acu-drawer {
+  position: fixed;
+  background: var(--acu-bg-panel);
+  box-shadow: var(--acu-shadow-xl);
+  z-index: var(--acu-z-modal);
+  display: flex;
+  flex-direction: column;
+  animation: acu-drawer-slide-in var(--acu-transition-normal) var(--acu-ease-cubic);
+  
+  &.left {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    max-width: 400px;
+  }
+  
+  &.right {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    max-width: 400px;
+  }
+  
+  &.top {
+    left: 0;
+    top: 0;
+    right: 0;
+    width: 100vw;
+    max-height: 400px;
+  }
+  
+  &.bottom {
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    max-height: 400px;
+  }
+}
+
+@keyframes acu-drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ========== Toast 提示 ========== */
+.acu-toast-container {
+  position: fixed;
+  z-index: var(--acu-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-sm);
+  pointer-events: none;
+  
+  &.top-left {
+    top: var(--acu-space-lg);
+    left: var(--acu-space-lg);
+  }
+  
+  &.top-right {
+    top: var(--acu-space-lg);
+    right: var(--acu-space-lg);
+  }
+  
+  &.bottom-left {
+    bottom: var(--acu-space-lg);
+    left: var(--acu-space-lg);
+  }
+  
+  &.bottom-right {
+    bottom: var(--acu-space-lg);
+    right: var(--acu-space-lg);
+  }
+}
+
+.acu-toast {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  box-shadow: var(--acu-shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--acu-space-sm);
+  pointer-events: auto;
+  animation: acu-toast-slide-in var(--acu-transition-normal) var(--acu-ease-cubic);
+  
+  &.success {
+    border-left: 4px solid var(--acu-success-text);
+    
+    .acu-toast-icon {
+      color: var(--acu-success-text);
+    }
+  }
+  
+  &.warning {
+    border-left: 4px solid var(--acu-warning-text);
+    
+    .acu-toast-icon {
+      color: var(--acu-warning-text);
+    }
+  }
+  
+  &.danger {
+    border-left: 4px solid var(--acu-error-text);
+    
+    .acu-toast-icon {
+      color: var(--acu-error-text);
+    }
+  }
+  
+  &.info {
+    border-left: 4px solid var(--acu-accent);
+    
+    .acu-toast-icon {
+      color: var(--acu-accent);
+    }
+  }
+}
+
+@keyframes acu-toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========== Tooltip 提示 ========== */
+.acu-tooltip {
+  position: absolute;
+  z-index: var(--acu-z-tooltip);
+  padding: var(--acu-space-xs) var(--acu-space-sm);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: var(--acu-font-xs);
+  border-radius: var(--acu-radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: acu-tooltip-fade-in var(--acu-transition-fast);
+}
+
+@keyframes acu-tooltip-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,232 @@
+/* ===================================
+   面板组件样式
+   =================================== */
+
+/* ========== 面板基础类 ========== */
+.acu-panel {
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-xl);
+  box-shadow: var(--acu-shadow-lg);
+  overflow: hidden;
+}
+
+/* ========== 面板头部 ========== */
+.acu-panel-header {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  background: var(--acu-table-head);
+  border-bottom: var(--acu-border-width-thin) solid var(--acu-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--acu-space-md);
+}
+
+.acu-panel-title {
+  font-size: var(--acu-font-2xl);
+  font-weight: var(--acu-font-weight-bold);
+  color: var(--acu-accent);
+  display: flex;
+  align-items: center;
+  gap: var(--acu-space-sm);
+  margin: 0;
+}
+
+.acu-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--acu-space-sm);
+}
+
+/* ========== 面板主体 ========== */
+.acu-panel-body {
+  padding: var(--acu-space-lg);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ========== 面板底部 ========== */
+.acu-panel-footer {
+  padding: var(--acu-space-md) var(--acu-space-lg);
+  background: var(--acu-table-head);
+  border-top: var(--acu-border-width-thin) solid var(--acu-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--acu-space-sm);
+}
+
+/* ========== 面板尺寸变体 ========== */
+.acu-panel-sm {
+  max-width: 400px;
+}
+
+.acu-panel-md {
+  max-width: 600px;
+}
+
+.acu-panel-lg {
+  max-width: 800px;
+}
+
+.acu-panel-xl {
+  max-width: 1000px;
+}
+
+.acu-panel-full {
+  width: 100%;
+  max-width: calc(100vw - var(--acu-space-3xl));
+  max-height: calc(100vh - var(--acu-space-3xl));
+}
+
+/* ========== 面板样式变体 ========== */
+.acu-panel-flat {
+  box-shadow: none;
+}
+
+.acu-panel-raised {
+  box-shadow: var(--acu-shadow-xl);
+}
+
+.acu-panel-bordered {
+  border-width: var(--acu-border-width-medium);
+}
+
+/* ========== 卡片面板 ========== */
+.acu-card {
+  background: var(--acu-bg-card);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  padding: var(--acu-space-lg);
+  transition: all var(--acu-transition-normal) var(--acu-ease-cubic);
+  
+  &:hover {
+    box-shadow: var(--acu-shadow-md);
+    transform: translateY(-2px);
+  }
+}
+
+.acu-card-header {
+  padding-bottom: var(--acu-space-md);
+  border-bottom: var(--acu-border-width-thin) solid var(--acu-border);
+  margin-bottom: var(--acu-space-md);
+}
+
+.acu-card-title {
+  font-size: var(--acu-font-xl);
+  font-weight: var(--acu-font-weight-semibold);
+  color: var(--acu-text-main);
+  margin: 0;
+}
+
+.acu-card-body {
+  color: var(--acu-text-main);
+}
+
+.acu-card-footer {
+  padding-top: var(--acu-space-md);
+  border-top: var(--acu-border-width-thin) solid var(--acu-border);
+  margin-top: var(--acu-space-md);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--acu-space-sm);
+}
+
+/* ========== 可折叠面板 ========== */
+.acu-panel-collapsible {
+  .acu-panel-header {
+    cursor: pointer;
+    user-select: none;
+    
+    &::after {
+      content: '\f078';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: var(--acu-font-sm);
+      color: var(--acu-text-sub);
+      transition: transform var(--acu-transition-normal);
+    }
+    
+    &.collapsed::after {
+      transform: rotate(-90deg);
+    }
+  }
+  
+  .acu-panel-body {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height var(--acu-transition-slow) var(--acu-ease-cubic);
+    
+    &.collapsed {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+}
+
+/* ========== 分割面板 ========== */
+.acu-panel-split {
+  display: flex;
+  gap: var(--acu-space-md);
+  
+  &.vertical {
+    flex-direction: column;
+  }
+  
+  &.horizontal {
+    flex-direction: row;
+  }
+  
+  .acu-panel-split-item {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* ========== 标签页面板 ========== */
+.acu-tabs {
+  .acu-tabs-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: var(--acu-border-width-thin) solid var(--acu-border);
+    margin-bottom: var(--acu-space-md);
+  }
+  
+  .acu-tabs-tab {
+    padding: var(--acu-space-sm) var(--acu-space-lg);
+    background: transparent;
+    border: none;
+    border-bottom: var(--acu-border-width-medium) solid transparent;
+    color: var(--acu-text-sub);
+    font-size: var(--acu-font-md);
+    font-weight: var(--acu-font-weight-medium);
+    cursor: pointer;
+    transition: all var(--acu-transition-normal);
+    
+    &:hover {
+      color: var(--acu-text-main);
+      background: var(--acu-btn-hover);
+    }
+    
+    &.active {
+      color: var(--acu-accent);
+      border-bottom-color: var(--acu-accent);
+    }
+  }
+  
+  .acu-tabs-content {
+    padding: var(--acu-space-md) 0;
+  }
+  
+  .acu-tabs-panel {
+    display: none;
+    
+    &.active {
+      display: block;
+    }
+  }
+}
