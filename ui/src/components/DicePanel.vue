@@ -327,6 +327,15 @@ function getBaseDC(level: string): number {
   return WORLD_LEVEL_CONFIG[level]?.baseDC ?? 10;
 }
 
+function getCritRate(charisma: number): number {
+  return Math.min(50, 5 + Math.floor(charisma / 2));
+}
+
+const critRate = computed(() => {
+  const cha = charisma.value !== '' ? Number(charisma.value) : 10;
+  return getCritRate(cha);
+});
+
 const QUICK_PRESETS = computed(() => {
   const list = presets.value.filter(p => p.visible !== false).map(p => ({ id: p.id!, name: p.name }));
   return [
@@ -454,6 +463,7 @@ async function handleStandardCheck(): Promise<void> {
   const attr = attrName.value || '自由检定';
   const diff = difficulty.value;
   const level = worldLevel.value;
+  const cha = charisma.value !== '' ? Number(charisma.value) : 10;
 
   const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
   const attrMod = computeAIDMAttrMod(attrVal);
@@ -471,6 +481,7 @@ async function handleStandardCheck(): Promise<void> {
 
   let isCritSuccess = rollTotal === 20;
   let isCritFailure = rollTotal === 1;
+  let isCritHit = false;
   let isSuccess = finalValue >= target;
   let outcomeText = '';
 
@@ -481,7 +492,13 @@ async function handleStandardCheck(): Promise<void> {
     outcomeText = '大失败！';
     isSuccess = false;
   } else if (isSuccess) {
-    outcomeText = '成功';
+    const critChance = getCritRate(cha);
+    isCritHit = Math.random() * 100 < critChance;
+    if (isCritHit) {
+      outcomeText = '暴击成功！';
+    } else {
+      outcomeText = '成功';
+    }
   } else {
     outcomeText = '失败';
   }
@@ -503,6 +520,7 @@ async function handleStandardCheck(): Promise<void> {
     margin: finalValue - target,
     criticalSuccess: isCritSuccess,
     criticalFailure: isCritFailure,
+    criticalHit: isCritHit,
     outcome: outcomeText,
     message: `D20(${rollTotal}) + 属性加成(${attrMod}) + 掌握加成(${masteryBonus})${mod !== 0 ? ` + 修正(${mod >= 0 ? '+' : ''}${mod})` : ''} = ${finalValue}`,
     diceType: formula,
@@ -511,6 +529,7 @@ async function handleStandardCheck(): Promise<void> {
   showResult.value = true;
 
   const initiator = initiatorName.value || '<user>';
+  const critText = isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isCritHit ? '💥 暴击成功！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`)));
   const content = `<meta:检定结果>
 【AIDM标准检定】
 
@@ -523,7 +542,8 @@ async function handleStandardCheck(): Promise<void> {
 
 📊 DC对比：${finalValue} ${judgeResult} ${target}
 （世界等级${level}，基础DC ${baseDC}，难度调整${diffLabel} ${diffMod > 0 ? '+' : ''}${diffMod}）
-${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`))}
+・暴击率：${getCritRate(cha)}%（魅力${cha}）
+${critText}
 </meta:检定结果>`;
   await sendToTextarea(content);
 
@@ -1600,21 +1620,40 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-form-row cols-3">
+        <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">目标DC</div>
+            <div class="acu-dice-form-label">魅力值</div>
+            <input v-model="charisma" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-crit-display">
+            <span class="acu-crit-icon">💥</span>
+            <span class="acu-crit-label">暴击率</span>
+            <span class="acu-crit-value">{{ critRate }}%</span>
+          </div>
+        </div>
+
+        <div class="acu-dc-quick-selector">
+          <button
+            v-for="opt in DIFFICULTY_OPTIONS"
+            :key="opt.value"
+            class="acu-dc-btn"
+            :class="{ active: difficulty === opt.value }"
+            @click="difficulty = opt.value"
+          >
+            <span class="acu-dc-label">{{ opt.value === 'normal' ? '基础' : (opt.value === 'hard' ? '困难' : '极难') }}</span>
+            <span class="acu-dc-value">DC {{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[opt.value] || 0) }}</span>
+          </button>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">自定义DC</div>
             <input
               v-model="targetValue"
               type="text"
               class="acu-dice-input"
-              :placeholder="`留空=${getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0)}`"
+              :placeholder="`留空使用难度DC`"
             />
-          </div>
-          <div>
-            <div class="acu-dice-form-label centered">难度调整</div>
-            <select v-model="difficulty" class="acu-dice-select">
-              <option v-for="o in DIFFICULTY_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
-            </select>
           </div>
           <div>
             <div class="acu-dice-form-label">修正值</div>
@@ -1875,6 +1914,26 @@ onMounted(() => {
           <div class="acu-info-card">
             <div class="label">目标DDC</div>
             <div class="value">{{ getBaseDC(worldLevel) + (targetDodgeMod !== '' ? Number(targetDodgeMod) : 0) }}</div>
+          </div>
+        </div>
+
+        <div class="acu-damage-preview">
+          <div class="acu-damage-header">
+            <span class="acu-damage-title">⚔️ 伤害预览</span>
+          </div>
+          <div class="acu-damage-cards">
+            <div class="acu-damage-card normal">
+              <div class="label">基础伤害</div>
+              <div class="value">{{ Math.max(1, Math.floor((attackPower !== '' ? Number(attackPower) : 10) * (1 - computeDamageReduction(targetDefense !== '' ? Number(targetDefense) : 5, attackPower !== '' ? Number(attackPower) : 10)))) }}</div>
+            </div>
+            <div class="acu-damage-card crit">
+              <div class="label">暴击伤害</div>
+              <div class="value">{{ Math.max(2, Math.floor((attackPower !== '' ? Number(attackPower) : 10) * (1 - computeDamageReduction(targetDefense !== '' ? Number(targetDefense) : 5, attackPower !== '' ? Number(attackPower) : 10))) * 2) }}</div>
+            </div>
+            <div class="acu-damage-card reduction">
+              <div class="label">伤害减免</div>
+              <div class="value">{{ Math.round(computeDamageReduction(targetDefense !== '' ? Number(targetDefense) : 5, attackPower !== '' ? Number(attackPower) : 10) * 100) }}%</div>
+            </div>
           </div>
         </div>
       </div>
@@ -3271,6 +3330,191 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
+}
+
+.acu-dc-quick-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.acu-crit-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.1));
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  border-radius: 6px;
+
+  .acu-crit-icon {
+    font-size: 14px;
+  }
+
+  .acu-crit-label {
+    font-size: 10px;
+    color: var(--acu-text-sub);
+    font-weight: 600;
+  }
+
+  .acu-crit-value {
+    font-size: 14px;
+    font-weight: 900;
+    color: #ff8c00;
+    font-family: 'Courier New', monospace;
+  }
+}
+
+.acu-damage-preview {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(192, 57, 43, 0.05));
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.acu-damage-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.acu-damage-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e74c3c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.acu-damage-cards {
+  display: flex;
+  gap: 6px;
+}
+
+.acu-damage-card {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+
+  .label {
+    font-size: 9px;
+    color: var(--acu-text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+
+  .value {
+    font-size: 16px;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+  }
+
+  &.normal {
+    border-color: rgba(52, 152, 219, 0.3);
+    background: rgba(52, 152, 219, 0.1);
+
+    .value {
+      color: #3498db;
+    }
+  }
+
+  &.crit {
+    border-color: rgba(255, 140, 0, 0.3);
+    background: rgba(255, 140, 0, 0.1);
+
+    .value {
+      color: #ff8c00;
+    }
+  }
+
+  &.reduction {
+    border-color: rgba(155, 89, 182, 0.3);
+    background: rgba(155, 89, 182, 0.1);
+
+    .value {
+      color: #9b59b6;
+    }
+  }
+}
+
+.acu-dc-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  border: 2px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  .acu-dc-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .acu-dc-value {
+    font-size: 14px;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+  }
+
+  &:hover {
+    border-color: var(--acu-accent);
+    background: rgba(52, 152, 219, 0.1);
+  }
+
+  &.active {
+    border-color: var(--acu-accent);
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(155, 89, 182, 0.15));
+    color: var(--acu-accent);
+
+    .acu-dc-value {
+      color: var(--acu-accent);
+    }
+  }
+
+  &:nth-child(1).active {
+    border-color: #27ae60;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.1));
+    color: #27ae60;
+
+    .acu-dc-value {
+      color: #27ae60;
+    }
+  }
+
+  &:nth-child(2).active {
+    border-color: #f39c12;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(230, 126, 34, 0.1));
+    color: #f39c12;
+
+    .acu-dc-value {
+      color: #f39c12;
+    }
+  }
+
+  &:nth-child(3).active {
+    border-color: #e74c3c;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(192, 57, 43, 0.1));
+    color: #e74c3c;
+
+    .acu-dc-value {
+      color: #e74c3c;
+    }
+  }
 }
 
 .acu-calc-preview {

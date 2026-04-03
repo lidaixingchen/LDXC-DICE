@@ -50,6 +50,7 @@ export interface CheckResult {
   margin: number;
   criticalSuccess: boolean;
   criticalFailure: boolean;
+  criticalHit?: boolean;
   outcome: string;
   message: string;
   diceType: string;

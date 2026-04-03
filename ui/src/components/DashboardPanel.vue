@@ -16,6 +16,8 @@ const COLLAPSED_STORAGE_KEY = 'acu-dashboard-collapsed';
 const defaultCollapsedState: Record<string, boolean> = {
   baseAttrs: false,
   specialAttrs: false,
+  skills: false,
+  equipment: false,
   locations: false,
   npcs: false,
   items: false,
@@ -121,7 +123,8 @@ const data = computed(() => {
     location: findT('地点') || findT('地图'),
     bag: findT('物品') || findT('背包') || findT('道具'),
     quest: findT('任务') || findT('备忘'),
-    equip: findT('装备')
+    equip: findT('装备'),
+    skills: findT('技能')
   };
 });
 
@@ -325,11 +328,59 @@ const equipList = computed(() => {
   const equip = data.value?.equip;
   if (!equip?.content) return [];
   
-  return equip.content.slice(1, 6).map((row: any) => ({
-    name: row[1] || '未知装备',
-    type: row[2] || ''
+  const headers = equip.content[0] || [];
+  const slotIdx = headers.findIndex((h: string) => h?.includes('槽位'));
+  const nameIdx = headers.findIndex((h: string) => h?.includes('名称'));
+  const effectIdx = headers.findIndex((h: string) => h?.includes('效果'));
+  
+  return equip.content.slice(1, 10).map((row: any) => ({
+    slot: slotIdx !== -1 ? row[slotIdx] || '' : row[1] || '',
+    name: nameIdx !== -1 ? row[nameIdx] || '未知装备' : row[2] || '未知装备',
+    effect: effectIdx !== -1 ? row[effectIdx] || '' : row[3] || ''
   }));
 });
+
+const skillList = computed(() => {
+  const skills = data.value?.skills;
+  if (!skills?.content) return { active: [], passive: [] };
+  
+  const headers = skills.content[0] || [];
+  const typeIdx = headers.findIndex((h: string) => h?.includes('类型'));
+  const nameIdx = headers.findIndex((h: string) => h?.includes('名称'));
+  const descIdx = headers.findIndex((h: string) => h?.includes('效果') || h?.includes('描述'));
+  const valueIdx = headers.findIndex((h: string) => h?.includes('数值'));
+  const cooldownIdx = headers.findIndex((h: string) => h?.includes('冷却'));
+  
+  const allSkills = skills.content.slice(1, 10).map((row: any) => ({
+    name: nameIdx !== -1 ? row[nameIdx] || '未知技能' : row[1] || '未知技能',
+    type: typeIdx !== -1 ? row[typeIdx] || '主动' : row[2] || '主动',
+    effect: descIdx !== -1 ? row[descIdx] || '' : row[3] || '',
+    value: valueIdx !== -1 ? row[valueIdx] || '' : row[4] || '',
+    cooldown: cooldownIdx !== -1 ? row[cooldownIdx] || '-' : row[5] || '-'
+  }));
+  
+  return {
+    active: allSkills.filter((s: any) => s.type === '主动'),
+    passive: allSkills.filter((s: any) => s.type === '被动')
+  };
+});
+
+const SLOT_ICONS: Record<string, string> = {
+  '主手': 'fa-hand',
+  '副手': 'fa-hand-back-fist',
+  '头部': 'fa-helmet-safety',
+  '身体': 'fa-shirt',
+  '手部': 'fa-mitten',
+  '脚部': 'fa-socks',
+  '饰品1': 'fa-ring',
+  '饰品2': 'fa-ring'
+};
+
+const SLOT_ORDER = ['主手', '副手', '头部', '身体', '手部', '脚部', '饰品1', '饰品2'];
+
+function getSlotIcon(slot: string): string {
+  return SLOT_ICONS[slot] || 'fa-gem';
+}
 
 const questList = computed(() => {
   const quest = data.value?.quest;
@@ -581,6 +632,86 @@ function handleDice(name: string, val: any) {
                     <i class="fa-solid fa-dice-d20"></i>
                     <span class="acu-dice-hint">投掷</span>
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 技能区（可折叠） -->
+          <div v-if="skillList.active.length || skillList.passive.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('skills') }">
+            <div class="acu-collapsible-header" @click="toggleSection('skills')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                技能 ({{ skillList.active.length + skillList.passive.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <!-- 主动技能 -->
+              <div v-if="skillList.active.length" class="acu-skill-section">
+                <div class="acu-skill-section-title">
+                  <i class="fa-solid fa-bolt"></i>
+                  主动技能
+                </div>
+                <div class="acu-skill-list">
+                  <div v-for="skill in skillList.active" :key="skill.name" class="acu-skill-item active">
+                    <div class="acu-skill-header">
+                      <span class="acu-skill-name">{{ skill.name }}</span>
+                      <span v-if="skill.cooldown !== '-'" class="acu-skill-cooldown">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                        {{ skill.cooldown }}
+                      </span>
+                    </div>
+                    <div class="acu-skill-effect">{{ skill.effect }}</div>
+                    <div v-if="skill.value" class="acu-skill-value">
+                      <i class="fa-solid fa-chart-line"></i>
+                      {{ skill.value }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- 被动技能 -->
+              <div v-if="skillList.passive.length" class="acu-skill-section">
+                <div class="acu-skill-section-title">
+                  <i class="fa-solid fa-star"></i>
+                  被动技能
+                </div>
+                <div class="acu-skill-list">
+                  <div v-for="skill in skillList.passive" :key="skill.name" class="acu-skill-item passive">
+                    <div class="acu-skill-header">
+                      <span class="acu-skill-name">{{ skill.name }}</span>
+                    </div>
+                    <div class="acu-skill-effect">{{ skill.effect }}</div>
+                    <div v-if="skill.value" class="acu-skill-value">
+                      <i class="fa-solid fa-chart-line"></i>
+                      {{ skill.value }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 装备区（可折叠） -->
+          <div v-if="equipList.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('equipment') }">
+            <div class="acu-collapsible-header" @click="toggleSection('equipment')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-shield-halved"></i>
+                装备 ({{ equipList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div class="acu-equip-grid">
+                <div v-for="equip in equipList" :key="equip.slot" class="acu-equip-item">
+                  <div class="acu-equip-slot">
+                    <i :class="['fa-solid', getSlotIcon(equip.slot)]"></i>
+                    <span class="acu-equip-slot-name">{{ equip.slot }}</span>
+                  </div>
+                  <div class="acu-equip-info">
+                    <div class="acu-equip-name">{{ equip.name }}</div>
+                    <div v-if="equip.effect" class="acu-equip-effect">{{ equip.effect }}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1011,6 +1142,161 @@ function handleDice(name: string, val: any) {
     font-size: var(--acu-font-sm, 12px);
     text-align: center;
   }
+}
+
+/* ========== 技能区 ========== */
+.acu-skill-section {
+  margin-bottom: var(--acu-space-md, 12px);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.acu-skill-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--acu-space-xs, 4px);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--acu-text-sub);
+  margin-bottom: var(--acu-space-sm, 8px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  i {
+    font-size: 10px;
+  }
+}
+
+.acu-skill-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-sm, 8px);
+}
+
+.acu-skill-item {
+  padding: var(--acu-space-sm, 8px) var(--acu-space-md, 12px);
+  background: var(--acu-card-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md, 6px);
+  border-left: 3px solid var(--acu-accent);
+  
+  &.active {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.05);
+  }
+  
+  &.passive {
+    border-left-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.05);
+  }
+}
+
+.acu-skill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.acu-skill-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-text-main);
+}
+
+.acu-skill-cooldown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #f59e0b;
+  
+  i {
+    font-size: 10px;
+  }
+}
+
+.acu-skill-effect {
+  font-size: 12px;
+  color: var(--acu-text-sub);
+  line-height: 1.4;
+}
+
+.acu-skill-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--acu-border);
+  font-size: 11px;
+  color: var(--acu-accent);
+  
+  i {
+    font-size: 10px;
+  }
+}
+
+/* ========== 装备区 ========== */
+.acu-equip-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-sm, 8px);
+}
+
+.acu-equip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--acu-space-md, 12px);
+  padding: var(--acu-space-sm, 8px) var(--acu-space-md, 12px);
+  background: var(--acu-card-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-md, 6px);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: var(--acu-accent);
+    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05);
+  }
+}
+
+.acu-equip-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 50px;
+  
+  i {
+    font-size: 16px;
+    color: var(--acu-accent);
+  }
+}
+
+.acu-equip-slot-name {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  white-space: nowrap;
+}
+
+.acu-equip-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.acu-equip-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-text-main);
+  margin-bottom: 2px;
+}
+
+.acu-equip-effect {
+  font-size: 11px;
+  color: var(--acu-text-sub);
+  line-height: 1.3;
 }
 
 /* ========== 属性可视化进度条 ========== */
