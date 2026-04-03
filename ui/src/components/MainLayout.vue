@@ -72,7 +72,7 @@ const showPresetManager = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
-const legacySettings = ref<LegacySettings>(settingsManager.getLegacySettings());
+const legacySettings = computed<LegacySettings>(() => settingsManager.getLegacySettings());
 let tableRefreshTimer: ReturnType<typeof setInterval> | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
 
@@ -309,7 +309,6 @@ onMounted(() => {
   loadPresets();
   loadTables();
   tableRefreshTimer = setInterval(loadTables, 3000);
-  settingsManager.onChange(s => (legacySettings.value = { ...s.legacy }));
 
   window.addEventListener('acu-show-changes-panel', () => {
     closeAllPanels();
