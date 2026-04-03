@@ -1,4 +1,7 @@
 ﻿
+/* ========== 导入设计令牌 ========== */
+@import './base/tokens';
+
 /* ========== 核心隔离层 ========== */
 .acu-wrapper,
 .acu-wrapper *:not(i[class*="fa-"]),
@@ -61,13 +64,13 @@
 .acu-dice-config-dialog select {
     width: 100%;
     text-align: center;
-    padding: 6px;
+    padding: var(--acu-space-sm);
     background: var(--acu-input-bg) !important;
     border: 1px solid var(--acu-border) !important;
-    border-radius: 4px;
+    border-radius: var(--acu-radius-sm);
     color: var(--acu-input-text, var(--acu-text-main)) !important;
-    font-size: 12px;
-    height: 30px;
+    font-size: var(--acu-font-md);
+    height: var(--acu-input-height-md);
     line-height: 1;
     box-sizing: border-box;
 }
@@ -78,7 +81,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    padding: 0 6px;
+    padding: 0 var(--acu-space-sm);
     margin: 0;
     text-align-last: center;
     display: block;
@@ -149,13 +152,13 @@
 .acu-embedded-options-container button:not(.acu-opt-btn) {
     font-family: inherit;
     font-size: inherit;
-    line-height: 1.4;
+    line-height: var(--acu-line-height-normal);
     cursor: pointer;
     border: 1px solid var(--acu-border);
-    border-radius: 6px;
+    border-radius: var(--acu-radius-md);
     background: var(--acu-btn-bg);
     color: var(--acu-text-main);
-    transition: all 0.2s ease;
+    transition: all var(--acu-transition-normal) var(--acu-ease-cubic);
     outline: none;
 }
 .acu-wrapper button:hover,
@@ -194,13 +197,13 @@
 .acu-avatar-manager-overlay input.acu-input {
     font-family: inherit;
     font-size: inherit;
-    line-height: 1.4;
+    line-height: var(--acu-line-height-normal);
     border: 1px solid var(--acu-border);
-    border-radius: 4px;
+    border-radius: var(--acu-radius-sm);
     background: var(--acu-btn-bg);
     color: var(--acu-text-main);
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--acu-transition-normal);
 }
 .acu-wrapper input:focus,
 .acu-wrapper textarea:focus,
@@ -648,11 +651,11 @@
 }
 
 /* 关闭按钮基类 - 所有关闭按钮统一使用 .acu-close-btn */
-.acu-close-btn {
-    background: none !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
+.acu-wrapper .acu-close-btn {
+    background: none;
+    border: none;
+    outline: none;
+    box-shadow: none;
     color: var(--acu-text-sub);
     cursor: pointer;
     font-size: 16px;
@@ -660,8 +663,8 @@
     border-radius: 4px;
     transition: all 0.2s;
 }
-.acu-close-btn:hover {
-    background: none !important;
+.acu-wrapper .acu-close-btn:hover {
+    background: none;
     color: var(--acu-accent);
 }
 
@@ -1075,8 +1078,8 @@
 .acu-wrapper.acu-mode-embedded { position: relative !important; width: 100% !important; margin-top: 8px !important; z-index: 31001 !important; clear: both; display: flex; flex-direction: column-reverse !important; padding: 0; }
 .acu-wrapper.acu-mode-embedded .acu-nav-container { position: relative !important; z-index: 31002 !important; }
 .acu-wrapper.acu-mode-embedded .acu-data-display { position: absolute !important; bottom: 100% !important; left: 0 !important; right: 0 !important; width: 100% !important; box-shadow: 0 -10px 30px rgba(0,0,0,0.25) !important; border: 1px solid var(--acu-border); margin-bottom: 5px; z-index: 31010 !important; max-height: 70vh !important; overflow-y: auto !important; }
-.acu-nav-container { display: grid; grid-template-columns: repeat(var(--acu-grid-cols, 3), 1fr); gap: 4px; padding: 6px; background: var(--acu-bg-nav); border: 1px solid var(--acu-border); border-radius: 10px; align-items: center; box-shadow: 0 2px 6px var(--acu-shadow); position: relative; z-index: 31001 !important; }
-.acu-nav-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 3px; padding: 4px 2px; border: 1px solid transparent; border-radius: 6px; background: var(--acu-btn-bg); color: var(--acu-text-main); font-weight: 600; font-size: 11px; cursor: pointer; transition: all 0.2s ease; user-select: none; overflow: hidden; height: 28px; }
+.acu-nav-container { display: grid; grid-template-columns: repeat(var(--acu-grid-cols, 3), 1fr); gap: var(--acu-space-xs); padding: var(--acu-space-6px); background: var(--acu-bg-nav); border: 1px solid var(--acu-border); border-radius: var(--acu-radius-10px); align-items: center; box-shadow: 0 2px 6px var(--acu-shadow); position: relative; z-index: 31001 !important; }
+.acu-nav-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: var(--acu-space-3px); padding: var(--acu-space-xs) var(--acu-space-2xs); border: 1px solid transparent; border-radius: var(--acu-radius-md); background: var(--acu-btn-bg); color: var(--acu-text-main); font-weight: 600; font-size: var(--acu-font-sm); cursor: pointer; transition: all 0.2s ease; user-select: none; overflow: hidden; height: var(--acu-btn-height-sm); }
 .acu-nav-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; margin-top: 1px; }
 .acu-nav-btn:hover { background: var(--acu-btn-hover); transform: translateY(-2px); }
 .acu-nav-btn:focus, .acu-nav-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--acu-accent) !important; }
@@ -1085,10 +1088,10 @@
 .acu-height-control {
 display: flex;
 align-items: center;
-margin-right: 8px;
+margin-right: var(--acu-space-sm);
 cursor: ns-resize;
-padding: 4px;
-border-radius: 4px;
+padding: var(--acu-space-xs);
+border-radius: var(--acu-radius-sm);
 color: var(--acu-text-sub);
 transition: all 0.2s;
 /* 关键属性：禁止在此区域触发浏览器默认手势 */
@@ -1109,27 +1112,27 @@ touch-action: none;
 }
 
         /* 视图切换样式 */
-        .acu-view-btn { background: transparent !important; border: none; color: var(--acu-text-main) !important; cursor: pointer; padding: 4px; margin-right: 5px; font-size: 14px; opacity: 0.7; }
-        .acu-view-btn:hover { opacity: 1; color: var(--acu-accent) !important; background: var(--acu-table-hover) !important; border-radius: 4px; }
-        .acu-view-btn.acu-reverse-btn.active, .acu-reverse-btn[data-reversed="true"] { color: var(--acu-accent) !important; opacity: 1; }
+        .acu-wrapper .acu-view-btn { background: transparent; border: none; color: var(--acu-text-main); cursor: pointer; padding: 4px; margin-right: 5px; font-size: 14px; opacity: 0.7; }
+        .acu-wrapper .acu-view-btn:hover { opacity: 1; color: var(--acu-accent); background: var(--acu-table-hover); border-radius: 4px; }
+        .acu-wrapper .acu-view-btn.acu-reverse-btn.active, .acu-wrapper .acu-reverse-btn[data-reversed="true"] { color: var(--acu-accent); opacity: 1; }
         /* Grid 视图 (双列) */
         .acu-card-body.view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
         /* 修复版：强制 Grid 模式使用 Flex 布局并允许高度自适应 */
-.acu-card-body.view-grid .acu-card-row { display: flex; height: auto !important; min-height: fit-content; border: 1px solid var(--acu-border); border-radius: 6px; padding: 4px 6px; flex-direction: column !important; align-items: flex-start !important; background: rgba(0,0,0,0.02); box-sizing: border-box; }
+.acu-wrapper .acu-card-body.view-grid .acu-card-row { display: flex; height: auto; min-height: fit-content; border: 1px solid var(--acu-border); border-radius: 6px; padding: 4px 6px; flex-direction: column; align-items: flex-start; background: rgba(0,0,0,0.02); box-sizing: border-box; }
         .acu-card-body.view-grid .acu-card-row.acu-grid-span-full { grid-column: 1 / -1; }
-        .acu-card-body.view-grid .acu-card-label { width: 100% !important; font-size: 0.85em; opacity: 0.8; margin-bottom: 2px; }
-        .acu-card-body.view-grid .acu-card-value { width: 100% !important; }
+        .acu-wrapper .acu-card-body.view-grid .acu-card-label { width: 100%; font-size: 0.85em; opacity: 0.8; margin-bottom: 2px; }
+        .acu-wrapper .acu-card-body.view-grid .acu-card-value { width: 100%; }
 
         /* List 视图 (单列 - 原版增强) */
         .acu-nav-btn.active { background: var(--acu-btn-active-bg); color: var(--acu-btn-active-text); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); outline: none; border-color: transparent; }
         .acu-nav-btn.active:hover { background: var(--acu-btn-active-bg); color: var(--acu-btn-active-text); transform: none; }
-        .acu-nav-btn.active:focus, .acu-nav-btn.active:focus-visible { outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2) !important; }
+        .acu-wrapper .acu-nav-btn.active:focus, .acu-wrapper .acu-nav-btn.active:focus-visible { outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
         .acu-nav-btn.has-validation-errors { border-color: rgba(231, 76, 60, 0.5); }
         .acu-nav-btn .acu-nav-warning-icon { color: var(--acu-error-text, #e74c3c); font-size: 10px; margin-left: 2px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .acu-action-btn { flex: 1; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--acu-btn-bg); border-radius: 8px; color: var(--acu-text-sub); cursor: pointer; border: 1px solid transparent; transition: all 0.2s; margin: 0; }
         .acu-action-btn:hover { background: var(--acu-btn-hover); color: var(--acu-text-main); transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .acu-action-btn:focus, .acu-action-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--acu-accent) !important; }
+        .acu-wrapper .acu-action-btn:focus, .acu-wrapper .acu-action-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--acu-accent); }
         #acu-btn-save-global { color: var(--acu-btn-active-bg); } #acu-btn-save-global:hover { background: var(--acu-btn-active-bg); color: var(--acu-btn-active-text); }
 
         .acu-data-display { position: absolute; bottom: calc(100% + 10px); left: 0; right: 0; max-height: 80vh; height: auto; background: var(--acu-bg-panel); border: 1px solid var(--acu-border); border-radius: 8px; box-shadow: 0 8px 30px var(--acu-shadow); display: flex; flex-direction: column; z-index: 31002 !important; opacity: 0; visibility: hidden; transition: opacity 0.2s ease-out, visibility 0s linear 0.2s; pointer-events: none; }
@@ -1188,19 +1191,19 @@ margin-top: 1px;
 /* 核心修改：flex-shrink: 0 确保这一块区域永远不会被压缩 */
 .acu-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .acu-search-wrapper { position: relative; display: flex; align-items: center; }
-        .acu-wrapper input.acu-search-input { background: var(--acu-btn-bg) !important; border: 1px solid var(--acu-border) !important; color: var(--acu-text-main) !important; padding: 4px 8px 4px 24px; border-radius: 12px; font-size: 12px; width: 120px; transition: width 0.2s, border-color 0.2s; }
-        .acu-wrapper input.acu-search-input::placeholder { color: var(--acu-text-sub) !important; opacity: 0.7; }
-        .acu-wrapper input.acu-search-input:focus { width: 160px; outline: none !important; border-color: var(--acu-accent) !important; box-shadow: none !important; }
+        .acu-wrapper input.acu-search-input { background: var(--acu-btn-bg); border: 1px solid var(--acu-border); color: var(--acu-text-main); padding: 4px 8px 4px 24px; border-radius: 12px; font-size: 12px; width: 120px; transition: width 0.2s, border-color 0.2s; }
+        .acu-wrapper input.acu-search-input::placeholder { color: var(--acu-text-sub); opacity: 0.7; }
+        .acu-wrapper input.acu-search-input:focus { width: 160px; outline: none; border-color: var(--acu-accent); box-shadow: none; }
         .acu-search-input::placeholder { color: var(--acu-text-sub) ; opacity: 0.7; }
         .acu-search-icon { position: absolute; left: 8px; font-size: 10px; color: var(--acu-text-sub); pointer-events: none; }
         /* 增加了 min-width 和 flex-shrink: 0 */
         .acu-panel-content { flex: 1; overflow-x: auto; overflow-y: hidden; padding: 15px; background: transparent; scrollbar-width: thin; scrollbar-color: var(--acu-scrollbar-thumb) var(--acu-scrollbar-track); overscroll-behavior-x: contain; overscroll-behavior-y: auto; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; }
         /* 增加了 height: 100%; 让网格容器填满面板的高度 */
 .acu-card-grid { display: flex; flex-wrap: nowrap; gap: 12px; align-items: flex-start; }
-        .acu-layout-vertical .acu-panel-content { overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior: auto; touch-action: manipulation; min-height: 0; }
+        .acu-wrapper .acu-layout-vertical .acu-panel-content { overflow-x: hidden; overflow-y: auto; overscroll-behavior: auto; touch-action: manipulation; min-height: 0; }
         /* 竖向布局时恢复 auto 高度 */
-.acu-layout-vertical .acu-card-grid { flex-wrap: wrap !important; justify-content: center; padding-bottom: 20px; height: auto; }
-.acu-wrapper:not(.acu-layout-vertical) .acu-manual-mode .acu-card-grid { height: 100%; } .acu-manual-mode .acu-data-card { max-height: 100% !important; overscroll-behavior-y: auto; } .acu-data-card { flex: 0 0 var(--acu-card-width, 260px); width: var(--acu-card-width, 260px); background: var(--acu-card-bg); border: 1px solid var(--acu-border); border-radius: 8px; height: auto; max-height: 60vh; overflow-y: auto; overscroll-behavior-y: auto; touch-action: manipulation; transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
+.acu-wrapper .acu-layout-vertical .acu-card-grid { flex-wrap: wrap; justify-content: center; padding-bottom: 20px; height: auto; }
+.acu-wrapper:not(.acu-layout-vertical) .acu-manual-mode .acu-card-grid { height: 100%; } .acu-wrapper .acu-manual-mode .acu-data-card { max-height: 100%; overscroll-behavior-y: auto; } .acu-data-card { flex: 0 0 var(--acu-card-width, 260px); width: var(--acu-card-width, 260px); background: var(--acu-card-bg); border: 1px solid var(--acu-border); border-radius: 8px; height: auto; max-height: 60vh; overflow-y: auto; overscroll-behavior-y: auto; touch-action: manipulation; transition: all 0.2s ease; display: flex; flex-direction: column; position: relative; }
         .acu-data-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--acu-shadow); border-color: var(--acu-accent); }
         .acu-data-card.pending-deletion { opacity: 0.6; border: 1px dashed var(--acu-error-text, #e74c3c); }
         .acu-data-card.pending-deletion::after { content: "待删除"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); color: var(--acu-error-text, #e74c3c); font-size: 24px; font-weight: bold; border: 2px solid var(--acu-error-text, #e74c3c); padding: 5px 10px; border-radius: 8px; opacity: 0.8; pointer-events: none; }
@@ -1208,53 +1211,53 @@ margin-top: 1px;
         .acu-data-card.acu-card-locked::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(var(--acu-accent-rgb, 59, 130, 246), 0.05) 0%, transparent 50%); pointer-events: none; z-index: 0; border-radius: 8px; }
         .acu-row-lock-badge { color: var(--acu-accent); font-size: 14px; opacity: 0.9; margin-left: 4px; flex-shrink: 0; }
         @keyframes pulse-highlight { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
-        .acu-highlight-manual { color: var(--acu-hl-manual) !important; background-color: var(--acu-hl-manual-bg) !important; border-radius: 4px; padding: 0 4px; font-weight: bold; animation: pulse-highlight 2s infinite; display: inline-block; }
-        .acu-highlight-diff { color: var(--acu-hl-diff) !important; background-color: var(--acu-hl-diff-bg) !important; border-radius: 4px; padding: 0 4px; font-weight: bold; animation: pulse-highlight 2s infinite; display: inline-block; }
+        .acu-wrapper .acu-highlight-manual { color: var(--acu-hl-manual); background-color: var(--acu-hl-manual-bg); border-radius: 4px; padding: 0 4px; font-weight: bold; animation: pulse-highlight 2s infinite; display: inline-block; }
+        .acu-wrapper .acu-highlight-diff { color: var(--acu-hl-diff); background-color: var(--acu-hl-diff-bg); border-radius: 4px; padding: 0 4px; font-weight: bold; animation: pulse-highlight 2s infinite; display: inline-block; }
         .acu-editable-title.acu-highlight-manual, .acu-editable-title.acu-highlight-diff { width: auto; display: inline-block; }
-        .acu-card-header { flex: 0 0 auto; padding: 8px 10px; background: var(--acu-table-head); border-bottom: 1px dashed var(--acu-border); font-weight: bold; color: var(--acu-text-main); font-size: 14px; display: flex; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 8px; min-height: 40px; height: auto !important; position: relative; }
-        .acu-editable-title { flex: 1; width: auto !important; cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.2s; white-space: pre-wrap !important; overflow: visible !important; word-break: break-word !important; text-align: center; line-height: 1.3; margin: 0; }
+        .acu-wrapper .acu-card-header { flex: 0 0 auto; padding: var(--acu-space-sm) var(--acu-space-10px); background: var(--acu-table-head); border-bottom: 1px dashed var(--acu-border); font-weight: bold; color: var(--acu-text-main); font-size: var(--acu-font-xl); display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: var(--acu-space-sm); min-height: var(--acu-size-40px); height: auto; position: relative; }
+        .acu-editable-title { flex: 1; width: auto; cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.2s; white-space: pre-wrap; overflow: visible; word-break: break-word; text-align: center; line-height: 1.3; margin: 0; }
         .acu-editable-title:hover { border-bottom-color: var(--acu-accent); color: var(--acu-accent); }
-        .acu-card-index { position: static !important; transform: none !important; margin: 0; flex-shrink: 0; font-size: 11px; color: var(--acu-text-sub); font-weight: normal; background: var(--acu-badge-bg); padding: 2px 6px; border-radius: 4px; }
+        .acu-card-index { position: static; transform: none; margin: 0; flex-shrink: 0; font-size: var(--acu-font-sm); color: var(--acu-text-sub); font-weight: normal; background: var(--acu-badge-bg); padding: var(--acu-space-2xs) var(--acu-space-6px); border-radius: var(--acu-radius-sm); }
         .acu-bookmark-icon { position: absolute; top: 8px; right: 8px; color: var(--acu-accent); cursor: pointer; font-size: 16px; opacity: 0.3; transition: opacity 0.2s, color 0.2s, transform 0.2s; z-index: 10; }
         .acu-bookmark-icon:hover { opacity: 0.6; transform: scale(1.1); }
         .acu-bookmark-icon.bookmarked { color: var(--acu-accent); opacity: 1; }
-        .acu-card-body { padding: 6px 12px; display: flex; flex-direction: column; gap: 0; font-size: var(--acu-table-font-size, var(--acu-font-size, 13px)); flex: 1; }
-        .acu-card-row { display: block; padding: 6px 0; border-bottom: 1px dashed var(--acu-border); cursor: pointer; overflow: hidden; }
+        .acu-card-body { padding: var(--acu-space-6px) var(--acu-space-md); display: flex; flex-direction: column; gap: 0; font-size: var(--acu-table-font-size, var(--acu-font-size, 13px)); flex: 1; }
+        .acu-card-row { display: block; padding: var(--acu-space-6px) 0; border-bottom: 1px dashed var(--acu-border); cursor: pointer; overflow: hidden; }
         .acu-card-row:last-child { border-bottom: none; }
-        .acu-card-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px dashed var(--acu-border); background: var(--acu-table-head); }
-        .acu-action-item { padding: 4px 10px; font-size: 11px; border: 1px solid var(--acu-border); border-radius: 4px; background: var(--acu-btn-bg); color: var(--acu-text-main); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.15s; white-space: nowrap; }
+        .acu-card-actions { display: flex; flex-wrap: wrap; gap: var(--acu-space-6px); padding: var(--acu-space-sm) var(--acu-space-10px); border-top: 1px dashed var(--acu-border); background: var(--acu-table-head); }
+        .acu-action-item { padding: var(--acu-space-xs) var(--acu-space-10px); font-size: var(--acu-font-sm); border: 1px solid var(--acu-border); border-radius: var(--acu-radius-sm); background: var(--acu-btn-bg); color: var(--acu-text-main); cursor: pointer; display: flex; align-items: center; gap: var(--acu-space-xs); transition: all 0.15s; white-space: nowrap; }
         .acu-action-item:hover { background: var(--acu-btn-hover); border-color: var(--acu-accent); color: var(--acu-accent); transform: translateY(-1px); }
         .acu-action-item:active { transform: translateY(0); }
         .acu-action-item.check-type { border-style: dashed; }
-        .acu-action-item i { font-size: 10px; opacity: 0.7; }
+        .acu-action-item i { font-size: var(--acu-font-xs); opacity: 0.7; }
         .acu-card-row:hover { background: var(--acu-table-hover); }
-        .acu-card-label { float: left !important; clear: left; width: auto !important; margin-right: 8px !important; color: var(--acu-text-sub); font-size: 0.9em; line-height: 1.5; padding-top: 0; }
+        .acu-card-label { float: left; clear: left; width: auto; margin-right: var(--acu-space-sm); color: var(--acu-text-sub); font-size: 0.9em; line-height: 1.5; padding-top: 0; }
         .acu-hide-label .acu-card-label { display: none; }
-        .acu-hide-label .acu-card-value { width: 100% !important; }
-        .acu-inline-dice-btn:hover { opacity: 1 !important; transform: scale(1.2); }
-        .acu-card-value { display: block; width: auto !important; margin: 0; text-align: left !important; word-break: break-all !important; white-space: pre-wrap !important; line-height: 1.5 !important; color: var(--acu-text-main); font-size: 1em; }
-        .acu-tag-container { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
-        .acu-multi-attr-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
-        .acu-badge { display: inline-block; padding: 1px 8px; border-radius: 12px; font-size: 0.9em; font-weight: 500; line-height: 1.2; }
+        .acu-wrapper .acu-hide-label .acu-card-value { width: 100%; }
+        .acu-inline-dice-btn:hover { opacity: 1; transform: scale(1.2); }
+        .acu-card-value { display: block; width: auto; margin: 0; text-align: left; word-break: break-all; white-space: pre-wrap; line-height: 1.5; color: var(--acu-text-main); font-size: 1em; }
+        .acu-tag-container { display: flex; flex-wrap: wrap; gap: var(--acu-space-xs); align-items: center; margin-top: var(--acu-space-2xs); }
+        .acu-multi-attr-container { display: grid; grid-template-columns: 1fr 1fr; gap: var(--acu-space-2xs) var(--acu-space-sm); }
+        .acu-badge { display: inline-block; padding: var(--acu-space-2xs) var(--acu-space-sm); border-radius: var(--acu-radius-xl); font-size: 0.9em; font-weight: 500; line-height: 1.2; }
         .acu-badge-green { background: var(--acu-success-bg); color: var(--acu-success-text); }
         .acu-badge-neutral { background: var(--acu-badge-bg); color: var(--acu-text-main); border: 1px solid var(--acu-border); }
-        .acu-panel-footer { flex: 0 0 auto; padding: 8px; border-top: 1px dashed var(--acu-border); background: var(--acu-table-head); display: flex; justify-content: center; align-items: center; gap: 5px; flex-wrap: wrap; }
-        .acu-page-btn { padding: 4px 10px; min-width: 32px; height: 28px; border-radius: 4px; border: 1px solid var(--acu-border); background: var(--acu-btn-bg); color: var(--acu-text-main); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .acu-panel-footer { flex: 0 0 auto; padding: var(--acu-space-sm); border-top: 1px dashed var(--acu-border); background: var(--acu-table-head); display: flex; justify-content: center; align-items: center; gap: var(--acu-space-5px); flex-wrap: wrap; }
+        .acu-page-btn { padding: var(--acu-space-xs) var(--acu-space-10px); min-width: var(--acu-size-32px); height: var(--acu-btn-height-sm); border-radius: var(--acu-radius-sm); border: 1px solid var(--acu-border); background: var(--acu-btn-bg); color: var(--acu-text-main); cursor: pointer; font-size: var(--acu-font-md); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .acu-page-btn:hover:not(.disabled):not(.active) { background: var(--acu-btn-hover); transform: translateY(-1px); }
         .acu-page-btn.active { background: var(--acu-accent); color: var(--acu-button-text-on-accent, #fff); border-color: var(--acu-accent); font-weight: bold; }
         .acu-page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-        .acu-page-info { font-size: 12px; color: var(--acu-text-sub); margin: 0 10px; }
+        .acu-page-info { font-size: var(--acu-font-md); color: var(--acu-text-sub); margin: 0 var(--acu-space-10px); }
         /* --- [重设计] 行动选项面板样式 - 叙事书页风 --- */
         .acu-option-panel {
             display: flex;
             flex-direction: column;
-            gap: 2px;
-            padding: 4px;
+            gap: var(--acu-space-2xs);
+            padding: var(--acu-space-xs);
             background: var(--acu-opt-panel-bg, var(--acu-bg-nav));
             border: 1px solid var(--acu-border);
-            border-radius: 6px;
+            border-radius: var(--acu-radius-md);
             margin-top: 0;
-            margin-bottom: 4px;
+            margin-bottom: var(--acu-space-xs);
             width: 100%;
             box-sizing: border-box;
             z-index: 31001;
@@ -1265,7 +1268,7 @@ margin-top: 1px;
         .acu-embedded-options-container {
             width: 100%;
             max-width: 100%;
-            margin: 12px 0;
+            margin: var(--acu-space-md) 0;
             padding: 0;
             clear: both;
             box-sizing: border-box;
@@ -1276,12 +1279,12 @@ margin-top: 1px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 11px;
+            font-size: var(--acu-font-sm);
             font-weight: 600;
             color: var(--acu-text-main);
-            padding: 8px 0;
+            padding: var(--acu-space-sm) 0;
             border-bottom: 1px solid var(--acu-border);
-            margin-bottom: 8px;
+            margin-bottom: var(--acu-space-sm);
             cursor: pointer;
             user-select: none;
             transition: color 0.2s;
@@ -1294,17 +1297,17 @@ margin-top: 1px;
         .acu-opt-btn {
             background: var(--acu-opt-bright-bg, #ffffff);
             border: 1px solid transparent;
-            padding: 3px 6px;
-            border-radius: 4px;
+            padding: var(--acu-space-3px) var(--acu-space-6px);
+            border-radius: var(--acu-radius-sm);
             cursor: pointer;
             color: var(--acu-text-main);
-            font-size: var(--acu-opt-font-size, 12px) !important;
+            font-size: var(--acu-opt-font-size, var(--acu-font-md));
             transition: all 0.15s;
             font-weight: normal;
             text-align: left;
             white-space: pre-wrap;
             word-break: break-word;
-            min-height: 22px;
+            min-height: var(--acu-size-22px);
             line-height: 1.3;
             display: flex;
             align-items: center;
@@ -1318,7 +1321,7 @@ margin-top: 1px;
             background: var(--acu-table-hover);
             color: var(--acu-accent);
             border-color: var(--acu-accent);
-            transform: translateX(3px);
+            transform: translateX(var(--acu-space-3px));
         }
         .acu-opt-btn:active {
             background: var(--acu-btn-active-bg);
@@ -1333,7 +1336,7 @@ margin-top: 1px;
             border-bottom: none;
             margin-bottom: 0;
         }
-        @keyframes acuFadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes acuFadeIn { from { opacity: 0; transform: translateY(var(--acu-space-5px)); } to { opacity: 1; transform: translateY(0); } }
 
         /* [新增] 骰子结果隐藏动画：消除闪烁 */
         .acu-dice-result-revealing {
@@ -1450,10 +1453,10 @@ background: var(--acu-table-hover);
         .acu-order-controls.visible { display: flex; align-items: center; justify-content: space-between; }
 
         .acu-nav-container.editing-order { border: 2px solid var(--acu-accent); background: var(--acu-bg-panel); }
-        .acu-nav-container.editing-order .acu-nav-btn, .acu-nav-container.editing-order .acu-action-btn { opacity: 1 !important; cursor: grab !important; border: 1px solid var(--acu-border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .acu-wrapper .acu-nav-container.editing-order .acu-nav-btn, .acu-wrapper .acu-nav-container.editing-order .acu-action-btn { opacity: 1; cursor: grab; border: 1px solid var(--acu-border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .acu-nav-container.editing-order .acu-nav-btn:hover, .acu-nav-container.editing-order .acu-action-btn:hover { border-color: var(--acu-accent); transform: translateY(-1px); }
 
-        .acu-swap-selected { background-color: var(--acu-accent) !important; color: var(--acu-button-text-on-accent, var(--acu-text-main)) !important; border-color: var(--acu-accent); box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2); transform: scale(1.05); z-index: 10; }
+        .acu-wrapper .acu-swap-selected { background-color: var(--acu-accent); color: var(--acu-button-text-on-accent, var(--acu-text-main)); border-color: var(--acu-accent); box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2); transform: scale(1.05); z-index: 10; }
         .acu-drag-over { border: 2px dashed var(--acu-accent); opacity: 0.5; transform: scale(0.95); background: rgba(var(--acu-accent-rgb), 0.1); }
 
         /* --- [PC Style] Unused Pool Optimization (工具架样式) --- */
@@ -1533,27 +1536,27 @@ background: var(--acu-table-hover);
         .acu-slider { width: 100%; height: 4px; background: #555; border-radius: 2px; outline: none; -webkit-appearance: none; }
         .acu-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; }
         .acu-select { width: 100%; padding: 8px; background: rgba(0,0,0,0.3); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none; }
-        .acu-edit-overlay input[type="checkbox"].acu-checkbox { margin-right: 10px; accent-color: var(--acu-accent) !important; background: transparent !important; background-color: transparent !important; }
+        .acu-wrapper .acu-edit-overlay input[type="checkbox"].acu-checkbox { margin-right: 10px; accent-color: var(--acu-accent); background: transparent; background-color: transparent; }
         .acu-btn-block { width: 100%; padding: 10px; background: #444; color: #eee; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
         .acu-btn-block:hover { background: #555; color: #fff; }
         .acu-expand-trigger { background: var(--acu-bg-nav); border: 1px solid var(--acu-border); box-shadow: 0 2px 6px var(--acu-shadow); cursor: pointer; color: var(--acu-text-main); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: all 0.2s; z-index: 31005 !important; }
         .acu-expand-trigger:hover { background: var(--acu-btn-hover); transform: translateY(-2px); }
         .acu-col-bar { width: 100%; justify-content: center; padding: 8px 10px; border-radius: 6px; }
-        .acu-col-pill { width: auto !important; padding: 6px 16px; border-radius: 50px; }
-        .acu-col-mini { width: 40px !important; height: 40px !important; padding: 0; justify-content: center; border-radius: 50%; }
+        .acu-col-pill { width: auto; padding: 6px 16px; border-radius: 50px; }
+        .acu-col-mini { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
         .acu-col-mini span { display: none; }
         /* [优化] 小眼睛图标悬停效果 */
-        .acu-nav-toggle-btn:hover { opacity: 1 !important; transform: translateY(-50%) scale(1.2); color: var(--acu-accent); }
+        .acu-nav-toggle-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.2); color: var(--acu-accent); }
         .acu-align-right { margin-left: auto; align-self: flex-end; }
         .acu-align-center { 
-            margin-left: auto !important; 
-            margin-right: auto !important; 
+            margin-left: auto; 
+            margin-right: auto; 
         }
         .acu-align-left { margin-right: auto; margin-left: 0; align-self: flex-start; }
         .acu-nav-container.acu-left-mode .acu-actions-group { order: -1; margin-left: 0; margin-right: 10px; }
         #acu-btn-collapse { color: var(--acu-text-sub); }
         #acu-btn-collapse:hover { color: var(--acu-text-main); background: rgba(0,0,0,0.05); }
-        @keyframes acu-breathe { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); color: #ff7e67; } 100% { opacity: 1; transform: scale(1); } } .acu-icon-breathe { animation: acu-breathe 3s infinite ease-in-out !important; display: inline-block; }
+        @keyframes acu-breathe { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); color: #ff7e67; } 100% { opacity: 1; transform: scale(1); } } .acu-wrapper .acu-icon-breathe { animation: acu-breathe 3s infinite ease-in-out; display: inline-block; }
 
         @media (min-width: 768px) {
             .acu-wrapper.acu-mode-embedded .acu-nav-container { width: fit-content !important; min-width: 300px; max-width: 100%; margin: 0 auto; border-radius: 50px; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border: 1px solid var(--acu-border); padding: 6px 20px; background: var(--acu-bg-nav) !important; }
@@ -1688,16 +1691,16 @@ background: var(--acu-table-hover);
             }
 
             /* 仪表盘地点名称单行省略样式 */
-            .acu-dash-locations .acu-location-item {
-                padding: 4px 8px !important;
+            .acu-wrapper .acu-dash-locations .acu-location-item {
+                padding: 4px 8px;
                 min-width: 0; /* 允许flex子元素收缩 */
                 overflow: hidden; /* 防止内容溢出 */
                 align-items: center;
                 color: var(--acu-text-main);
             }
 
-            .acu-dash-locations .acu-location-item > span:first-child {
-                display: flex !important;
+            .acu-wrapper .acu-dash-locations .acu-location-item > span:first-child {
+                display: flex;
                 align-items: center;
                 gap: 6px;
                 flex: 1;
@@ -1847,12 +1850,12 @@ background: var(--acu-table-hover);
                 min-height: 200px;
             }
 
-            .acu-dashboard-content {
+            .acu-wrapper .acu-dashboard-content {
                 padding: 8px 15px;
-                overflow-y: auto !important;
-                overflow-x: hidden !important;
-                -webkit-overflow-scrolling: touch !important;
-                touch-action: pan-y !important;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-y;
                 overscroll-behavior-y: contain;
                 max-height: calc(80vh - 60px);
             }
@@ -1873,20 +1876,20 @@ background: var(--acu-table-hover);
             }
 
             /* 仪表盘操作图标 - 统一放大+增加点击热区 */
-            .acu-dash-dice-btn,
-            .acu-dash-goto-btn,
-            .acu-dash-use-item-btn,
-            .acu-dash-use-skill-btn,
-            .acu-dash-track-task-btn,
-            .acu-dash-msg-btn,
-            .acu-dash-contest-btn,
-            .acu-dash-dice-free,
-            .acu-dash-relation-graph-btn,
-            .acu-dash-avatar-manager-btn {
+            .acu-wrapper .acu-dash-dice-btn,
+            .acu-wrapper .acu-dash-goto-btn,
+            .acu-wrapper .acu-dash-use-item-btn,
+            .acu-wrapper .acu-dash-use-skill-btn,
+            .acu-wrapper .acu-dash-track-task-btn,
+            .acu-wrapper .acu-dash-msg-btn,
+            .acu-wrapper .acu-dash-contest-btn,
+            .acu-wrapper .acu-dash-dice-free,
+            .acu-wrapper .acu-dash-relation-graph-btn,
+            .acu-wrapper .acu-dash-avatar-manager-btn {
                 cursor: pointer;
                 color: var(--acu-text-sub);
                 opacity: 0.5;
-                font-size: 14px !important;
+                font-size: 14px;
                 padding: 6px;
                 margin: -4px;
                 border-radius: 4px;
@@ -1931,10 +1934,10 @@ background: var(--acu-table-hover);
                     overflow: visible;
                 }
 
-                .acu-dashboard-content {
-                    max-height: calc(50vh - 40px) !important;
-                    padding: 8px 10px !important;
-                    padding-bottom: 8px !important;
+                .acu-wrapper .acu-dashboard-content {
+                    max-height: calc(50vh - 40px);
+                    padding: 8px 10px;
+                    padding-bottom: 8px;
                 }
 
                 .acu-dash-body.acu-dash-horizontal {
@@ -1949,15 +1952,15 @@ background: var(--acu-table-hover);
                 }
 
                 /* 移动端进一步放大操作按钮 */
-                .acu-dash-dice-btn,
-                .acu-dash-goto-btn,
-                .acu-dash-use-item-btn,
-                .acu-dash-use-skill-btn,
-                .acu-dash-track-task-btn,
-                .acu-dash-msg-btn,
-                .acu-dash-contest-btn,
-                .acu-dash-dice-free {
-                    font-size: 16px !important;
+                .acu-wrapper .acu-dash-dice-btn,
+                .acu-wrapper .acu-dash-goto-btn,
+                .acu-wrapper .acu-dash-use-item-btn,
+                .acu-wrapper .acu-dash-use-skill-btn,
+                .acu-wrapper .acu-dash-track-task-btn,
+                .acu-wrapper .acu-dash-msg-btn,
+                .acu-wrapper .acu-dash-contest-btn,
+                .acu-wrapper .acu-dash-dice-free {
+                    font-size: 16px;
                     padding: 8px;
                     min-width: 36px;
                     min-height: 36px;

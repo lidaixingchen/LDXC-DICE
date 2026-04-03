@@ -1,0 +1,193 @@
+/* ===================================
+   主题特定样式
+   =================================== */
+
+/* ========== Badge 颜色自动推导 ========== */
+[class*="acu-theme-"] {
+    --acu-failure-text: var(--acu-error-text);
+    --acu-failure-bg: var(--acu-error-bg);
+    --acu-crit-failure-text: var(--acu-error-text);
+    --acu-crit-failure-bg: var(--acu-error-bg);
+    --acu-crit-success-text: var(--acu-accent);
+    --acu-crit-success-bg: var(--acu-success-bg);
+    --acu-extreme-success-text: var(--acu-hl-diff);
+    --acu-extreme-success-bg: var(--acu-hl-diff-bg);
+}
+
+/* ========== 选项面板背景色 ========== */
+.acu-theme-retro {
+    --acu-opt-bright-bg: #fffef9;
+}
+
+.acu-theme-modern,
+.acu-theme-forest,
+.acu-theme-ocean,
+.acu-theme-sakura,
+.acu-theme-purple,
+.acu-theme-wechat,
+.acu-theme-galgame,
+.acu-theme-dreamcore {
+    --acu-opt-bright-bg: #ffffff;
+}
+
+.acu-theme-dark {
+    --acu-opt-bright-bg: rgba(255, 255, 255, 0.05);
+}
+
+.acu-theme-cyber {
+    --acu-opt-bright-bg: rgba(0, 255, 204, 0.08);
+}
+
+.acu-theme-nightowl {
+    --acu-opt-bright-bg: rgba(127, 219, 202, 0.08);
+}
+
+.acu-theme-minepink {
+    --acu-opt-bright-bg: rgba(255, 128, 193, 0.08);
+}
+
+.acu-theme-educational {
+    --acu-opt-bright-bg: rgba(255, 153, 0, 0.1);
+}
+
+.acu-theme-vaporwave {
+    --acu-opt-bright-bg: rgba(0, 255, 255, 0.1);
+}
+
+.acu-theme-aurora {
+    --acu-opt-bright-bg: rgba(56, 189, 248, 0.1);
+}
+
+.acu-theme-classicpackaging {
+    --acu-opt-bright-bg: rgba(255, 255, 0, 0.08);
+}
+
+.acu-theme-terminal {
+    --acu-opt-bright-bg: rgba(0, 255, 0, 0.06);
+}
+
+.acu-theme-chouten {
+    --acu-opt-bright-bg: transparent;
+}
+
+/* ========== 极光幻境主题 ========== */
+.acu-theme-aurora .acu-nav-btn {
+    border: 1px solid rgba(56, 189, 248, 0.2) !important;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(168, 85, 247, 0.1)) !important;
+    border-radius: var(--acu-radius-lg);
+    color: #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.acu-theme-aurora .acu-nav-btn:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2)) !important;
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+    transform: translateY(-2px);
+}
+
+.acu-theme-aurora .acu-nav-btn.active {
+    background: linear-gradient(135deg, #38bdf8, #a855f7) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.4), 0 2px 10px rgba(168, 85, 247, 0.3);
+    font-weight: bold;
+}
+
+.acu-theme-aurora .acu-data-card:hover {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 8px 30px rgba(56, 189, 248, 0.15), 0 4px 15px rgba(168, 85, 247, 0.1);
+    transform: translateY(-3px);
+}
+
+/* ========== 梦核主题 ========== */
+.acu-theme-dreamcore .acu-data-card {
+    border-color: #D6D2C4;
+    box-shadow: 0 2px 8px rgba(92, 88, 105, 0.1);
+}
+
+.acu-theme-dreamcore .acu-dice-panel input::placeholder,
+.acu-theme-dreamcore .acu-contest-panel input::placeholder {
+    color: #B0ACC0 !important;
+    opacity: 0.9;
+}
+
+.acu-theme-dreamcore .acu-dice-panel input[type="text"],
+.acu-theme-dreamcore .acu-dice-panel input[type="number"],
+.acu-theme-dreamcore .acu-dice-panel input:not([type]),
+.acu-theme-dreamcore .acu-contest-panel input[type="text"],
+.acu-theme-dreamcore .acu-contest-panel input[type="number"],
+.acu-theme-dreamcore .acu-contest-panel input:not([type]) {
+    color: #4A4652 !important;
+}
+
+/* ========== 超天酱主题 ========== */
+.acu-theme-chouten .acu-nav-container {
+    background: linear-gradient(180deg, rgba(45, 27, 78, 0.95) 0%, rgba(26, 10, 46, 0.98) 100%) !important;
+    border: 1px solid rgba(255, 107, 157, 0.5) !important;
+    box-shadow: 0 0 20px rgba(179, 136, 255, 0.2), inset 0 0 30px rgba(255, 107, 157, 0.1) !important;
+    backdrop-filter: blur(10px);
+    overflow: visible !important;
+}
+
+.acu-theme-chouten .acu-nav-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: var(--acu-radius-lg);
+    color: #FFE4F0;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+}
+
+.acu-theme-chouten .acu-nav-btn:hover {
+    background: rgba(255, 107, 157, 0.2) !important;
+    border-color: #FF6B9D !important;
+    text-shadow: 0 0 8px #FF6B9D;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+}
+
+.acu-theme-chouten .acu-nav-btn.active {
+    background: linear-gradient(135deg, #FF6B9D 0%, #B388FF 100%) !important;
+    border-color: #FFFFFF !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 0 20px rgba(255, 107, 157, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.acu-theme-chouten .acu-data-card {
+    border: 1px solid rgba(179, 136, 255, 0.3) !important;
+    background: linear-gradient(160deg, rgba(30, 15, 50, 0.85) 0%, rgba(20, 8, 40, 0.9) 100%) !important;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(179, 136, 255, 0.05);
+    position: relative;
+}
+
+.acu-theme-chouten .acu-data-card:hover {
+    border-color: #7FFFD4 !important;
+    box-shadow: 0 8px 30px rgba(127, 255, 212, 0.15), 0 0 15px rgba(127, 255, 212, 0.1);
+    transform: translateY(-2px);
+}
+
+.acu-theme-chouten .acu-dice-panel input::placeholder,
+.acu-theme-chouten .acu-contest-panel input::placeholder {
+    color: rgba(179, 136, 255, 0.6) !important;
+}
+
+.acu-theme-chouten .acu-dice-panel input,
+.acu-theme-chouten .acu-contest-panel input {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 107, 157, 0.3) !important;
+    border-radius: var(--acu-radius-sm);
+    color: #7FFFD4 !important;
+    transition: all 0.3s ease;
+}
+
+.acu-theme-chouten .acu-dice-panel input:focus,
+.acu-theme-chouten .acu-contest-panel input:focus {
+    border-color: #7FFFD4 !important;
+    box-shadow: 0 0 10px rgba(127, 255, 212, 0.4), inset 0 0 10px rgba(127, 255, 212, 0.1) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+}
