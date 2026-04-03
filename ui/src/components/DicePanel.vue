@@ -765,7 +765,8 @@ async function handleContestCheck(): Promise<void> {
   const oppAttrVal = oppAttr.value !== '' ? Number(oppAttr.value) : 10;
   const oppAttrMod = computeAIDMAttrMod(oppAttrVal);
 
-  const oppRollVal = oppRoll.value !== '' ? Number(oppRoll.value) : 10;
+  const oppRollResult = roll('1d20');
+  const oppRollVal = oppRollResult.total;
 
   const envAdv = envAdvantage.value !== '' ? Number(envAdvantage.value) : 0;
   const envDis = envDisadvantage.value !== '' ? Number(envDisadvantage.value) : 0;
@@ -1712,7 +1713,7 @@ onMounted(() => {
               </div>
               <div class="acu-dice-field">
                 <div class="acu-dice-form-label">
-                  <span>己方属性名</span>
+                  <span>对抗属性</span>
                   <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
                     <i class="fa-solid fa-dice"></i>
                   </button>
@@ -1722,7 +1723,7 @@ onMounted(() => {
                     v-model="attrName" 
                     type="text" 
                     class="acu-dice-input" 
-                    placeholder="自由检定"
+                    placeholder="如：力量/敏捷"
                     @focus="attrDropdown.update(attributeButtons)"
                     @blur="attrDropdown.close()"
                   />
@@ -1747,38 +1748,8 @@ onMounted(() => {
 
             <div class="acu-dice-form-row cols-3">
               <div class="acu-dice-field">
-                <div class="acu-dice-form-label">
-                  <span>对方属性名</span>
-                </div>
-                <div class="acu-dice-input-wrapper">
-                  <input 
-                    v-model="oppAttrName" 
-                    type="text" 
-                    class="acu-dice-input" 
-                    placeholder="对方属性"
-                    @focus="attrDropdown.update(attributeButtons)"
-                    @blur="attrDropdown.close()"
-                  />
-                  <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
-                    <div 
-                      v-for="a in attrDropdown.suggestions.value" 
-                      :key="a.name"
-                      class="acu-dropdown-item"
-                      @mousedown.prevent="handleSelectOpponentAttribute(a)"
-                    >
-                      <span class="acu-dropdown-label">{{ a.name }}</span>
-                      <span class="acu-dropdown-value">{{ a.value }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="acu-dice-field">
                 <div class="acu-dice-form-label">对方属性值</div>
                 <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
-              </div>
-              <div class="acu-dice-field">
-                <div class="acu-dice-form-label">对方投骰值</div>
-                <input v-model="oppRoll" type="text" class="acu-dice-input" placeholder="留空=10" />
               </div>
             </div>
 
