@@ -1,37 +1,37 @@
-﻿/* ===================================
+/* ===================================
    全局样式主文件
    =================================== */
 
 /* ========== 导入设计令牌 ========== */
-@import './base/tokens';
+@use './base/tokens' as *;
 
 /* ========== 导入主题系统 ========== */
-@import './themes';
+@use './themes' as *;
 
 /* ========== 导入基础样式 ========== */
-@import './base/base';
+@use './base/base' as *;
 
 /* ========== 导入布局样式 ========== */
-@import './layout/layout';
-@import './layout/navigation';
+@use './layout/layout' as *;
+@use './layout/navigation' as *;
 
 /* ========== 导入模块样式 ========== */
-@import './modules/cards';
-@import './modules/forms';
-@import './modules/panels';
-@import './modules/theme-styles';
+@use './modules/cards' as *;
+@use './modules/forms' as *;
+@use './modules/panels' as *;
+@use './modules/theme-styles' as *;
 
 /* ========== 导入组件样式 ========== */
-@import './components/buttons';
-@import './components/inputs';
-@import './components/panels';
-@import './components/modals';
+@use './components/buttons' as *;
+@use './components/inputs' as *;
+@use './components/panels' as *;
+@use './components/modals' as *;
 
 /* ========== 导入动画样式 ========== */
-@import './animations';
+@use './animations' as *;
 
 /* ========== 导入响应式样式 ========== */
-@import './responsive';
+@use './responsive' as *;
 
 /* ========== 导入工具类 ========== */
-@import './utilities/utilities';
+@use './utilities/utilities' as *;
