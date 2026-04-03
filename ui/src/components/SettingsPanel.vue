@@ -622,6 +622,14 @@ onMounted(() => {
               @change="updateLegacy({ hideDiceResultFromUser: ($event.target as any).checked })"
             />
           </div>
+          <div class="acu-setting-row checkbox">
+            <label>屏蔽神-数据库弹窗</label>
+            <input
+              type="checkbox"
+              :checked="settings.muteDatabaseToasts"
+              @change="updateLegacy({ muteDatabaseToasts: ($event.target as any).checked })"
+            />
+          </div>
         </div>
 
         <!-- 4. 表格 -->
