@@ -2791,19 +2791,19 @@ onMounted(() => {
 
 .acu-dice-roll-btn {
   width: 100%;
-  height: 48px;
-  border-radius: 12px;
+  height: 40px;
+  border-radius: 10px;
   border: none;
   background: linear-gradient(135deg, var(--acu-accent), color-mix(in srgb, var(--acu-accent) 85%, black));
   color: white;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
   position: relative;
@@ -3292,9 +3292,9 @@ onMounted(() => {
 .acu-section-card {
   background: var(--acu-bg-panel);
   border: 1px solid var(--acu-border);
-  border-radius: 8px;
-  padding: 10px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
 
   &:last-child {
     margin-bottom: 0;
@@ -3306,7 +3306,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--acu-accent);
   text-transform: uppercase;
@@ -3342,24 +3342,24 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 6px 10px;
+  gap: 3px;
+  padding: 4px 6px;
   background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.1));
   border: 1px solid rgba(255, 165, 0, 0.3);
   border-radius: 6px;
 
   .acu-crit-icon {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .acu-crit-label {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--acu-text-sub);
     font-weight: 600;
   }
 
   .acu-crit-value {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 900;
     color: #ff8c00;
     font-family: 'Courier New', monospace;
@@ -3369,20 +3369,20 @@ onMounted(() => {
 .acu-damage-preview {
   background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(192, 57, 43, 0.05));
   border: 1px solid rgba(231, 76, 60, 0.2);
-  border-radius: 8px;
-  padding: 10px;
-  margin-top: 8px;
+  border-radius: 6px;
+  padding: 6px;
+  margin-top: 6px;
 }
 
 .acu-damage-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .acu-damage-title {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
   color: #e74c3c;
   text-transform: uppercase;
@@ -3391,27 +3391,27 @@ onMounted(() => {
 
 .acu-damage-cards {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .acu-damage-card {
   flex: 1;
   text-align: center;
-  padding: 8px 4px;
-  border-radius: 6px;
+  padding: 5px 3px;
+  border-radius: 4px;
   border: 1px solid var(--acu-border);
   background: var(--acu-bg-header);
 
   .label {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--acu-text-sub);
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .value {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
     font-family: 'Courier New', monospace;
   }
@@ -3449,9 +3449,9 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 4px;
-  border-radius: 6px;
+  gap: 1px;
+  padding: 5px 3px;
+  border-radius: 5px;
   border: 2px solid var(--acu-border);
   background: var(--acu-bg-header);
   color: var(--acu-text-sub);
@@ -3459,14 +3459,14 @@ onMounted(() => {
   transition: all 0.2s ease;
 
   .acu-dc-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.3px;
   }
 
   .acu-dc-value {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 900;
     font-family: 'Courier New', monospace;
   }
@@ -3520,9 +3520,9 @@ onMounted(() => {
 .acu-calc-preview {
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.08), rgba(155, 89, 182, 0.08));
   border: 1px solid rgba(52, 152, 219, 0.2);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
 }
 
 .acu-calc-formula {
@@ -3607,24 +3607,24 @@ onMounted(() => {
 
 .acu-attr-quick-row {
   display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: 3px;
+  margin-bottom: 6px;
   flex-wrap: wrap;
 }
 
 .acu-attr-quick-btn {
-  flex: 1 1 calc(16.66% - 4px);
+  flex: 1 1 calc(16.66% - 3px);
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 4px 6px;
-  border-radius: 4px;
+  gap: 2px;
+  padding: 3px 4px;
+  border-radius: 3px;
   border: 1px solid var(--acu-border);
   background: var(--acu-bg-header);
   color: var(--acu-text-sub);
-  font-size: 10px;
+  font-size: 9px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -3636,11 +3636,11 @@ onMounted(() => {
 
   .val {
     color: var(--acu-text-sub);
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .mod {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     color: var(--acu-success);
   }
@@ -3707,8 +3707,8 @@ onMounted(() => {
 .acu-info-card {
   background: linear-gradient(135deg, var(--acu-bg-header), var(--acu-bg-panel));
   border: 1px solid var(--acu-border);
-  border-radius: 6px;
-  padding: 8px 6px;
+  border-radius: 5px;
+  padding: 5px 4px;
   text-align: center;
   transition: all 0.2s ease;
 
@@ -3718,15 +3718,15 @@ onMounted(() => {
   }
 
   .label {
-    font-size: 9px;
+    font-size: 8px;
     color: var(--acu-text-sub);
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   .value {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 900;
     color: var(--acu-accent);
 
@@ -3759,7 +3759,7 @@ onMounted(() => {
 .acu-config-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .acu-config-row {
