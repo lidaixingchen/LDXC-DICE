@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, provide, ref, watch } from 'vue';
-import { useCharacterData, useDiceSystem, useDropdownSuggestions, usePresets } from '../composables';
+import { useCharacterData, useDiceSystem, useDiceHistory, useDropdownSuggestions, usePresets } from '../composables';
 import type { AttributeButton } from '../composables/useCharacterData';
 import type { CheckResult } from '../types';
 
@@ -11,6 +11,7 @@ const emit = defineEmits<{
 
 const { initialize: initDiceSystem, performCheck, roll } = useDiceSystem();
 const { presets, currentPreset, loadPresets, selectPreset } = usePresets();
+const { addCheckEntry, addContestEntry } = useDiceHistory();
 
 const { characters, currentCharacter, attributeButtons, selectCharacter, getRandomAttribute, getAttributeValue } =
   useCharacterData();
@@ -528,6 +529,8 @@ async function handleStandardCheck(): Promise<void> {
 ${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`))}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addCheckEntry(lastResult.value, { initiatorName: initiator });
 }
 
 async function handleInitiativeCheck(): Promise<void> {
@@ -595,6 +598,21 @@ async function handleInitiativeCheck(): Promise<void> {
 ${myTotal > oppTotal ? '✅ 先手行动权！' : (myTotal < oppTotal ? '❌ 后手行动！' : '⚖️ 同时行动！')}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addContestEntry({
+    success: isFirst,
+    playerRoll: myRollTotal,
+    playerTotal: myTotal,
+    opponentRoll: oppRollTotal,
+    opponentTotal: oppTotal,
+    margin: myTotal - oppTotal,
+    message: lastResult.value.message,
+    outcome: outcomeText,
+    playerName: initiatorName.value || '己方',
+    opponentName: '对方',
+    playerAttribute: '敏捷',
+    opponentAttribute: '敏捷',
+  });
 }
 
 async function handleEscapeCheck(): Promise<void> {
@@ -669,6 +687,8 @@ async function handleEscapeCheck(): Promise<void> {
 ${isSuccess ? '🏃 逃跑成功！脱离战斗！' : '🚫 逃跑失败！浪费一回合，敌人获得免费攻击机会'}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addCheckEntry(lastResult.value, { initiatorName: initiatorName.value || '<user>' });
 }
 
 function addStatus(): void {
@@ -806,6 +826,21 @@ async function handleContestCheck(): Promise<void> {
 ${isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (myTotal > oppTotal ? '✅ 获胜！' : (myTotal < oppTotal ? '❌ 落败！' : '⚖️ 平局！')))}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addContestEntry({
+    success: isSuccess,
+    playerRoll: rollTotal,
+    playerTotal: myTotal,
+    opponentRoll: oppRollVal,
+    opponentTotal: oppTotal,
+    margin: myTotal - oppTotal,
+    message: lastResult.value.message,
+    outcome: outcomeText,
+    playerName: initiator,
+    opponentName: '对方',
+    playerAttribute: attrName.value || '属性',
+    opponentAttribute: '属性',
+  });
 }
 
 async function handleCombatCheck(): Promise<void> {
@@ -893,6 +928,8 @@ ${isCrit ? '・暴击倍率：x2' : ''}
 最终伤害：${finalDamage}${isCrit ? '（暴击）' : ''}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addCheckEntry(lastResult.value, { initiatorName: initiator });
 }
 
 async function handleDefenseCheck(): Promise<void> {
@@ -969,6 +1006,8 @@ ${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
 ・承受伤害：${baseDamage}
 </meta:检定结果>`;
   await sendToTextarea(content);
+
+  addCheckEntry(lastResult.value, { initiatorName: initiator });
 }
 
 async function handleRoll(): Promise<void> {
@@ -1091,7 +1130,7 @@ function handleRetry() {
 }
 
 function showHistory() {
-  window.dispatchEvent(new CustomEvent('acu-show-changes-panel'));
+  window.dispatchEvent(new CustomEvent('acu-show-dice-history'));
 }
 
 function switchToOpposed() {

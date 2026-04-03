@@ -11,6 +11,7 @@ import MvuPanel from './MvuPanel.vue';
 import RelationGraph from './RelationGraph.vue';
 import SettingsPanel from './SettingsPanel.vue';
 import SavePanel from './SavePanel.vue';
+import DiceHistoryPanel from './DiceHistoryPanel.vue';
 import TableBrowser from './TableBrowser.vue';
 
 const { getTableData } = useDashboard();
@@ -27,6 +28,7 @@ const showMvu = ref(false);
 const showFavorites = ref(false);
 const showSettings = ref(false);
 const showSave = ref(false);
+const showDiceHistory = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
@@ -94,6 +96,7 @@ function closeAllPanels() {
   showFavorites.value = false;
   showSettings.value = false;
   showSave.value = false;
+  showDiceHistory.value = false;
   showOpposedCheck.value = false;
 }
 
@@ -220,6 +223,7 @@ const showDataDisplay = computed(
     showFavorites.value ||
     showSettings.value ||
     showSave.value ||
+    showDiceHistory.value ||
     showOpposedCheck.value ||
     activeTab.value !== '',
 );
@@ -262,12 +266,19 @@ onMounted(() => {
     activeTab.value = '';
     showSettings.value = true;
   }) as EventListener);
+
+  window.addEventListener('acu-show-dice-history', () => {
+    closeAllPanels();
+    activeTab.value = '';
+    showDiceHistory.value = true;
+  });
 });
 
 onUnmounted(() => {
   if (tableRefreshTimer) clearInterval(tableRefreshTimer);
   window.removeEventListener('acu-show-changes-panel', () => {});
   window.removeEventListener('acu-open-settings-section', () => {});
+  window.removeEventListener('acu-show-dice-history', () => {});
 });
 </script>
 
@@ -308,6 +319,7 @@ onUnmounted(() => {
       <FavoritesPanel v-else-if="showFavorites" @close="showFavorites = false" />
       <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
       <SavePanel v-else-if="showSave" @close="showSave = false" />
+      <DiceHistoryPanel v-else-if="showDiceHistory" @close="showDiceHistory = false" />
       <TableBrowser
         v-else-if="activeTab"
         :key="activeTab"

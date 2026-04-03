@@ -102,3 +102,49 @@ export interface PresetFormData {
   modifier: number;
   customFields: Record<string, number | string | boolean>;
 }
+
+export interface CheckHistoryEntry {
+  historyType: 'check';
+  timestamp: number;
+  success: boolean;
+  roll: number;
+  total: number;
+  target: number;
+  outcome: string;
+  message: string;
+  diceType: string;
+  attributeName?: string;
+  initiatorName?: string;
+  effectStatus?: string;
+  detailLines?: string[];
+  effectTrace?: string[];
+  detailId?: string;
+  effectRunId?: string;
+}
+
+export interface ContestHistoryEntry {
+  historyType: 'contest';
+  timestamp: number;
+  success: boolean;
+  playerRoll: number;
+  playerTotal: number;
+  opponentRoll: number;
+  opponentTotal: number;
+  margin: number;
+  message: string;
+  outcome?: string;
+  playerName?: string;
+  opponentName?: string;
+  playerAttribute?: string;
+  opponentAttribute?: string;
+  left?: { name?: string; roll?: number; total?: number };
+  right?: { name?: string; roll?: number; total?: number };
+  winner?: string;
+  effectStatus?: string;
+  detailLines?: string[];
+  effectTrace?: string[];
+  detailId?: string;
+  effectRunId?: string;
+}
+
+export type HistoryEntry = CheckHistoryEntry | ContestHistoryEntry;
