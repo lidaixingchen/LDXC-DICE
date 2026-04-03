@@ -4,6 +4,7 @@
 
 /* ========== 间距系统 ========== */
 :root {
+  --acu-space-2xs: 2px;
   --acu-space-xs: 4px;
   --acu-space-sm: 8px;
   --acu-space-md: 12px;
@@ -11,6 +12,13 @@
   --acu-space-xl: 20px;
   --acu-space-2xl: 24px;
   --acu-space-3xl: 32px;
+  
+  /* 额外间距 */
+  --acu-space-3px: 3px;
+  --acu-space-5px: 5px;
+  --acu-space-6px: 6px;
+  --acu-space-10px: 10px;
+  --acu-space-15px: 15px;
 }
 
 /* ========== 圆角系统 ========== */
@@ -21,6 +29,9 @@
   --acu-radius-xl: 12px;
   --acu-radius-2xl: 16px;
   --acu-radius-full: 9999px;
+  
+  /* 额外圆角 */
+  --acu-radius-10px: 10px;
 }
 
 /* ========== 字体大小系统 ========== */
@@ -112,6 +123,18 @@
   --acu-btn-height-md: 32px;
   --acu-btn-height-lg: 38px;
   --acu-btn-height-xl: 44px;
+  
+  /* 额外组件尺寸 */
+  --acu-size-18px: 18px;
+  --acu-size-20px: 20px;
+  --acu-size-22px: 22px;
+  --acu-size-24px: 24px;
+  --acu-size-28px: 28px;
+  --acu-size-32px: 32px;
+  --acu-size-36px: 36px;
+  --acu-size-40px: 40px;
+  --acu-size-44px: 44px;
+  --acu-size-50px: 50px;
 }
 
 /* ========== 边框宽度 ========== */

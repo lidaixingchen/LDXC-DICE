@@ -1,0 +1,316 @@
+/* ===================================
+   基础样式
+   =================================== */
+
+/* ========== 核心隔离层 ========== */
+.acu-wrapper,
+.acu-wrapper *:not(i[class*="fa-"]),
+.acu-edit-overlay,
+.acu-edit-overlay *:not(i[class*="fa-"]),
+.acu-cell-menu,
+.acu-cell-menu *:not(i[class*="fa-"]),
+.acu-dice-panel,
+.acu-dice-panel *:not(i[class*="fa-"]),
+.acu-contest-panel,
+.acu-contest-panel *:not(i[class*="fa-"]),
+.acu-relation-graph-overlay,
+.acu-relation-graph-overlay *:not(i[class*="fa-"]),
+.acu-avatar-manager-overlay,
+.acu-avatar-manager-overlay *:not(i[class*="fa-"]),
+.acu-preview-overlay,
+.acu-preview-overlay *:not(i[class*="fa-"]),
+.acu-import-confirm-overlay,
+.acu-import-confirm-overlay *:not(i[class*="fa-"]),
+.acu-embedded-options-container,
+.acu-embedded-options-container *:not(i[class*="fa-"]) {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ========== 基础样式 ========== */
+.acu-wrapper,
+.acu-edit-overlay,
+.acu-dice-panel,
+.acu-contest-panel,
+.acu-relation-graph-overlay,
+.acu-avatar-manager-overlay,
+.acu-preview-overlay,
+.acu-import-confirm-overlay,
+.acu-embedded-options-container,
+.acu-cell-menu {
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--acu-text-main);
+}
+
+/* ========== 投骰面板统一样式 ========== */
+.acu-dice-panel,
+.acu-contest-panel,
+.acu-dice-config-dialog {
+    background: var(--acu-bg-panel);
+    color: var(--acu-text-main);
+}
+
+.acu-dice-panel input[type="text"],
+.acu-dice-panel input[type="number"],
+.acu-dice-panel input:not([type]),
+.acu-dice-panel select,
+.acu-contest-panel input[type="text"],
+.acu-contest-panel input[type="number"],
+.acu-contest-panel input:not([type]),
+.acu-contest-panel select,
+.acu-dice-config-dialog input[type="text"],
+.acu-dice-config-dialog input[type="number"],
+.acu-dice-config-dialog input:not([type]),
+.acu-dice-config-dialog select {
+    width: 100%;
+    text-align: center;
+    padding: var(--acu-space-sm);
+    background: var(--acu-input-bg) !important;
+    border: 1px solid var(--acu-border) !important;
+    border-radius: var(--acu-radius-sm);
+    color: var(--acu-input-text, var(--acu-text-main)) !important;
+    font-size: var(--acu-font-md);
+    height: var(--acu-input-height-md);
+    line-height: 1;
+    box-sizing: border-box;
+}
+
+.acu-dice-panel select,
+.acu-contest-panel select,
+.acu-dice-config-dialog select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0 var(--acu-space-sm);
+    margin: 0;
+    text-align-last: center;
+    display: block;
+}
+
+.acu-dice-panel input[type="number"]::-webkit-inner-spin-button,
+.acu-dice-panel input[type="number"]::-webkit-outer-spin-button,
+.acu-contest-panel input[type="number"]::-webkit-inner-spin-button,
+.acu-contest-panel input[type="number"]::-webkit-outer-spin-button,
+.acu-dice-config-dialog input[type="number"]::-webkit-inner-spin-button,
+.acu-dice-config-dialog input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.acu-dice-panel input[type="number"],
+.acu-contest-panel input[type="number"],
+.acu-dice-config-dialog input[type="number"] {
+    -moz-appearance: textfield;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.acu-dice-panel input::placeholder,
+.acu-contest-panel input::placeholder,
+.acu-dice-config-dialog input::placeholder {
+    color: var(--acu-input-placeholder, var(--acu-text-sub)) !important;
+    opacity: 0.7;
+    text-align: center;
+}
+
+.acu-dice-panel input:focus,
+.acu-dice-panel select:focus,
+.acu-contest-panel input:focus,
+.acu-contest-panel select:focus,
+.acu-dice-config-dialog input:focus,
+.acu-dice-config-dialog select:focus {
+    outline: none;
+    border-color: var(--acu-accent) !important;
+}
+
+.acu-dice-panel select option,
+.acu-contest-panel select option,
+.acu-dice-config-dialog select option {
+    background: var(--acu-bg-panel);
+    color: var(--acu-text-main);
+}
+
+/* ========== 搜索框样式 ========== */
+.acu-wrapper .acu-search-input {
+    background-color: var(--acu-input-bg) !important;
+    color: var(--acu-text-main) !important;
+    border: 1px solid var(--acu-border);
+}
+
+.acu-wrapper .acu-search-input:focus {
+    outline: none;
+    border-color: var(--acu-accent);
+    box-shadow: none !important;
+}
+
+.acu-wrapper .acu-search-input::placeholder {
+    color: var(--acu-text-sub) !important;
+    opacity: 0.7;
+}
+
+/* ========== 通用组件基类 ========== */
+
+/* 按钮基类 */
+.acu-wrapper button,
+.acu-edit-overlay button,
+.acu-dice-panel button,
+.acu-contest-panel button,
+.acu-relation-graph-overlay button,
+.acu-avatar-manager-overlay button,
+.acu-preview-overlay button,
+.acu-embedded-options-container button:not(.acu-opt-btn) {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: var(--acu-line-height-normal);
+    cursor: pointer;
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-md);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    transition: all var(--acu-transition-normal) var(--acu-ease-cubic);
+    outline: none;
+}
+
+.acu-wrapper button:hover,
+.acu-edit-overlay button:hover,
+.acu-dice-panel button:hover,
+.acu-contest-panel button:hover,
+.acu-relation-graph-overlay button:hover,
+.acu-avatar-manager-overlay button:hover,
+.acu-preview-overlay button:hover,
+.acu-embedded-options-container button:not(.acu-opt-btn):hover {
+    background: var(--acu-btn-hover);
+}
+
+.acu-wrapper button:focus,
+.acu-edit-overlay button:focus,
+.acu-dice-panel button:focus,
+.acu-contest-panel button:focus,
+.acu-relation-graph-overlay button:focus,
+.acu-avatar-manager-overlay button:focus,
+.acu-preview-overlay button:focus,
+.acu-embedded-options-container button:not(.acu-opt-btn):focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* 输入框基类 */
+.acu-wrapper input,
+.acu-wrapper textarea,
+.acu-wrapper select,
+.acu-edit-overlay input,
+.acu-edit-overlay textarea,
+.acu-edit-overlay select,
+.acu-dice-panel input,
+.acu-dice-panel select,
+.acu-contest-panel input,
+.acu-contest-panel select,
+.acu-avatar-manager-overlay input.acu-input {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: var(--acu-line-height-normal);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-sm);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    outline: none;
+    transition: border-color var(--acu-transition-normal);
+}
+
+.acu-wrapper input:focus,
+.acu-wrapper textarea:focus,
+.acu-wrapper select:focus,
+.acu-edit-overlay input:focus,
+.acu-edit-overlay textarea:focus,
+.acu-edit-overlay select:focus,
+.acu-dice-panel input:focus,
+.acu-dice-panel select:focus,
+.acu-contest-panel input:focus,
+.acu-contest-panel select:focus,
+.acu-avatar-manager-overlay input.acu-input:focus {
+    border-color: var(--acu-accent);
+    box-shadow: none;
+    outline: none;
+}
+
+.acu-wrapper input::placeholder,
+.acu-wrapper textarea::placeholder,
+.acu-dice-panel input::placeholder,
+.acu-contest-panel input::placeholder,
+.acu-avatar-manager-overlay input.acu-input::placeholder {
+    color: var(--acu-text-sub);
+    opacity: 0.7;
+}
+
+/* 确保重要人物表（卡片）和 MVU 面板中的输入框始终有高对比度 */
+.acu-data-card input,
+.acu-data-card textarea,
+.acu-mvu-panel input,
+.acu-mvu-panel textarea {
+    color: var(--SillyTavern-text-color, #e0e0e0) !important;
+    background-color: var(--SillyTavern-bar-color, #0b0b0b) !important;
+}
+
+.acu-data-card input::placeholder,
+.acu-data-card textarea::placeholder,
+.acu-mvu-panel input::placeholder,
+.acu-mvu-panel textarea::placeholder {
+    color: var(--SillyTavern-text-color, #e0e0e0) !important;
+    opacity: 0.7 !important;
+}
+
+/* ========== 弹窗遮罩层基类 ========== */
+.acu-edit-overlay,
+.acu-relation-graph-overlay,
+.acu-avatar-manager-overlay,
+.acu-preview-overlay,
+.acu-import-confirm-overlay,
+.acu-crop-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--acu-z-modal-backdrop);
+    backdrop-filter: blur(5px);
+}
+
+.acu-dice-overlay,
+.acu-contest-overlay,
+.acu-dice-config-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: var(--acu-z-modal-backdrop);
+    backdrop-filter: blur(5px);
+}
+
+/* ========== 弹窗对话框基类 ========== */
+.acu-edit-dialog,
+.acu-dice-panel,
+.acu-contest-panel,
+.acu-relation-graph-container,
+.acu-avatar-manager,
+.acu-import-confirm-dialog,
+.acu-dice-config-dialog {
+    background: var(--acu-bg-panel);
+    border: 1px solid var(--acu-border);
+    border-radius: var(--acu-radius-xl);
+    box-shadow: var(--acu-shadow-xl);
+    color: var(--acu-text-main);
+    max-height: 95vh;
+    overflow: hidden;
+}
