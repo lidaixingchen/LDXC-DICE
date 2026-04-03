@@ -174,17 +174,23 @@ async function handleOptionClick(optionValue: string) {
   const config = legacySettings.value;
 
   if (!config.clickOptionToAutoSend) {
-    const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
-    if (textarea) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(textarea, textarea.value + (textarea.value ? ' ' : '') + optionValue);
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      } else {
-        textarea.value += (textarea.value ? ' ' : '') + optionValue;
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    try {
+      const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
+      if (textarea) {
+        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(textarea, textarea.value + (textarea.value ? ' ' : '') + optionValue);
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          textarea.dispatchEvent(new Event('change', { bubbles: true }));
+        } else {
+          textarea.value += (textarea.value ? ' ' : '') + optionValue;
+          textarea.dispatchEvent(new Event('input', { bubbles: true }));
+          textarea.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        textarea.focus();
       }
-      textarea.focus();
+    } catch (err) {
+      console.error('[DICE]ACU 填充选项失败', err);
     }
     return;
   }
@@ -213,9 +219,11 @@ async function handleOptionClick(optionValue: string) {
       if (nativeInputValueSetter) {
         nativeInputValueSetter.call(textarea, optionValue);
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
       } else {
         textarea.value = optionValue;
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
       }
       sendButton.click();
     }
@@ -505,16 +513,24 @@ onUnmounted(() => {
 
 /* 向下弹出 */
 .acu-wrapper.acu-panel-expand-down .acu-data-display {
-  bottom: auto;
-  top: calc(100% + 10px);
+  bottom: auto !important;
+  top: calc(100% + 10px) !important;
 }
 
 .acu-wrapper.acu-mode-embedded .acu-data-display {
   position: relative !important;
-  bottom: auto !important;
-  top: auto !important;
   margin-bottom: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.acu-wrapper.acu-mode-embedded.acu-panel-expand-up .acu-data-display {
+  bottom: auto !important;
+  top: auto !important;
+}
+
+.acu-wrapper.acu-mode-embedded.acu-panel-expand-down .acu-data-display {
+  bottom: auto !important;
+  top: auto !important;
 }
 
 /* 选项面板 */

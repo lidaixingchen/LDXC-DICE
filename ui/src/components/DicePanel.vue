@@ -100,15 +100,6 @@ const newStatusIntensity = ref<'weak' | 'medium' | 'strong'>('medium');
 const newStatusValue = ref<number | string>('1');
 const newStatusRounds = ref<number | string>('3');
 
-const SPV_MAP: Record<string, number> = {
-  'F级': 5, 'E级': 10, 'D级': 15, 'C级': 20,
-  'B级': 25, 'A级': 35, 'S级': 50, 'SS级': 70, 'SSS级': 95,
-};
-
-function getSPV(level: string): number {
-  return SPV_MAP[level] || 5;
-}
-
 interface EquipmentSlot {
   name: string;
   physDmg: number;
@@ -132,14 +123,14 @@ const equipment = ref<EquipmentSlot>({
 const combat = inject<any>('aidmCombat');
 
 function startCombat(): void {
-  const spv = getSPV(worldLevel.value);
   const levelConfig = WORLD_LEVEL_CONFIG[worldLevel.value];
+  const baseHP = levelConfig.hpBase || 100;
   combat.value = {
     active: true,
     round: 1,
     enemyName: combat.value.enemyName || '未知敌人',
-    enemyMaxHP: combat.value.enemyMaxHP || spv * 5 * 2,
-    enemyCurrentHP: combat.value.enemyMaxHP || spv * 5 * 2,
+    enemyMaxHP: combat.value.enemyMaxHP || baseHP * 2,
+    enemyCurrentHP: combat.value.enemyMaxHP || baseHP * 2,
     playerMaxHP: levelConfig.hpBase + (playerDefense.value !== '' ? Number(playerDefense.value) * 5 : 0) + equipment.value.hpBonus,
     playerCurrentHP: levelConfig.hpBase + (playerDefense.value !== '' ? Number(playerDefense.value) * 5 : 0) + equipment.value.hpBonus,
     playerShield: 0,
@@ -212,7 +203,6 @@ function deriveCombatStats(attrs: Record<string, number>, level: string): Derive
   const per = findAttrValue(attrs, ATTR_MAPPING.perception) || 0;
   const cha = findAttrValue(attrs, ATTR_MAPPING.charisma) || 0;
 
-  const spv = getSPV(level);
   const hpBase = WORLD_LEVEL_CONFIG[level]?.hpBase || 25;
 
   return {
@@ -320,8 +310,16 @@ function computeAIDMAttrMod(attr: number): number {
   return 19 + Math.floor((attr - 381) / 40);
 }
 
-function getMasteryBonus(level: string): number {
-  return WORLD_LEVEL_CONFIG[level]?.masteryBonus ?? 0;
+function getMasteryBonus(_level: string): number {
+  return 0;
+}
+
+function getSPV(level: string): number {
+  const SPV_MAP: Record<string, number> = {
+    'F级': 5, 'E级': 10, 'D级': 15, 'C级': 20,
+    'B级': 25, 'A级': 35, 'S级': 50, 'SS级': 70, 'SSS级': 95,
+  };
+  return SPV_MAP[level] || 5;
 }
 
 function getBaseDC(level: string): number {
@@ -1267,7 +1265,7 @@ function exportSave(): void {
 
 【角色信息】
 名称：${initiatorName.value || '冒险者'}
-等级：${worldLevel.value} | SPV：${spv}
+等级：${worldLevel.value}
 
 【战斗属性】
 HP：${combat.value.playerCurrentHP}/${combat.value.playerMaxHP}
@@ -1462,7 +1460,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="!isCustomMode" class="acu-dice-form-row cols-3">
+      <div v-if="!isCustomMode" class="acu-dice-form-row cols-2">
         <div>
           <div class="acu-dice-form-label centered">世界等级</div>
           <select v-model="worldLevel" class="acu-dice-select">
@@ -1471,26 +1469,11 @@ onMounted(() => {
             </option>
           </select>
         </div>
-        <div v-if="!isCustomMode" class="acu-spv-panel">
-          <div class="acu-dice-form-label centered">SPV体系</div>
-          <div class="acu-spv-grid">
-            <div class="acu-spv-item">
-              <span class="acu-spv-label">SPV</span>
-              <span class="acu-spv-value">{{ getSPV(worldLevel) }}</span>
-            </div>
-            <div class="acu-spv-item">
-              <span class="acu-spv-label">HP基础</span>
-              <span class="acu-spv-value">{{ WORLD_LEVEL_CONFIG[worldLevel].hpBase }}</span>
-            </div>
-            <div class="acu-spv-item">
-              <span class="acu-spv-label">技能基准</span>
-              <span class="acu-spv-value">{{ getSPV(worldLevel) * 1.0 }}</span>
-            </div>
-            <div class="acu-spv-item">
-              <span class="acu-spv-label">装备基准</span>
-              <span class="acu-spv-value">{{ Math.floor(getSPV(worldLevel) * 0.6) }}</span>
-            </div>
-          </div>
+        <div>
+          <div class="acu-dice-form-label centered">难度</div>
+          <select v-model="difficulty" class="acu-dice-select">
+            <option v-for="d in DIFFICULTY_OPTIONS" :key="d.id" :value="d.id">{{ d.name }}</option>
+          </select>
         </div>
       </div>
 
@@ -1564,10 +1547,6 @@ onMounted(() => {
           <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">属性加成:</span>
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
-          </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
           </div>
           <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">最终DC:</span>
@@ -1689,10 +1668,6 @@ onMounted(() => {
           <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">对方加成:</span>
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}</span>
-          </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
           </div>
         </div>
       </div>
@@ -1858,10 +1833,6 @@ onMounted(() => {
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
           </div>
           <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
-          </div>
-          <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">闪避DC:</span>
             <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (enemyAtkMod !== '' ? Number(enemyAtkMod) : 0) }}</span>
           </div>
@@ -1955,8 +1926,8 @@ onMounted(() => {
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}</span>
           </div>
           <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">双方掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+            <span class="acu-dice-info-label">双方敏捷加成:</span>
+            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}</span>
           </div>
         </div>
       </div>
@@ -2832,38 +2803,6 @@ onMounted(() => {
     border-color: var(--acu-accent);
 
     &:hover { opacity: 0.85; }
-  }
-}
-
-.acu-spv-panel {
-  border: 1px solid var(--acu-border);
-  border-radius: 6px;
-  padding: 6px 8px;
-}
-
-.acu-spv-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 3px;
-}
-
-.acu-spv-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 3px 2px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.04);
-
-  .acu-spv-label {
-    font-size: 8px;
-    color: var(--acu-text-sub);
-  }
-
-  .acu-spv-value {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--acu-accent);
   }
 }
 
