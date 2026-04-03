@@ -1,4 +1,7 @@
 ﻿
+/* ========== 导入设计令牌 ========== */
+@import './base/tokens';
+
 /* ========== 核心隔离层 ========== */
 .acu-wrapper,
 .acu-wrapper *:not(i[class*="fa-"]),
@@ -61,13 +64,13 @@
 .acu-dice-config-dialog select {
     width: 100%;
     text-align: center;
-    padding: 6px;
+    padding: var(--acu-space-sm);
     background: var(--acu-input-bg) !important;
     border: 1px solid var(--acu-border) !important;
-    border-radius: 4px;
+    border-radius: var(--acu-radius-sm);
     color: var(--acu-input-text, var(--acu-text-main)) !important;
-    font-size: 12px;
-    height: 30px;
+    font-size: var(--acu-font-md);
+    height: var(--acu-input-height-md);
     line-height: 1;
     box-sizing: border-box;
 }
@@ -78,7 +81,7 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    padding: 0 6px;
+    padding: 0 var(--acu-space-sm);
     margin: 0;
     text-align-last: center;
     display: block;
@@ -149,13 +152,13 @@
 .acu-embedded-options-container button:not(.acu-opt-btn) {
     font-family: inherit;
     font-size: inherit;
-    line-height: 1.4;
+    line-height: var(--acu-line-height-normal);
     cursor: pointer;
     border: 1px solid var(--acu-border);
-    border-radius: 6px;
+    border-radius: var(--acu-radius-md);
     background: var(--acu-btn-bg);
     color: var(--acu-text-main);
-    transition: all 0.2s ease;
+    transition: all var(--acu-transition-normal) var(--acu-ease-cubic);
     outline: none;
 }
 .acu-wrapper button:hover,
@@ -194,13 +197,13 @@
 .acu-avatar-manager-overlay input.acu-input {
     font-family: inherit;
     font-size: inherit;
-    line-height: 1.4;
+    line-height: var(--acu-line-height-normal);
     border: 1px solid var(--acu-border);
-    border-radius: 4px;
+    border-radius: var(--acu-radius-sm);
     background: var(--acu-btn-bg);
     color: var(--acu-text-main);
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--acu-transition-normal);
 }
 .acu-wrapper input:focus,
 .acu-wrapper textarea:focus,
