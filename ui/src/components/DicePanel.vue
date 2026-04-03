@@ -2038,22 +2038,19 @@ onMounted(() => {
 
 .acu-dice-panel-actions {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
 
   button {
-    background: transparent;
+    background: none;
     border: none;
     color: var(--acu-text-sub);
     cursor: pointer;
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
+    font-size: 14px;
+    padding: 4px;
+    transition: all 0.2s;
 
     &:hover {
-      background: var(--acu-accent-light);
       color: var(--acu-accent);
     }
   }
@@ -2440,7 +2437,6 @@ onMounted(() => {
   border: 1px solid var(--acu-border);
   border-radius: 6px;
   padding: 8px;
-  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
 
   .acu-section-title {
     display: flex;
@@ -2548,7 +2544,6 @@ onMounted(() => {
   border: 1px solid var(--acu-border);
   border-radius: 6px;
   padding: 6px 8px;
-  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.4);
 }
 
 .acu-spv-grid {
@@ -2582,7 +2577,6 @@ onMounted(() => {
   border-radius: 6px;
   padding: 8px;
   margin-top: 4px;
-  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
 
   .cols-4 { grid-template-columns: repeat(4, 1fr); gap: 4px; }
 
@@ -2594,7 +2588,6 @@ onMounted(() => {
   border-radius: 6px;
   padding: 8px;
   margin-top: 4px;
-  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.5);
 
   .acu-combat-round-badge {
     font-size: 11px;
@@ -2669,7 +2662,6 @@ onMounted(() => {
   border-radius: 6px;
   padding: 6px;
   margin-top: 4px;
-  background: rgba(var(--acu-bg-header-rgb, 30, 30, 35), 0.3);
 }
 
 .acu-tools-tabs {
