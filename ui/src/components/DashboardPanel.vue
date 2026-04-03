@@ -17,7 +17,6 @@ const defaultCollapsedState: Record<string, boolean> = {
   baseAttrs: false,
   specialAttrs: false,
   skills: false,
-  equipment: false,
   locations: false,
   npcs: false,
   items: false,
@@ -770,31 +769,6 @@ function handleDice(name: string, val: any) {
               </div>
             </div>
           </div>
-          
-          <!-- 装备区（可折叠） -->
-          <div v-if="equipList.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('equipment') }">
-            <div class="acu-collapsible-header" @click="toggleSection('equipment')">
-              <h4 class="acu-section-title">
-                <i class="fa-solid fa-shield-halved"></i>
-                装备 ({{ equipList.length }})
-              </h4>
-              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
-            </div>
-            <div class="acu-collapsible-content">
-              <div class="acu-equip-grid">
-                <div v-for="equip in equipList" :key="equip.slot" class="acu-equip-item">
-                  <div class="acu-equip-slot">
-                    <i :class="['fa-solid', getSlotIcon(equip.slot)]"></i>
-                    <span class="acu-equip-slot-name">{{ equip.slot }}</span>
-                  </div>
-                  <div class="acu-equip-info">
-                    <div class="acu-equip-name">{{ equip.name }}</div>
-                    <div v-if="equip.effect" class="acu-equip-effect">{{ equip.effect }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- 地点与角色 -->
@@ -893,9 +867,15 @@ function handleDice(name: string, val: any) {
             </div>
             <div class="acu-collapsible-content">
               <div v-if="equipList.length" class="acu-equip-grid">
-                <div v-for="item in equipList" :key="item.name" class="acu-equip-item">
-                  <i class="fa-solid fa-shirt"></i>
-                  <span>{{ item.name }}</span>
+                <div v-for="equip in equipList" :key="equip.slot" class="acu-equip-item">
+                  <div class="acu-equip-slot">
+                    <i :class="['fa-solid', getSlotIcon(equip.slot)]"></i>
+                    <span class="acu-equip-slot-name">{{ equip.slot }}</span>
+                  </div>
+                  <div class="acu-equip-info">
+                    <div class="acu-equip-name">{{ equip.name }}</div>
+                    <div v-if="equip.effect" class="acu-equip-effect">{{ equip.effect }}</div>
+                  </div>
                 </div>
               </div>
               <div v-else class="acu-empty-state">
