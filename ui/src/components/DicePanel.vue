@@ -1442,42 +1442,72 @@ onMounted(() => {
         </button>
       </div>
 
-      <div class="acu-dice-quick-section">
-        <div class="acu-dice-section-title">
-          <span><i class="fa-solid fa-user"></i> 快捷选择</span>
-        </div>
-        <div class="acu-dice-char-buttons">
-          <button
-            v-for="c in characters.slice(0, 6)"
-            :key="c.name"
-            class="acu-dice-char-btn"
-            :class="{ active: currentCharacter === c.name }"
-            @click="handleSelectCharacter(c.name)"
-          >
-            {{ c.name.length > 4 ? c.name.slice(0, 4) + '..' : c.name }}
-          </button>
-          <div v-if="characters.length === 0" class="acu-dice-empty-hint">无角色数据</div>
-        </div>
-      </div>
+      <div class="acu-dual-column">
+        <div class="acu-quick-panel">
+          <div class="acu-section-card">
+            <div class="acu-card-header">
+              <span class="acu-card-title"><i class="fa-solid fa-globe"></i> 世界设定</span>
+            </div>
+            <div v-if="!isCustomMode" class="acu-dice-form-row cols-1">
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">世界等级</div>
+                <select v-model="worldLevel" class="acu-dice-select">
+                  <option v-for="level in WORLD_LEVELS" :key="level" :value="level">
+                    {{ level }} (DC {{ WORLD_LEVEL_CONFIG[level].baseDC }})
+                  </option>
+                </select>
+              </div>
+              <div class="acu-dice-field">
+                <div class="acu-dice-form-label">难度</div>
+                <select v-model="difficulty" class="acu-dice-select">
+                  <option v-for="d in DIFFICULTY_OPTIONS" :key="d.value" :value="d.value">{{ d.label }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
-      <div v-if="!isCustomMode" class="acu-dice-form-row cols-2">
-        <div>
-          <div class="acu-dice-form-label centered">世界等级</div>
-          <select v-model="worldLevel" class="acu-dice-select">
-            <option v-for="level in WORLD_LEVELS" :key="level" :value="level">
-              {{ level }} (DC {{ WORLD_LEVEL_CONFIG[level].baseDC }})
-            </option>
-          </select>
-        </div>
-        <div>
-          <div class="acu-dice-form-label centered">难度</div>
-          <select v-model="difficulty" class="acu-dice-select">
-            <option v-for="d in DIFFICULTY_OPTIONS" :key="d.value" :value="d.value">{{ d.label }}</option>
-          </select>
-        </div>
-      </div>
+          <div class="acu-section-card">
+            <div class="acu-card-header">
+              <span class="acu-card-title"><i class="fa-solid fa-users"></i> 角色快捷</span>
+            </div>
+            <div class="acu-dice-char-buttons">
+              <button
+                v-for="c in characters.slice(0, 6)"
+                :key="c.name"
+                class="acu-dice-char-btn"
+                :class="{ active: currentCharacter === c.name }"
+                @click="handleSelectCharacter(c.name)"
+              >
+                {{ c.name.length > 4 ? c.name.slice(0, 4) + '..' : c.name }}
+              </button>
+              <div v-if="characters.length === 0" class="acu-dice-empty-hint">无角色数据</div>
+            </div>
+          </div>
 
-      <div v-if="checkMode === 'standard' && !isCustomMode">
+          <div v-if="attributeButtons.length > 0 && !isCustomMode" class="acu-section-card">
+            <div class="acu-card-header">
+              <span class="acu-card-title"><i class="fa-solid fa-chart-bar"></i> 属性快捷</span>
+            </div>
+            <div class="acu-dice-quick-compact">
+              <button
+                v-for="a in attributeButtons.slice(0, 6)"
+                :key="a.name"
+                class="acu-stat-chip"
+                :class="{ active: attrName === a.name }"
+                @click="handleSelectAttribute(a)"
+              >
+                <span class="label">{{ a.name }}</span>
+                <span class="val">{{ a.value }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="acu-config-panel">
+          <div v-if="checkMode === 'standard' && !isCustomMode" class="acu-section-card">
+            <div class="acu-card-header">
+              <span class="acu-card-title"><i class="fa-solid fa-dice-d20"></i> 检定配置</span>
+            </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
@@ -1540,23 +1570,30 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">属性加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">属性加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          <div class="acu-info-card">
+            <div class="label">掌握加成</div>
+            <div class="value positive">+{{ getMasteryBonus(worldLevel) }}</div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">最终DC:</span>
-            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
+          <div class="acu-info-card">
+            <div class="label">最终DC</div>
+            <div class="value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</div>
+          </div>
+        </div>
           </div>
         </div>
       </div>
 
-      <div v-if="checkMode === 'contest' && !isCustomMode">
+      <div v-if="checkMode === 'contest' && !isCustomMode" class="acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-dice-d20"></i> 对抗检定</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
@@ -1658,19 +1695,26 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">己方加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">己方加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">对方加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}</span>
+          <div class="acu-info-card">
+            <div class="label">对方加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 }">
+              {{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(oppAttr !== '' ? Number(oppAttr) : 10) }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="checkMode === 'combat' && !isCustomMode">
+      <div v-if="checkMode === 'combat' && !isCustomMode" class="acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-sword"></i> 战斗检定</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
@@ -1743,23 +1787,28 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">属性加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">属性加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">暴击率:</span>
-            <span class="acu-dice-info-value">{{ computeCritRate(charisma !== '' ? Number(charisma) : 10) }}%</span>
+          <div class="acu-info-card">
+            <div class="label">暴击率</div>
+            <div class="value positive">{{ computeCritRate(charisma !== '' ? Number(charisma) : 10) }}%</div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">目标DDC:</span>
-            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (targetDodgeMod !== '' ? Number(targetDodgeMod) : 0) }}</span>
+          <div class="acu-info-card">
+            <div class="label">目标DDC</div>
+            <div class="value">{{ getBaseDC(worldLevel) + (targetDodgeMod !== '' ? Number(targetDodgeMod) : 0) }}</div>
           </div>
         </div>
       </div>
 
-      <div v-if="checkMode === 'defense' && !isCustomMode">
+      <div v-if="checkMode === 'defense' && !isCustomMode" class="acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-shield-halved"></i> 防御检定</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">
@@ -1815,23 +1864,28 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">属性加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">属性加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">掌握加成:</span>
-            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          <div class="acu-info-card">
+            <div class="label">掌握加成</div>
+            <div class="value positive">+{{ getMasteryBonus(worldLevel) }}</div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">闪避DC:</span>
-            <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (enemyAtkMod !== '' ? Number(enemyAtkMod) : 0) }}</span>
+          <div class="acu-info-card">
+            <div class="label">闪避DC</div>
+            <div class="value">{{ getBaseDC(worldLevel) + (enemyAtkMod !== '' ? Number(enemyAtkMod) : 0) }}</div>
           </div>
         </div>
       </div>
 
-      <div v-if="checkMode === 'initiative' && !isCustomMode">
+      <div v-if="checkMode === 'initiative' && !isCustomMode" class="acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-bolt"></i> 先攻检定</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
@@ -1905,23 +1959,32 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">己方敏捷加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">己方敏捷加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">对方敏捷加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}</span>
+          <div class="acu-info-card">
+            <div class="label">对方敏捷加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) > 0 }">
+              {{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">双方敏捷加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}</span>
+          <div class="acu-info-card">
+            <div class="label">双方敏捷差</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10), negative: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) < computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) - computeAIDMAttrMod(oppAgility !== '' ? Number(oppAgility) : 10) }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div v-if="checkMode === 'escape' && !isCustomMode">
+      <div v-if="checkMode === 'escape' && !isCustomMode" class="acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-person-running"></i> 逃跑检定</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">名字</div>
@@ -1992,26 +2055,30 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-info-bar">
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">敏捷加成:</span>
-            <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+        <div class="acu-info-cards">
+          <div class="acu-info-card">
+            <div class="label">敏捷加成</div>
+            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
+              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            </div>
           </div>
-          <div class="acu-dice-info-item">
-            <span class="acu-dice-info-label">场景DC:</span>
-            <span class="acu-dice-info-value">{{
+          <div class="acu-info-card">
+            <div class="label">场景DC</div>
+            <div class="value">{{
               escapeType === 'solo'
                 ? 10
                 : (escapeType === 'surrounded'
                   ? (10 + (escapeEnemyAgility !== '' ? computeAIDMAttrMod(Number(escapeEnemyAgility)) : 0) + (escapeEnemyCount !== '' ? Number(escapeEnemyCount) * 2 : 2))
                   : (10 + (escapeEnemyAgility !== '' ? computeAIDMAttrMod(Number(escapeEnemyAgility)) : 0) + (escapeObstacleMod !== '' ? Number(escapeObstacleMod) : 0)))
-            }}</span>
+            }}</div>
           </div>
         </div>
       </div>
 
-      <div class="acu-equipment-panel" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense')">
-        <div class="acu-section-title"><span><i class="fa-solid fa-shield-halved"></i> 装备</span></div>
+      <div class="acu-equipment-panel acu-section-card" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense')">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-shield-halved"></i> 装备</span>
+        </div>
         <div class="acu-dice-form-row cols-4">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">物伤加成</div>
@@ -2042,9 +2109,9 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="acu-combat-manager" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense' || checkMode === 'initiative')">
-        <div class="acu-section-title">
-          <span><i class="fa-solid fa-swords"></i> 战斗管理器</span>
+      <div class="acu-combat-manager acu-section-card" v-if="!isCustomMode && (checkMode === 'combat' || checkMode === 'defense' || checkMode === 'initiative')">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-swords"></i> 战斗管理器</span>
           <template v-if="!combat.active">
             <button class="acu-tiny-btn accent" @click="startCombat" title="开始战斗">⚔️ 开始</button>
           </template>
@@ -2095,7 +2162,10 @@ onMounted(() => {
         <div v-else class="acu-empty-hint">点击「开始」进入战斗模式追踪回合与HP</div>
       </div>
 
-      <div v-if="isCustomMode" class="acu-dice-custom-area">
+      <div v-if="isCustomMode" class="acu-dice-custom-area acu-section-card">
+        <div class="acu-card-header">
+          <span class="acu-card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> 自定义骰子</span>
+        </div>
         <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">骰子语法</div>
@@ -2112,108 +2182,6 @@ onMounted(() => {
             <input v-model="customTargetValue" type="text" class="acu-dice-input" placeholder="留空=无判定" />
           </div>
         </div>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'standard'" class="acu-dice-quick-compact">
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'contest'" class="acu-dice-quick-compact">
-        <div class="acu-quick-label">己方属性:</div>
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-        <div class="acu-quick-label" style="margin-top: 4px;">对方属性:</div>
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="'opp-' + a.name"
-          class="acu-stat-chip"
-          :class="{ active: oppAttrName === a.name }"
-          @click="handleSelectOpponentAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'combat'" class="acu-dice-quick-compact">
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'defense'" class="acu-dice-quick-compact">
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'initiative'" class="acu-dice-quick-compact">
-        <div class="acu-quick-label">己方敏捷:</div>
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-        <div class="acu-quick-label" style="margin-top: 4px;">对方敏捷:</div>
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="'opp-' + a.name"
-          class="acu-stat-chip"
-          :class="{ active: oppAttrName === a.name }"
-          @click="handleSelectOpponentAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
-      </div>
-
-      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'escape'" class="acu-dice-quick-compact">
-        <button
-          v-for="a in attributeButtons.slice(0, 6)"
-          :key="a.name"
-          class="acu-stat-chip"
-          :class="{ active: attrName === a.name }"
-          @click="handleSelectAttribute(a)"
-        >
-          <span class="label">{{ a.name }}</span>
-          <span class="val">{{ a.value }}</span>
-        </button>
       </div>
 
       <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
@@ -2425,6 +2393,10 @@ onMounted(() => {
   display: grid;
   gap: 8px;
 
+  &.cols-1 {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
   &.cols-2 {
     grid-template-columns: 1fr 1fr;
   }
@@ -3022,5 +2994,131 @@ onMounted(() => {
   font-size: 11px;
   color: var(--acu-accent);
   font-weight: 600;
+}
+
+.acu-section-card {
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.acu-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--acu-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--acu-border);
+
+  i {
+    margin-right: 4px;
+  }
+}
+
+.acu-card-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.acu-info-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.acu-info-card {
+  background: linear-gradient(135deg, var(--acu-bg-header), var(--acu-bg-panel));
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  padding: 8px 6px;
+  text-align: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--acu-accent);
+    transform: translateY(-1px);
+  }
+
+  .label {
+    font-size: 9px;
+    color: var(--acu-text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+
+  .value {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--acu-accent);
+
+    &.positive {
+      color: var(--acu-success);
+    }
+
+    &.negative {
+      color: var(--acu-danger);
+    }
+  }
+}
+
+.acu-dual-column {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.acu-quick-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acu-config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.acu-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--acu-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.acu-config-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--acu-text-sub);
+  min-width: 60px;
+}
+
+.acu-config-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--acu-text-main);
 }
 </style>
