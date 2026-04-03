@@ -1,0 +1,241 @@
+/* ===================================
+   表单样式
+   =================================== */
+
+/* ========== 编辑对话框 ========== */
+.acu-edit-dialog {
+    background: var(--acu-bg-panel);
+    width: 95%;
+    max-width: 500px;
+    max-height: 95vh;
+    padding: var(--acu-space-lg);
+    border-radius: var(--acu-radius-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--acu-space-10px);
+    box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+    color: var(--acu-text-main);
+    border: 1px solid var(--acu-border);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.acu-edit-title {
+    margin: 0;
+    font-size: var(--acu-font-3xl);
+    font-weight: bold;
+    color: var(--acu-text-main);
+    padding-bottom: var(--acu-space-sm);
+    border-bottom: 1px solid var(--acu-border);
+}
+
+.acu-edit-icon-muted {
+    opacity: 0.7;
+}
+
+.acu-edit-content {
+    background: var(--acu-bg-panel);
+}
+
+.acu-settings-content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--acu-space-15px);
+}
+
+/* ========== 表单字段 ========== */
+.acu-card-edit-field {
+    margin-bottom: var(--acu-space-10px);
+}
+
+.acu-card-edit-label {
+    display: block;
+    font-size: var(--acu-font-md);
+    color: var(--acu-accent);
+    font-weight: bold;
+    margin-bottom: var(--acu-space-xs);
+}
+
+/* ========== 输入框 ========== */
+.acu-card-edit-input {
+    width: 100% !important;
+    padding: var(--acu-space-10px) !important;
+    border: 1px solid var(--acu-border) !important;
+    border-radius: var(--acu-radius-md) !important;
+    background: var(--acu-input-bg) !important;
+    color: var(--acu-text-main) !important;
+    box-sizing: border-box !important;
+    font-size: var(--acu-font-xl) !important;
+    line-height: 1.5 !important;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.acu-card-edit-input:focus {
+    outline: none !important;
+    border-color: var(--acu-accent) !important;
+    box-shadow: none !important;
+}
+
+/* ========== 选择框 ========== */
+.acu-edit-dialog select {
+    padding: var(--acu-space-6px) var(--acu-space-10px) !important;
+    border: 1px solid var(--acu-border) !important;
+    border-radius: var(--acu-radius-md) !important;
+    background: var(--acu-input-bg) !important;
+    color: var(--acu-text-main) !important;
+    font-size: var(--acu-font-lg) !important;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.acu-edit-dialog select:focus {
+    outline: none !important;
+    border-color: var(--acu-accent) !important;
+}
+
+.acu-edit-dialog select option {
+    background: var(--acu-bg-panel) !important;
+    color: var(--acu-text-main) !important;
+}
+
+/* ========== 文本输入框 ========== */
+.acu-edit-dialog input[type="text"],
+.acu-edit-dialog input[type="number"],
+.acu-edit-dialog input[type="search"],
+.acu-edit-dialog input:not([type]) {
+    padding: var(--acu-space-6px) var(--acu-space-10px) !important;
+    border: 1px solid var(--acu-border) !important;
+    border-radius: var(--acu-radius-md) !important;
+    background: var(--acu-input-bg) !important;
+    color: var(--acu-text-main) !important;
+    font-size: var(--acu-font-lg) !important;
+    box-sizing: border-box !important;
+}
+
+.acu-edit-dialog input:focus {
+    outline: none !important;
+    border-color: var(--acu-accent) !important;
+}
+
+.acu-edit-dialog input::placeholder {
+    color: var(--acu-text-sub) !important;
+    opacity: 0.7;
+}
+
+/* ========== 文本域 ========== */
+.acu-card-edit-textarea {
+    min-height: var(--acu-size-40px);
+    max-height: 500px;
+    resize: none;
+    overflow-y: hidden;
+}
+
+.acu-edit-textarea {
+    width: 100%;
+    height: auto;
+    padding: var(--acu-space-md);
+    border: 1px solid var(--acu-border) !important;
+    background: var(--acu-input-bg) !important;
+    color: var(--acu-text-main) !important;
+    border-radius: var(--acu-radius-md);
+    resize: vertical;
+    box-sizing: border-box;
+    font-size: var(--acu-font-xl);
+    line-height: 1.6;
+    overflow-y: auto !important;
+}
+
+.acu-edit-textarea:focus {
+    outline: none;
+    border-color: var(--acu-accent) !important;
+}
+
+.acu-edit-textarea::placeholder {
+    color: var(--acu-text-sub) !important;
+    opacity: 0.7;
+}
+
+/* ========== 对话框按钮 ========== */
+.acu-dialog-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--acu-space-xl);
+    margin-top: var(--acu-space-10px);
+}
+
+.acu-dialog-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--acu-font-xl);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-6px);
+    color: var(--acu-text-sub);
+    transition: color 0.2s;
+}
+
+.acu-dialog-btn:hover {
+    color: var(--acu-text-main);
+}
+
+.acu-btn-confirm {
+    color: var(--acu-success-text);
+}
+
+.acu-btn-confirm:hover {
+    opacity: 0.8;
+}
+
+/* ========== 复选框和单选框 ========== */
+.acu-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    cursor: pointer;
+    user-select: none;
+}
+
+.acu-checkbox input[type="checkbox"] {
+    width: var(--acu-size-18px);
+    height: var(--acu-size-18px);
+    cursor: pointer;
+    accent-color: var(--acu-accent);
+}
+
+.acu-checkbox label {
+    cursor: pointer;
+    font-size: var(--acu-font-lg);
+    color: var(--acu-text-main);
+}
+
+/* ========== 表单验证样式 ========== */
+.acu-field-error {
+    border-color: var(--acu-error-text, #e74c3c) !important;
+}
+
+.acu-field-error-message {
+    color: var(--acu-error-text, #e74c3c);
+    font-size: var(--acu-font-sm);
+    margin-top: var(--acu-space-2xs);
+}
+
+/* ========== 表单提示 ========== */
+.acu-field-hint {
+    color: var(--acu-text-sub);
+    font-size: var(--acu-font-sm);
+    margin-top: var(--acu-space-2xs);
+    opacity: 0.8;
+}
+
+/* ========== 禁用状态 ========== */
+.acu-edit-dialog input:disabled,
+.acu-edit-dialog select:disabled,
+.acu-edit-dialog textarea:disabled {
+    opacity: var(--acu-opacity-disabled);
+    cursor: not-allowed;
+    background: var(--acu-table-head) !important;
+}

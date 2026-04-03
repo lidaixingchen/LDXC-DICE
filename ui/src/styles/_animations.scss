@@ -1,0 +1,209 @@
+/* ===================================
+   动画样式
+   =================================== */
+
+/* ========== 淡入动画 ========== */
+@keyframes acuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(var(--acu-space-5px));
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== 脉冲高亮动画 ========== */
+@keyframes pulse-highlight {
+    0% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
+
+/* ========== 呼吸动画 ========== */
+@keyframes acu-breathe {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.85);
+        color: #ff7e67;
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.acu-wrapper .acu-icon-breathe {
+    animation: acu-breathe 3s infinite ease-in-out;
+    display: inline-block;
+}
+
+/* ========== 弹出动画 ========== */
+@keyframes popUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ========== 高亮闪烁动画 ========== */
+@keyframes highlightFlash {
+    0%, 100% {
+        box-shadow: none;
+    }
+    50% {
+        box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.6);
+    }
+}
+
+/* ========== 脉冲动画 ========== */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ========== 旋转动画 ========== */
+@keyframes acu-center-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes acu-map-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========== 滑入动画 ========== */
+@keyframes acu-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ========== 模态弹出动画 ========== */
+@keyframes acu-modal-pop {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ========== Aurora 主题动画 ========== */
+@keyframes aurora-glow {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* ========== Chouten 主题动画 ========== */
+@keyframes chouten-rainbow-border {
+    0% {
+        border-color: #ff6b6b;
+    }
+    14% {
+        border-color: #ffa500;
+    }
+    28% {
+        border-color: #ffff00;
+    }
+    42% {
+        border-color: #00ff00;
+    }
+    57% {
+        border-color: #00ffff;
+    }
+    71% {
+        border-color: #0000ff;
+    }
+    85% {
+        border-color: #ff00ff;
+    }
+    100% {
+        border-color: #ff6b6b;
+    }
+}
+
+@keyframes chouten-badge-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+@keyframes chouten-sparkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ========== 调试动画 ========== */
+@keyframes debugSlideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes debugFadeScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes debugPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

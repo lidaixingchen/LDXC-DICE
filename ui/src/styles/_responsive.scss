@@ -1,0 +1,183 @@
+/* ===================================
+   响应式样式
+   =================================== */
+
+/* ========== 移动端适配 (max-width: 768px) ========== */
+@media (max-width: 768px) {
+    /* 导航适配 */
+    .acu-nav-container {
+        grid-template-columns: repeat(var(--acu-grid-cols, 2), 1fr);
+        gap: var(--acu-space-2xs);
+        padding: var(--acu-space-xs);
+    }
+    
+    .acu-nav-btn {
+        font-size: var(--acu-font-xs);
+        padding: var(--acu-space-2xs) var(--acu-space-xs);
+        height: var(--acu-btn-height-sm);
+    }
+    
+    /* 卡片适配 */
+    .acu-data-card {
+        flex: 0 0 100%;
+        width: 100%;
+        max-height: 50vh;
+    }
+    
+    .acu-card-grid {
+        flex-direction: column;
+        gap: var(--acu-space-sm);
+    }
+    
+    .acu-card-header {
+        padding: var(--acu-space-xs) var(--acu-space-sm);
+        font-size: var(--acu-font-md);
+    }
+    
+    .acu-card-body {
+        padding: var(--acu-space-xs) var(--acu-space-sm);
+    }
+    
+    /* 弹窗适配 */
+    .acu-edit-dialog {
+        width: 95%;
+        max-width: 95%;
+        padding: var(--acu-space-sm);
+    }
+    
+    .acu-edit-dialog.acu-settings-dialog {
+        max-width: 95%;
+        width: 95%;
+    }
+    
+    /* 面板适配 */
+    .acu-panel-content {
+        padding: var(--acu-space-sm);
+    }
+    
+    .acu-panel-footer {
+        padding: var(--acu-space-xs);
+        gap: var(--acu-space-2xs);
+    }
+    
+    /* 选项面板适配 */
+    .acu-option-panel {
+        padding: var(--acu-space-xs);
+    }
+    
+    .acu-opt-btn {
+        font-size: var(--acu-font-sm);
+        padding: var(--acu-space-2xs) var(--acu-space-xs);
+    }
+}
+
+/* ========== 小屏幕适配 (max-width: 500px) ========== */
+@media (max-width: 500px) {
+    .acu-nav-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .acu-data-card {
+        max-height: 40vh;
+    }
+    
+    .acu-edit-dialog {
+        width: 100%;
+        max-width: 100%;
+        border-radius: var(--acu-radius-md);
+    }
+}
+
+/* ========== 平板适配 (min-width: 769px) ========== */
+@media (min-width: 769px) {
+    .acu-edit-dialog {
+        max-width: 900px;
+        width: 90%;
+    }
+    
+    .acu-edit-dialog.acu-settings-dialog {
+        max-width: 400px;
+        width: 400px;
+    }
+}
+
+/* ========== 大屏幕适配 (min-width: 1200px) ========== */
+@media (min-width: 1200px) {
+    .acu-data-card {
+        flex: 0 0 var(--acu-card-width, 280px);
+        width: var(--acu-card-width, 280px);
+    }
+}
+
+/* ========== 触摸设备优化 ========== */
+@media (hover: none) and (pointer: coarse) {
+    /* 增大触摸目标 */
+    button {
+        min-width: var(--acu-size-44px);
+        min-height: var(--acu-size-44px);
+    }
+    
+    .acu-nav-btn {
+        min-height: var(--acu-size-44px);
+    }
+    
+    .acu-action-item {
+        min-height: var(--acu-size-36px);
+        padding: var(--acu-space-sm) var(--acu-space-md);
+    }
+    
+    /* 移除 hover 效果 */
+    .acu-data-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .acu-nav-btn:hover {
+        transform: none;
+    }
+    
+    .acu-action-item:hover {
+        transform: none;
+    }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+    .acu-wrapper {
+        display: none;
+    }
+    
+    .acu-edit-overlay,
+    .acu-dice-overlay,
+    .acu-contest-overlay {
+        display: none;
+    }
+}
+
+/* ========== 高对比度模式 ========== */
+@media (prefers-contrast: high) {
+    .acu-data-card {
+        border-width: 2px;
+    }
+    
+    .acu-nav-btn {
+        border-width: 2px;
+    }
+    
+    .acu-action-item {
+        border-width: 2px;
+    }
+}
+
+/* ========== 减少动画模式 ========== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .acu-icon-breathe {
+        animation: none;
+    }
+}
