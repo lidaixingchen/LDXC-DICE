@@ -47,6 +47,7 @@ const customTargetValue = ref<number | string>('');
 const isCustomMode = ref(false);
 const worldLevel = ref('F级');
 
+const oppAttrName = ref('');
 const oppAttr = ref<number | string>('');
 const oppRoll = ref<number | string>('');
 const envAdvantage = ref<number | string>('');
@@ -382,6 +383,12 @@ function handleSelectCharacter(name: string): void {
 function handleSelectAttribute(attr: AttributeButton): void {
   attrName.value = attr.name;
   attrValue.value = attr.value;
+  attrDropdown.close();
+}
+
+function handleSelectOpponentAttribute(attr: AttributeButton): void {
+  oppAttrName.value = attr.name;
+  oppAttr.value = attr.value;
   attrDropdown.close();
 }
 
@@ -1572,16 +1579,78 @@ onMounted(() => {
       <div v-if="checkMode === 'contest' && !isCustomMode">
         <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">己方属性值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
           </div>
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">对方属性值</div>
-            <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
+            <div class="acu-dice-form-label">
+              <span>己方属性名</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="自由检定"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">己方属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>对方属性名</span>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="oppAttrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="对方属性"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectOpponentAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">对方属性值</div>
+            <input v-model="oppAttr" type="text" class="acu-dice-input" placeholder="留空=10" />
+          </div>
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">对方投骰值</div>
             <input v-model="oppRoll" type="text" class="acu-dice-input" placeholder="留空=10" />
@@ -1629,6 +1698,42 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'combat' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>攻击属性名</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="力量/敏捷"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">攻击属性值</div>
@@ -1687,6 +1792,42 @@ onMounted(() => {
       <div v-if="checkMode === 'defense' && !isCustomMode">
         <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>闪避属性名</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="敏捷/感知"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
             <div class="acu-dice-form-label">闪避属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="敏捷/感知取高" />
           </div>
@@ -1730,11 +1871,76 @@ onMounted(() => {
       <div v-if="checkMode === 'initiative' && !isCustomMode">
         <div class="acu-dice-form-row cols-2">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">己方敏捷</div>
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>己方敏捷属性</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="敏捷"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">己方敏捷值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">对方敏捷</div>
+            <div class="acu-dice-form-label">
+              <span>对方敏捷属性</span>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="oppAttrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="敏捷"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectOpponentAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">对方敏捷值</div>
             <input v-model="oppAgility" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
         </div>
@@ -1756,6 +1962,42 @@ onMounted(() => {
       </div>
 
       <div v-if="checkMode === 'escape' && !isCustomMode">
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">名字</div>
+            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">
+              <span>敏捷属性名</span>
+              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
+                <i class="fa-solid fa-dice"></i>
+              </button>
+            </div>
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="敏捷"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label centered">逃跑场景</div>
@@ -1766,7 +2008,7 @@ onMounted(() => {
             </select>
           </div>
           <div>
-            <div class="acu-dice-form-label">己方敏捷</div>
+            <div class="acu-dice-form-label">己方敏捷值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
           </div>
           <div>
@@ -1913,6 +2155,95 @@ onMounted(() => {
       </div>
 
       <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'standard'" class="acu-dice-quick-compact">
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="a.name"
+          class="acu-stat-chip"
+          :class="{ active: attrName === a.name }"
+          @click="handleSelectAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+      </div>
+
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'contest'" class="acu-dice-quick-compact">
+        <div class="acu-quick-label">己方属性:</div>
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="a.name"
+          class="acu-stat-chip"
+          :class="{ active: attrName === a.name }"
+          @click="handleSelectAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+        <div class="acu-quick-label" style="margin-top: 4px;">对方属性:</div>
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="'opp-' + a.name"
+          class="acu-stat-chip"
+          :class="{ active: oppAttrName === a.name }"
+          @click="handleSelectOpponentAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+      </div>
+
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'combat'" class="acu-dice-quick-compact">
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="a.name"
+          class="acu-stat-chip"
+          :class="{ active: attrName === a.name }"
+          @click="handleSelectAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+      </div>
+
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'defense'" class="acu-dice-quick-compact">
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="a.name"
+          class="acu-stat-chip"
+          :class="{ active: attrName === a.name }"
+          @click="handleSelectAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+      </div>
+
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'initiative'" class="acu-dice-quick-compact">
+        <div class="acu-quick-label">己方敏捷:</div>
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="a.name"
+          class="acu-stat-chip"
+          :class="{ active: attrName === a.name }"
+          @click="handleSelectAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+        <div class="acu-quick-label" style="margin-top: 4px;">对方敏捷:</div>
+        <button
+          v-for="a in attributeButtons.slice(0, 6)"
+          :key="'opp-' + a.name"
+          class="acu-stat-chip"
+          :class="{ active: oppAttrName === a.name }"
+          @click="handleSelectOpponentAttribute(a)"
+        >
+          <span class="label">{{ a.name }}</span>
+          <span class="val">{{ a.value }}</span>
+        </button>
+      </div>
+
+      <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'escape'" class="acu-dice-quick-compact">
         <button
           v-for="a in attributeButtons.slice(0, 6)"
           :key="a.name"
@@ -2292,6 +2623,13 @@ onMounted(() => {
       color: white;
     }
   }
+}
+
+.acu-quick-label {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  margin-bottom: 2px;
+  font-weight: 500;
 }
 
 .acu-dice-roll-btn {
