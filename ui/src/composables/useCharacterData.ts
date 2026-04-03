@@ -174,7 +174,32 @@ export function useCharacterData() {
   }
 
   function updateAttributeButtons(attrs: Record<string, number>): void {
-    attributeButtons.value = Object.entries(attrs).map(([name, value]) => ({
+    const BASE_ATTRIBUTES = ['力量', '敏捷', '体质', '智力', '感知', '魅力'];
+    
+    const filteredAttrs = Object.entries(attrs)
+      .filter(([name]) => {
+        const nameLower = name.toLowerCase();
+        const excludedKeywords = ['年龄', 'age', 'hp', '生命', 'mp', '魔力', '地点', 'location', '位置', 
+          'pos', '金钱', 'money', '金币', '经验', 'exp', '等级', 'level', 'lv', 
+          '状态', 'status', '描述', 'desc', '备注', 'note', '备注', '性别', 'gender'];
+        
+        for (const keyword of excludedKeywords) {
+          if (nameLower.includes(keyword.toLowerCase())) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .sort(([nameA], [nameB]) => {
+        const idxA = BASE_ATTRIBUTES.findIndex(attr => nameA.includes(attr));
+        const idxB = BASE_ATTRIBUTES.findIndex(attr => nameB.includes(attr));
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+      });
+    
+    attributeButtons.value = filteredAttrs.map(([name, value]) => ({
       name,
       value,
     }));

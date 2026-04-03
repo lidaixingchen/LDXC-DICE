@@ -1500,7 +1500,27 @@ onMounted(() => {
                 <i class="fa-solid fa-dice"></i>
               </button>
             </div>
-            <input v-model="attrName" type="text" class="acu-dice-input" placeholder="自由检定" />
+            <div class="acu-dice-input-wrapper">
+              <input 
+                v-model="attrName" 
+                type="text" 
+                class="acu-dice-input" 
+                placeholder="自由检定"
+                @focus="attrDropdown.update(attributeButtons)"
+                @blur="attrDropdown.close()"
+              />
+              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
+                <div 
+                  v-for="a in attrDropdown.suggestions.value" 
+                  :key="a.name"
+                  class="acu-dropdown-item"
+                  @mousedown.prevent="handleSelectAttribute(a)"
+                >
+                  <span class="acu-dropdown-label">{{ a.name }}</span>
+                  <span class="acu-dropdown-value">{{ a.value }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1894,7 +1914,7 @@ onMounted(() => {
 
       <div v-if="attributeButtons.length > 0 && !isCustomMode && checkMode === 'standard'" class="acu-dice-quick-compact">
         <button
-          v-for="a in attributeButtons.slice(0, 12)"
+          v-for="a in attributeButtons.slice(0, 6)"
           :key="a.name"
           class="acu-stat-chip"
           :class="{ active: attrName === a.name }"
@@ -2709,4 +2729,49 @@ onMounted(() => {
 .acu-skill-name { font-weight: 700; color: var(--acu-text-main); }
 
 .acu-skill-effect { color: var(--acu-text-sub); font-size: 8px; }
+
+.acu-dice-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.acu-dropdown-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 2px;
+}
+
+.acu-dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: var(--acu-accent-light);
+  }
+}
+
+.acu-dropdown-label {
+  font-size: 12px;
+  color: var(--acu-text-main);
+  font-weight: 500;
+}
+
+.acu-dropdown-value {
+  font-size: 11px;
+  color: var(--acu-accent);
+  font-weight: 600;
+}
 </style>
