@@ -11,6 +11,24 @@ const { getTableData } = useDashboard();
 const activeMobileTab = ref<'player' | 'world' | 'items'>('player');
 const isMobile = ref(false);
 
+const collapsedSections = ref<Record<string, boolean>>({
+  baseAttrs: false,
+  specialAttrs: false,
+  locations: false,
+  npcs: false,
+  items: false,
+  equips: false,
+  quests: false
+});
+
+function toggleSection(section: string) {
+  collapsedSections.value[section] = !collapsedSections.value[section];
+}
+
+function isCollapsed(section: string): boolean {
+  return collapsedSections.value[section] ?? false;
+}
+
 function checkMobile() {
   isMobile.value = window.innerWidth < 768;
 }
@@ -23,6 +41,19 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile);
 });
+
+const ATTR_MAX_VALUE = 20;
+
+function getAttrPercent(value: number): number {
+  return Math.min(100, Math.max(0, (value / ATTR_MAX_VALUE) * 100));
+}
+
+function getAttrColor(percent: number): string {
+  if (percent >= 80) return 'var(--acu-success, #10b981)';
+  if (percent >= 50) return 'var(--acu-accent, #89b4fa)';
+  if (percent >= 30) return 'var(--acu-color-warning, #f59e0b)';
+  return 'var(--acu-danger, #f38ba8)';
+}
 
 interface CombatState {
   active: boolean;
@@ -302,36 +333,80 @@ function handleDice(name: string, val: any) {
 
         <!-- 属性区 -->
         <div class="acu-dash-player" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'player' }">
-          <!-- 基础属性区 -->
-          <div v-if="playerInfo?.baseAttrs?.length" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-chart-bar"></i>
-              基础属性 ({{ playerInfo?.baseAttrs?.length || 0 }})
-            </h4>
-            <div class="acu-attr-grid">
-              <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-item">
-                <span class="label">{{ attr.name }}</span>
-                <span class="val">{{ attr.value }}</span>
-                <button class="acu-dice-btn" @click="handleDice(attr.name, attr.value)" :title="`投掷 ${attr.name}`">
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
+          <!-- 基础属性区（可折叠） -->
+          <div v-if="playerInfo?.baseAttrs?.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('baseAttrs') }">
+            <div class="acu-collapsible-header" @click="toggleSection('baseAttrs')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-chart-bar"></i>
+                基础属性 ({{ playerInfo?.baseAttrs?.length || 0 }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div class="acu-attr-visual-grid">
+                <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-visual-item">
+                  <div class="acu-attr-header">
+                    <span class="acu-attr-name">{{ attr.name }}</span>
+                    <span class="acu-attr-value">{{ attr.value }}</span>
+                  </div>
+                  <div class="acu-attr-bar">
+                    <div 
+                      class="acu-attr-fill" 
+                      :style="{ 
+                        width: getAttrPercent(Number(attr.value)) + '%',
+                        background: getAttrColor(getAttrPercent(Number(attr.value)))
+                      }"
+                    ></div>
+                  </div>
+                  <button 
+                    class="acu-dice-btn" 
+                    @click="handleDice(attr.name, attr.value)" 
+                    :title="`投掷 ${attr.name} (${attr.value})`"
+                    aria-label="投掷骰子"
+                  >
+                    <i class="fa-solid fa-dice-d20"></i>
+                    <span class="acu-dice-hint">投掷</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- 特有属性区 -->
-          <div v-if="playerInfo?.specialAttrs?.length" class="acu-info-section">
-            <h4 class="acu-section-title">
-              <i class="fa-solid fa-star"></i>
-              特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
-            </h4>
-            <div class="acu-attr-grid">
-              <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-item special">
-                <span class="label">{{ attr.name }}</span>
-                <span class="val">{{ attr.value }}</span>
-                <button class="acu-dice-btn" @click="handleDice(attr.name, attr.value)" :title="`投掷 ${attr.name}`">
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
+          <!-- 特有属性区（可折叠） -->
+          <div v-if="playerInfo?.specialAttrs?.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('specialAttrs') }">
+            <div class="acu-collapsible-header" @click="toggleSection('specialAttrs')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-star"></i>
+                特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div class="acu-attr-visual-grid">
+                <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-visual-item special">
+                  <div class="acu-attr-header">
+                    <span class="acu-attr-name">{{ attr.name }}</span>
+                    <span class="acu-attr-value">{{ attr.value }}</span>
+                  </div>
+                  <div class="acu-attr-bar">
+                    <div 
+                      class="acu-attr-fill" 
+                      :style="{ 
+                        width: getAttrPercent(Number(attr.value)) + '%',
+                        background: getAttrColor(getAttrPercent(Number(attr.value)))
+                      }"
+                    ></div>
+                  </div>
+                  <button 
+                    class="acu-dice-btn" 
+                    @click="handleDice(attr.name, attr.value)" 
+                    :title="`投掷 ${attr.name} (${attr.value})`"
+                    aria-label="投掷骰子"
+                  >
+                    <i class="fa-solid fa-dice-d20"></i>
+                    <span class="acu-dice-hint">投掷</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -580,6 +655,131 @@ function handleDice(name: string, val: any) {
   &:last-child {
     border-bottom: none;
     margin-bottom: 0;
+  }
+}
+
+/* ========== 可折叠区块 ========== */
+.acu-collapsible {
+  border: 1px solid var(--acu-border);
+  border-radius: var(--acu-radius-lg, 8px);
+  overflow: hidden;
+  margin-bottom: var(--acu-space-sm, 8px);
+  background: var(--acu-card-bg);
+  
+  .acu-collapsible-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--acu-space-sm, 8px) var(--acu-space-md, 12px);
+    background: var(--acu-table-head, var(--acu-card-bg));
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+    
+    &:hover {
+      background: var(--acu-table-hover, rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1));
+    }
+    
+    .acu-section-title {
+      margin-bottom: 0;
+    }
+  }
+  
+  .acu-expand-icon {
+    color: var(--acu-text-sub);
+    font-size: 10px;
+    transition: transform 0.2s ease;
+  }
+  
+  &.acu-collapsed {
+    .acu-expand-icon {
+      transform: rotate(-90deg);
+    }
+    
+    .acu-collapsible-content {
+      display: none;
+    }
+  }
+  
+  .acu-collapsible-content {
+    padding: var(--acu-space-md, 12px);
+    animation: acuSlideDown 0.2s ease;
+  }
+}
+
+@keyframes acuSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== 属性可视化进度条 ========== */
+.acu-attr-visual-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--acu-space-sm, 8px);
+}
+
+.acu-attr-visual-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: var(--acu-space-2xs, 2px) var(--acu-space-sm, 8px);
+  align-items: center;
+  padding: var(--acu-space-xs, 4px) 0;
+  
+  .acu-attr-header {
+    grid-column: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .acu-attr-name {
+    color: var(--acu-text-sub);
+    font-size: var(--acu-font-sm, 12px);
+    font-weight: 500;
+  }
+  
+  .acu-attr-value {
+    color: var(--acu-text-main);
+    font-size: var(--acu-font-md, 14px);
+    font-weight: bold;
+  }
+  
+  .acu-attr-bar {
+    grid-column: 1;
+    height: 4px;
+    background: var(--acu-border);
+    border-radius: var(--acu-radius-full, 9999px);
+    overflow: hidden;
+    
+    .acu-attr-fill {
+      height: 100%;
+      border-radius: var(--acu-radius-full, 9999px);
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+  }
+  
+  .acu-dice-btn {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  
+  &.special {
+    .acu-attr-name {
+      color: var(--acu-accent);
+    }
+    
+    .acu-attr-bar {
+      height: 5px;
+      background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.2);
+    }
   }
 }
 
@@ -1136,38 +1336,65 @@ function handleDice(name: string, val: any) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: var(--acu-space-2xs, 2px) var(--acu-space-xs, 4px);
+  gap: var(--acu-space-2xs, 2px);
+  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
   border: 1px solid transparent;
-  border-radius: var(--acu-radius-sm, 4px);
+  border-radius: var(--acu-radius-md, 6px);
   background: transparent;
   color: var(--acu-text-sub);
   cursor: pointer;
   transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
   
   i {
-    font-size: 11px;
-    opacity: 0.5;
-    transition: opacity 0.15s ease;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: all 0.15s ease;
+  }
+  
+  .acu-dice-hint {
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    font-size: var(--acu-font-xs, 11px);
+    white-space: nowrap;
+    transition: all 0.2s ease;
   }
   
   &:hover {
     background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.15);
     border-color: var(--acu-accent);
     color: var(--acu-accent);
+    padding: var(--acu-space-xs, 4px) var(--acu-space-md, 12px);
     
     i {
       opacity: 1;
+      animation: acuDiceShake 0.4s ease;
+    }
+    
+    .acu-dice-hint {
+      max-width: 50px;
+      opacity: 1;
+      margin-left: var(--acu-space-2xs, 2px);
     }
   }
   
   &:active {
-    transform: scale(0.9);
+    transform: scale(0.92);
+    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.25);
   }
   
   &:focus-visible {
     outline: 2px solid var(--acu-accent);
     outline-offset: 2px;
   }
+}
+
+@keyframes acuDiceShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
 }
 
 /* ========== 战斗状态视觉区分 ========== */
