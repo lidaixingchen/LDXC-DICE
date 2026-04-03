@@ -447,6 +447,17 @@ onMounted(() => {
               <option v-for="f in fontOptions" :key="f.value" :value="f.value">{{ f.label }}</option>
             </select>
           </div>
+          <div class="acu-setting-row acu-setting-row-toggle">
+            <label>高亮变化内容</label>
+            <label class="acu-toggle">
+              <input
+                type="checkbox"
+                :checked="settings.highlightNew"
+                @change="updateLegacy({ highlightNew: ($event.target as any).checked })"
+              />
+              <span class="acu-toggle-slider"></span>
+            </label>
+          </div>
           <div class="acu-setting-row">
             <label>面板宽度 ({{ settings.cardWidth }}px)</label>
             <input
@@ -462,6 +473,24 @@ onMounted(() => {
         <!-- 2. 布局 [全量找回] -->
         <div v-if="activeSection === 'layout'" class="acu-config-group">
           <div class="acu-group-label">排列与吸附</div>
+          <div class="acu-setting-row">
+            <label>布局模式</label>
+            <select :value="settings.layout" @change="updateLegacy({ layout: ($event.target as any).value })">
+              <option value="horizontal">横向滚动</option>
+              <option value="vertical">竖向滚动</option>
+            </select>
+          </div>
+          <div class="acu-setting-row">
+            <label>每页显示条数</label>
+            <input
+              type="number"
+              min="10"
+              max="200"
+              step="10"
+              :value="settings.itemsPerPage"
+              @change="updateLegacy({ itemsPerPage: parseInt(($event.target as any).value) })"
+            />
+          </div>
           <div class="acu-setting-row">
             <label>动作栏位置</label>
             <select
