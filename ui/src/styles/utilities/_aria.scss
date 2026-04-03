@@ -1,0 +1,434 @@
+/* ===================================
+   ARIA 支持样式
+   =================================== */
+
+/* ========== 屏幕阅读器专用 ========== */
+.acu-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.acu-sr-only-focusable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  
+  &:focus,
+  &:active {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+/* ========== 跳转链接 ========== */
+.acu-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--acu-accent);
+  color: var(--acu-button-text-on-accent, #fff);
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  z-index: 100000;
+  text-decoration: none;
+  font-weight: var(--acu-font-weight-semibold);
+  border-radius: var(--acu-radius-md);
+  transition: top var(--acu-transition-fast);
+  
+  &:focus {
+    top: var(--acu-space-sm);
+    left: var(--acu-space-sm);
+    outline: var(--acu-focus-ring-width) solid var(--acu-button-text-on-accent, #fff);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== ARIA 角色样式 ========== */
+
+/* 按钮 */
+[role="button"] {
+  cursor: pointer;
+  user-select: none;
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 链接 */
+[role="link"] {
+  cursor: pointer;
+  text-decoration: underline;
+  color: var(--acu-accent);
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 导航 */
+[role="navigation"] {
+  /* 导航地标 */
+}
+
+[role="menubar"] {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[role="menu"] {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  box-shadow: var(--acu-shadow-md);
+}
+
+[role="menuitem"] {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  cursor: pointer;
+  transition: background-color var(--acu-transition-fast);
+  
+  &:hover,
+  &:focus {
+    background: var(--acu-btn-hover);
+    outline: none;
+  }
+  
+  &[aria-current="page"] {
+    background: var(--acu-btn-active-bg);
+    color: var(--acu-btn-active-text);
+  }
+}
+
+/* 标签页 */
+[role="tablist"] {
+  display: flex;
+  border-bottom: var(--acu-border-width-medium) solid var(--acu-border);
+}
+
+[role="tab"] {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all var(--acu-transition-fast);
+  
+  &:hover {
+    border-bottom-color: var(--acu-accent);
+  }
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: calc(var(--acu-focus-ring-offset) * -1);
+  }
+  
+  &[aria-selected="true"] {
+    border-bottom-color: var(--acu-accent);
+    color: var(--acu-accent);
+    font-weight: var(--acu-font-weight-semibold);
+  }
+}
+
+[role="tabpanel"] {
+  padding: var(--acu-space-md);
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 对话框 */
+[role="dialog"],
+[role="alertdialog"] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-lg);
+  box-shadow: var(--acu-shadow-xl);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  z-index: 100000;
+  
+  &:focus {
+    outline: none;
+  }
+}
+
+[role="alertdialog"] {
+  /* 警报对话框特殊样式 */
+  border-color: var(--acu-color-error);
+}
+
+/* 工具提示 */
+[role="tooltip"] {
+  position: absolute;
+  background: var(--acu-gray-900);
+  color: var(--acu-gray-50);
+  padding: var(--acu-space-xs) var(--acu-space-sm);
+  border-radius: var(--acu-radius-sm);
+  font-size: var(--acu-font-xs);
+  max-width: 250px;
+  z-index: 100000;
+  pointer-events: none;
+  
+  /* 箭头 */
+  &::before {
+    content: '';
+    position: absolute;
+    border: 6px solid transparent;
+  }
+  
+  &[data-placement="top"]::before {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: var(--acu-gray-900);
+  }
+  
+  &[data-placement="bottom"]::before {
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: var(--acu-gray-900);
+  }
+}
+
+/* 进度条 */
+[role="progressbar"] {
+  width: 100%;
+  height: var(--acu-space-sm);
+  background: var(--acu-gray-200);
+  border-radius: var(--acu-radius-full);
+  overflow: hidden;
+  
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--acu-accent);
+    transition: width var(--acu-transition-normal);
+  }
+}
+
+/* 状态消息 */
+[role="status"],
+[role="alert"] {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  border-radius: var(--acu-radius-md);
+  font-size: var(--acu-font-sm);
+  
+  &:empty {
+    display: none;
+  }
+}
+
+[role="status"] {
+  background: var(--acu-color-info-light);
+  color: var(--acu-color-info-dark);
+  border-left: 4px solid var(--acu-color-info);
+}
+
+[role="alert"] {
+  background: var(--acu-color-error-light);
+  color: var(--acu-color-error-dark);
+  border-left: 4px solid var(--acu-color-error);
+}
+
+/* 列表框 */
+[role="listbox"] {
+  display: flex;
+  flex-direction: column;
+  background: var(--acu-bg-panel);
+  border: var(--acu-border-width-thin) solid var(--acu-border);
+  border-radius: var(--acu-radius-md);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+[role="option"] {
+  padding: var(--acu-space-sm) var(--acu-space-md);
+  cursor: pointer;
+  transition: background-color var(--acu-transition-fast);
+  
+  &:hover {
+    background: var(--acu-btn-hover);
+  }
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: calc(var(--acu-focus-ring-offset) * -1);
+    background: var(--acu-btn-hover);
+  }
+  
+  &[aria-selected="true"] {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+  }
+}
+
+/* 开关 */
+[role="switch"] {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  width: 48px;
+  height: 24px;
+  background: var(--acu-gray-300);
+  border-radius: var(--acu-radius-full);
+  transition: background-color var(--acu-transition-normal);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform var(--acu-transition-normal);
+    box-shadow: var(--acu-shadow-sm);
+  }
+  
+  &[aria-checked="true"] {
+    background: var(--acu-accent);
+    
+    &::after {
+      transform: translateX(24px);
+    }
+  }
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== ARIA 状态样式 ========== */
+
+/* 禁用状态 */
+[aria-disabled="true"] {
+  opacity: var(--acu-opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 隐藏状态 */
+[aria-hidden="true"] {
+  display: none !important;
+}
+
+/* 展开状态 */
+[aria-expanded="true"] {
+  /* 展开状态样式 */
+}
+
+/* 折叠状态 */
+[aria-expanded="false"] {
+  /* 折叠状态样式 */
+}
+
+/* 选中状态 */
+[aria-selected="true"],
+[aria-checked="true"] {
+  /* 选中状态样式 */
+}
+
+/* 按下状态 */
+[aria-pressed="true"] {
+  transform: translateY(1px);
+}
+
+/* 忙碌状态 */
+[aria-busy="true"] {
+  position: relative;
+  color: transparent !important;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid var(--acu-text-sub);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: acu-spin 0.75s linear infinite;
+  }
+}
+
+/* 无效状态 */
+[aria-invalid="true"] {
+  border-color: var(--acu-color-error) !important;
+  
+  &:focus {
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) rgba(239, 68, 68, 0.2);
+  }
+}
+
+/* 必填状态 */
+[aria-required="true"] {
+  /* 必填字段样式 */
+}
+
+/* ========== 动画 ========== */
+@keyframes acu-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== 深色主题适配 ========== */
+.acu-theme-dark {
+  [role="tooltip"] {
+    background: var(--acu-gray-700);
+    color: var(--acu-gray-50);
+    
+    &[data-placement="top"]::before {
+      border-top-color: var(--acu-gray-700);
+    }
+    
+    &[data-placement="bottom"]::before {
+      border-bottom-color: var(--acu-gray-700);
+    }
+  }
+  
+  [role="progressbar"] {
+    background: var(--acu-gray-700);
+  }
+}

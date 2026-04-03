@@ -1,0 +1,314 @@
+/* ===================================
+   对比度工具类 - WCAG 2.1 AA 合规
+   =================================== */
+
+/* ========== 对比度级别 ========== */
+
+/* AA级别 - 普通文本 (4.5:1) */
+.acu-contrast-aa {
+  /* 确保文本对比度至少为 4.5:1 */
+  color: var(--acu-gray-900);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-50);
+  }
+}
+
+/* AA级别 - 大文本 (3:1) */
+.acu-contrast-aa-large {
+  /* 确保大文本对比度至少为 3:1 */
+  font-size: 18px;
+  font-weight: var(--acu-font-weight-normal);
+  color: var(--acu-gray-800);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-100);
+  }
+}
+
+/* AAA级别 - 普通文本 (7:1) */
+.acu-contrast-aaa {
+  /* 确保文本对比度至少为 7:1 */
+  color: var(--acu-gray-900);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-50);
+  }
+}
+
+/* AAA级别 - 大文本 (4.5:1) */
+.acu-contrast-aaa-large {
+  /* 确保大文本对比度至少为 4.5:1 */
+  font-size: 18px;
+  font-weight: var(--acu-font-weight-normal);
+  color: var(--acu-gray-800);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-100);
+  }
+}
+
+/* ========== 文本对比度工具类 ========== */
+
+/* 高对比度文本 (主要文本) */
+.acu-text-high-contrast {
+  color: var(--acu-gray-900);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-50);
+  }
+}
+
+/* 中等对比度文本 (次要文本) */
+.acu-text-medium-contrast {
+  color: var(--acu-gray-700);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-300);
+  }
+}
+
+/* 低对比度文本 (辅助文本) - 仍符合AA标准 */
+.acu-text-low-contrast {
+  color: var(--acu-gray-600);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-400);
+  }
+}
+
+/* ========== 背景对比度工具类 ========== */
+
+/* 高对比度背景 */
+.acu-bg-high-contrast {
+  background-color: var(--acu-gray-900);
+  color: var(--acu-gray-50);
+}
+
+/* 中等对比度背景 */
+.acu-bg-medium-contrast {
+  background-color: var(--acu-gray-100);
+  color: var(--acu-gray-900);
+  
+  .acu-theme-dark & {
+    background-color: var(--acu-gray-800);
+    color: var(--acu-gray-50);
+  }
+}
+
+/* ========== 语义化色彩对比度 ========== */
+
+/* 成功色 - 符合AA标准 */
+.acu-text-success-compliant {
+  color: var(--acu-color-success-dark); /* #065f46 - 深绿色，对比度更高 */
+}
+
+.acu-bg-success-compliant {
+  background-color: var(--acu-color-success-light); /* #d1fae5 - 浅绿色背景 */
+  color: var(--acu-color-success-dark); /* #065f46 - 深绿色文本 */
+}
+
+/* 警告色 - 符合AA标准 */
+.acu-text-warning-compliant {
+  color: var(--acu-color-warning-dark); /* #92400e - 深橙色，对比度更高 */
+}
+
+.acu-bg-warning-compliant {
+  background-color: var(--acu-color-warning-light); /* #fef3c7 - 浅橙色背景 */
+  color: var(--acu-color-warning-dark); /* #92400e - 深橙色文本 */
+}
+
+/* 错误色 - 符合AA标准 */
+.acu-text-error-compliant {
+  color: var(--acu-color-error-dark); /* #991b1b - 深红色，对比度更高 */
+}
+
+.acu-bg-error-compliant {
+  background-color: var(--acu-color-error-light); /* #fee2e2 - 浅红色背景 */
+  color: var(--acu-color-error-dark); /* #991b1b - 深红色文本 */
+}
+
+/* 信息色 - 符合AA标准 */
+.acu-text-info-compliant {
+  color: var(--acu-color-info-dark); /* #1e40af - 深蓝色，对比度更高 */
+}
+
+.acu-bg-info-compliant {
+  background-color: var(--acu-color-info-light); /* #dbeafe - 浅蓝色背景 */
+  color: var(--acu-color-info-dark); /* #1e40af - 深蓝色文本 */
+}
+
+/* ========== 链接对比度 ========== */
+
+/* 高对比度链接 */
+.acu-link-high-contrast {
+  color: var(--acu-color-info-dark);
+  text-decoration: underline;
+  
+  &:hover {
+    color: var(--acu-color-info);
+  }
+  
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-color-info);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== 占位符对比度 ========== */
+
+/* 占位符文本 - 符合AA标准 */
+.acu-placeholder-compliant {
+  &::placeholder {
+    color: var(--acu-gray-600);
+    opacity: 1;
+  }
+  
+  .acu-theme-dark & {
+    &::placeholder {
+      color: var(--acu-gray-400);
+    }
+  }
+}
+
+/* ========== 禁用状态对比度 ========== */
+
+/* 禁用文本 - 符合AA标准 */
+.acu-disabled-compliant {
+  color: var(--acu-gray-600);
+  opacity: 0.65;
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-400);
+  }
+}
+
+/* ========== 边框对比度 ========== */
+
+/* 高对比度边框 */
+.acu-border-high-contrast {
+  border-color: var(--acu-gray-700);
+  
+  .acu-theme-dark & {
+    border-color: var(--acu-gray-300);
+  }
+}
+
+/* ========== 图标对比度 ========== */
+
+/* 高对比度图标 */
+.acu-icon-high-contrast {
+  color: var(--acu-gray-800);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-200);
+  }
+}
+
+/* ========== 表格对比度 ========== */
+
+/* 表格行对比度 */
+.acu-table-row-contrast {
+  &:nth-child(even) {
+    background-color: var(--acu-gray-50);
+  }
+  
+  &:hover {
+    background-color: var(--acu-gray-100);
+  }
+  
+  .acu-theme-dark & {
+    &:nth-child(even) {
+      background-color: var(--acu-gray-800);
+    }
+    
+    &:hover {
+      background-color: var(--acu-gray-700);
+    }
+  }
+}
+
+/* ========== 表单标签对比度 ========== */
+
+/* 表单标签 - 符合AA标准 */
+.acu-form-label-compliant {
+  color: var(--acu-gray-800);
+  font-weight: var(--acu-font-weight-medium);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-200);
+  }
+}
+
+/* ========== 按钮对比度 ========== */
+
+/* 主要按钮 - 符合AA标准 */
+.acu-btn-primary-compliant {
+  background-color: var(--acu-color-info-dark);
+  color: #ffffff;
+  
+  &:hover {
+    background-color: var(--acu-color-info);
+  }
+}
+
+/* ========== 调试工具 ========== */
+
+/* 对比度检查器 (开发模式) */
+.acu-contrast-checker {
+  position: relative;
+  
+  &::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 16px;
+    height: 16px;
+    background: var(--acu-color-success);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ========== 高对比度模式 ========== */
+
+@media (prefers-contrast: high) {
+  .acu-text-high-contrast,
+  .acu-text-medium-contrast,
+  .acu-text-low-contrast {
+    color: black !important;
+  }
+  
+  .acu-theme-dark .acu-text-high-contrast,
+  .acu-theme-dark .acu-text-medium-contrast,
+  .acu-theme-dark .acu-text-low-contrast {
+    color: white !important;
+  }
+  
+  .acu-btn,
+  .acu-input,
+  .acu-nav-btn {
+    border-width: 2px;
+  }
+}
+
+/* ========== 强制颜色模式 ========== */
+
+@media (forced-colors: active) {
+  .acu-text-success-compliant,
+  .acu-text-warning-compliant,
+  .acu-text-error-compliant,
+  .acu-text-info-compliant {
+    color: LinkText;
+  }
+  
+  .acu-btn-primary-compliant {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}

@@ -1,0 +1,254 @@
+/* ===================================
+   焦点管理和键盘导航
+   =================================== */
+
+/* ========== 焦点陷阱容器 ========== */
+.acu-focus-trap {
+  position: relative;
+  
+  /* 焦点陷阱激活时的样式 */
+  &.active {
+    /* 确保所有可聚焦元素可见 */
+    *:focus {
+      outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color) !important;
+      outline-offset: var(--acu-focus-ring-offset);
+    }
+  }
+}
+
+/* ========== 焦点指示器 ========== */
+.acu-focus-indicator {
+  /* 默认隐藏 */
+  opacity: 0;
+  transition: opacity var(--acu-transition-fast);
+  
+  /* 当父元素获得焦点时显示 */
+  :focus-within > &,
+  :focus > & {
+    opacity: 1;
+  }
+}
+
+/* ========== 键盘导航样式 ========== */
+
+/* 可聚焦元素 */
+.acu-focusable {
+  cursor: pointer;
+  
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 键盘导航项 */
+.acu-keyboard-nav {
+  /* 默认样式 */
+  
+  /* 焦点样式 */
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+    z-index: 1;
+  }
+  
+  /* 键盘激活样式 */
+  &.keyboard-active {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+  }
+}
+
+/* ========== 焦点环样式变体 ========== */
+
+/* 主色调焦点环 */
+.acu-focus-ring-primary {
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-accent);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 成功焦点环 */
+.acu-focus-ring-success {
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-color-success);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 警告焦点环 */
+.acu-focus-ring-warning {
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-color-warning);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 错误焦点环 */
+.acu-focus-ring-error {
+  &:focus,
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-color-error);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== 焦点可见性控制 ========== */
+
+/* 仅在键盘导航时显示焦点环 */
+.acu-focus-visible-only {
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+  
+  &:focus-visible {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* 始终显示焦点环 */
+.acu-focus-always {
+  &:focus {
+    outline: var(--acu-focus-ring-width) solid var(--acu-focus-ring-color);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== Tab索引指示器 ========== */
+[data-tabindex="-1"] {
+  /* 可通过JavaScript聚焦，但不能通过Tab键导航 */
+}
+
+[data-tabindex="0"] {
+  /* 可通过Tab键导航 */
+}
+
+/* ========== 焦点容器 ========== */
+.acu-focus-container {
+  /* 焦点容器样式 */
+  
+  /* 当容器内任何元素获得焦点时 */
+  &:focus-within {
+    /* 可添加容器焦点样式 */
+  }
+}
+
+/* ========== 焦点恢复 ========== */
+.acu-focus-restore {
+  /* 用于保存和恢复焦点的元素 */
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ========== 跳过导航 ========== */
+.acu-skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  
+  &:focus {
+    position: fixed;
+    top: var(--acu-space-md);
+    left: var(--acu-space-md);
+    width: auto;
+    height: auto;
+    padding: var(--acu-space-sm) var(--acu-space-md);
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+    border-radius: var(--acu-radius-md);
+    text-decoration: none;
+    font-weight: var(--acu-font-weight-semibold);
+    z-index: 100000;
+    outline: var(--acu-focus-ring-width) solid var(--acu-button-text-on-accent, #fff);
+    outline-offset: var(--acu-focus-ring-offset);
+  }
+}
+
+/* ========== 键盘快捷键指示器 ========== */
+.acu-keyboard-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--acu-space-xs);
+  background: var(--acu-gray-100);
+  border: 1px solid var(--acu-gray-300);
+  border-radius: var(--acu-radius-sm);
+  font-size: var(--acu-font-xs);
+  font-family: monospace;
+  color: var(--acu-gray-700);
+  box-shadow: 0 1px 0 var(--acu-gray-300);
+  
+  .acu-theme-dark & {
+    background: var(--acu-gray-700);
+    border-color: var(--acu-gray-600);
+    color: var(--acu-gray-200);
+    box-shadow: 0 1px 0 var(--acu-gray-600);
+  }
+}
+
+/* ========== 焦点顺序可视化 (调试用) ========== */
+.acu-debug-focus-order {
+  *:focus {
+    outline: 3px solid red !important;
+    outline-offset: 2px;
+  }
+  
+  [data-focus-order]::before {
+    content: attr(data-focus-order);
+    position: absolute;
+    top: -20px;
+    left: 0;
+    background: red;
+    color: white;
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 3px;
+  }
+}
+
+/* ========== 高对比度模式支持 ========== */
+@media (forced-colors: active) {
+  .acu-btn,
+  .acu-input,
+  .acu-nav-btn {
+    border: 2px solid currentColor;
+  }
+  
+  .acu-btn:focus,
+  .acu-input:focus,
+  .acu-nav-btn:focus {
+    outline: 3px solid Highlight;
+  }
+  
+  .acu-focus-ring-primary,
+  .acu-focus-ring-success,
+  .acu-focus-ring-warning,
+  .acu-focus-ring-error {
+    &:focus,
+    &:focus-visible {
+      outline: 3px solid Highlight;
+    }
+  }
+}
+
+/* ========== 减少动画模式 ========== */
+@media (prefers-reduced-motion: reduce) {
+  *:focus {
+    transition: none !important;
+  }
+}
