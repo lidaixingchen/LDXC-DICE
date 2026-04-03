@@ -1215,9 +1215,9 @@ margin-top: 1px;
         .acu-highlight-diff { color: var(--acu-hl-diff) !important; background-color: var(--acu-hl-diff-bg) !important; border-radius: 4px; padding: 0 4px; font-weight: bold; animation: pulse-highlight 2s infinite; display: inline-block; }
         .acu-editable-title.acu-highlight-manual, .acu-editable-title.acu-highlight-diff { width: auto; display: inline-block; }
         .acu-card-header { flex: 0 0 auto; padding: 8px 10px; background: var(--acu-table-head); border-bottom: 1px dashed var(--acu-border); font-weight: bold; color: var(--acu-text-main); font-size: 14px; display: flex; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 8px; min-height: 40px; height: auto !important; position: relative; }
-        .acu-editable-title { flex: 1; width: auto !important; cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.2s; white-space: pre-wrap !important; overflow: visible !important; word-break: break-word !important; text-align: center; line-height: 1.3; margin: 0; }
+        .acu-editable-title { flex: 1; width: auto; cursor: pointer; border-bottom: 1px dashed transparent; transition: all 0.2s; white-space: pre-wrap; overflow: visible; word-break: break-word; text-align: center; line-height: 1.3; margin: 0; }
         .acu-editable-title:hover { border-bottom-color: var(--acu-accent); color: var(--acu-accent); }
-        .acu-card-index { position: static !important; transform: none !important; margin: 0; flex-shrink: 0; font-size: 11px; color: var(--acu-text-sub); font-weight: normal; background: var(--acu-badge-bg); padding: 2px 6px; border-radius: 4px; }
+        .acu-card-index { position: static; transform: none; margin: 0; flex-shrink: 0; font-size: 11px; color: var(--acu-text-sub); font-weight: normal; background: var(--acu-badge-bg); padding: 2px 6px; border-radius: 4px; }
         .acu-bookmark-icon { position: absolute; top: 8px; right: 8px; color: var(--acu-accent); cursor: pointer; font-size: 16px; opacity: 0.3; transition: opacity 0.2s, color 0.2s, transform 0.2s; z-index: 10; }
         .acu-bookmark-icon:hover { opacity: 0.6; transform: scale(1.1); }
         .acu-bookmark-icon.bookmarked { color: var(--acu-accent); opacity: 1; }
@@ -1231,11 +1231,11 @@ margin-top: 1px;
         .acu-action-item.check-type { border-style: dashed; }
         .acu-action-item i { font-size: 10px; opacity: 0.7; }
         .acu-card-row:hover { background: var(--acu-table-hover); }
-        .acu-card-label { float: left !important; clear: left; width: auto !important; margin-right: 8px !important; color: var(--acu-text-sub); font-size: 0.9em; line-height: 1.5; padding-top: 0; }
+        .acu-card-label { float: left; clear: left; width: auto; margin-right: 8px; color: var(--acu-text-sub); font-size: 0.9em; line-height: 1.5; padding-top: 0; }
         .acu-hide-label .acu-card-label { display: none; }
         .acu-hide-label .acu-card-value { width: 100% !important; }
-        .acu-inline-dice-btn:hover { opacity: 1 !important; transform: scale(1.2); }
-        .acu-card-value { display: block; width: auto !important; margin: 0; text-align: left !important; word-break: break-all !important; white-space: pre-wrap !important; line-height: 1.5 !important; color: var(--acu-text-main); font-size: 1em; }
+        .acu-inline-dice-btn:hover { opacity: 1; transform: scale(1.2); }
+        .acu-card-value { display: block; width: auto; margin: 0; text-align: left; word-break: break-all; white-space: pre-wrap; line-height: 1.5; color: var(--acu-text-main); font-size: 1em; }
         .acu-tag-container { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 2px; }
         .acu-multi-attr-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
         .acu-badge { display: inline-block; padding: 1px 8px; border-radius: 12px; font-size: 0.9em; font-weight: 500; line-height: 1.2; }
@@ -1542,15 +1542,15 @@ background: var(--acu-table-hover);
         .acu-expand-trigger { background: var(--acu-bg-nav); border: 1px solid var(--acu-border); box-shadow: 0 2px 6px var(--acu-shadow); cursor: pointer; color: var(--acu-text-main); font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: all 0.2s; z-index: 31005 !important; }
         .acu-expand-trigger:hover { background: var(--acu-btn-hover); transform: translateY(-2px); }
         .acu-col-bar { width: 100%; justify-content: center; padding: 8px 10px; border-radius: 6px; }
-        .acu-col-pill { width: auto !important; padding: 6px 16px; border-radius: 50px; }
-        .acu-col-mini { width: 40px !important; height: 40px !important; padding: 0; justify-content: center; border-radius: 50%; }
+        .acu-col-pill { width: auto; padding: 6px 16px; border-radius: 50px; }
+        .acu-col-mini { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
         .acu-col-mini span { display: none; }
         /* [优化] 小眼睛图标悬停效果 */
-        .acu-nav-toggle-btn:hover { opacity: 1 !important; transform: translateY(-50%) scale(1.2); color: var(--acu-accent); }
+        .acu-nav-toggle-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.2); color: var(--acu-accent); }
         .acu-align-right { margin-left: auto; align-self: flex-end; }
         .acu-align-center { 
-            margin-left: auto !important; 
-            margin-right: auto !important; 
+            margin-left: auto; 
+            margin-right: auto; 
         }
         .acu-align-left { margin-right: auto; margin-left: 0; align-self: flex-start; }
         .acu-nav-container.acu-left-mode .acu-actions-group { order: -1; margin-left: 0; margin-right: 10px; }
