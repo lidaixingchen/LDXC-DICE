@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, ref, onMounted, onUnmounted } from 'vue';
+import { computed, inject, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 
 const emit = defineEmits<{
@@ -11,7 +11,9 @@ const { getTableData } = useDashboard();
 const activeMobileTab = ref<'player' | 'world' | 'items'>('player');
 const isMobile = ref(false);
 
-const collapsedSections = ref<Record<string, boolean>>({
+const COLLAPSED_STORAGE_KEY = 'acu-dashboard-collapsed';
+
+const defaultCollapsedState: Record<string, boolean> = {
   baseAttrs: false,
   specialAttrs: false,
   locations: false,
@@ -19,14 +21,51 @@ const collapsedSections = ref<Record<string, boolean>>({
   items: false,
   equips: false,
   quests: false
-});
+};
+
+const collapsedSections = ref<Record<string, boolean>>({ ...defaultCollapsedState });
+
+function loadCollapsedState() {
+  try {
+    const saved = localStorage.getItem(COLLAPSED_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.assign(collapsedSections.value, defaultCollapsedState, parsed);
+    }
+  } catch {
+    console.warn('Failed to load collapsed state from localStorage');
+  }
+}
+
+function saveCollapsedState() {
+  try {
+    localStorage.setItem(COLLAPSED_STORAGE_KEY, JSON.stringify(collapsedSections.value));
+  } catch {
+    console.warn('Failed to save collapsed state to localStorage');
+  }
+}
 
 function toggleSection(section: string) {
   collapsedSections.value[section] = !collapsedSections.value[section];
+  saveCollapsedState();
 }
 
 function isCollapsed(section: string): boolean {
   return collapsedSections.value[section] ?? false;
+}
+
+function expandAllSections() {
+  Object.keys(collapsedSections.value).forEach(key => {
+    collapsedSections.value[key] = false;
+  });
+  saveCollapsedState();
+}
+
+function collapseAllSections() {
+  Object.keys(collapsedSections.value).forEach(key => {
+    collapsedSections.value[key] = true;
+  });
+  saveCollapsedState();
 }
 
 function checkMobile() {
@@ -34,6 +73,7 @@ function checkMobile() {
 }
 
 onMounted(() => {
+  loadCollapsedState();
   checkMobile();
   window.addEventListener('resize', checkMobile);
 });
@@ -414,75 +454,135 @@ function handleDice(name: string, val: any) {
 
         <!-- 地点与角色 -->
         <div class="acu-dash-locations" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'world' }">
-          <h3 class="acu-dash-section-title">
-            <i class="fa-solid fa-map"></i>
-            地点 ({{ locationList.length }})
-          </h3>
-          <div class="acu-location-grid">
-            <div v-for="loc in locationList" :key="loc.name" 
-                 class="acu-location-item" 
-                 :class="{ 'acu-current': loc.isCurrent }">
-              <i :class="loc.isCurrent ? 'fa-solid fa-location-dot' : 'fa-solid fa-map-pin'"></i>
-              <span>{{ loc.name }}</span>
-              <i v-if="!loc.isCurrent" class="fa-solid fa-walking acu-action-icon"></i>
+          <!-- 地点区（可折叠） -->
+          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('locations') }">
+            <div class="acu-collapsible-header" @click="toggleSection('locations')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-map"></i>
+                地点 ({{ locationList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div v-if="locationList.length" class="acu-location-grid">
+                <div v-for="loc in locationList" :key="loc.name" 
+                     class="acu-location-item" 
+                     :class="{ 'acu-current': loc.isCurrent }">
+                  <i :class="loc.isCurrent ? 'fa-solid fa-location-dot' : 'fa-solid fa-map-pin'"></i>
+                  <span>{{ loc.name }}</span>
+                  <i v-if="!loc.isCurrent" class="fa-solid fa-walking acu-action-icon"></i>
+                </div>
+              </div>
+              <div v-else class="acu-empty-state">
+                <i class="fa-solid fa-map"></i>
+                <span>暂无地点信息</span>
+              </div>
             </div>
           </div>
           
-          <h3 class="acu-dash-section-title" style="margin-top: 12px;">
-            <i class="fa-solid fa-users"></i>
-            角色 ({{ npcList.length }})
-          </h3>
-          <div class="acu-npc-grid">
-            <div v-for="npc in npcList" :key="npc.name" 
-                 class="acu-npc-item"
-                 :class="{ 'acu-offscene': !npc.isInScene }">
-              <div class="acu-npc-avatar">{{ npc.name.charAt(0) }}</div>
-              <div class="acu-npc-info">
-                <div class="name">{{ npc.name }}</div>
-                <div class="status">{{ npc.status }}</div>
+          <!-- 角色区（可折叠） -->
+          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('npcs') }">
+            <div class="acu-collapsible-header" @click="toggleSection('npcs')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-users"></i>
+                角色 ({{ npcList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div v-if="npcList.length" class="acu-npc-grid">
+                <div v-for="npc in npcList" :key="npc.name" 
+                     class="acu-npc-item"
+                     :class="{ 'acu-offscene': !npc.isInScene }">
+                  <div class="acu-npc-avatar">{{ npc.name.charAt(0) }}</div>
+                  <div class="acu-npc-info">
+                    <div class="name">{{ npc.name }}</div>
+                    <div class="status">{{ npc.status }}</div>
+                  </div>
+                  <i class="fa-solid fa-people-arrows acu-action-icon"></i>
+                </div>
               </div>
-              <i class="fa-solid fa-people-arrows acu-action-icon"></i>
+              <div v-else class="acu-empty-state">
+                <i class="fa-solid fa-users"></i>
+                <span>暂无角色信息</span>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 物品、装备、任务 -->
         <div class="acu-dash-intel" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'items' }">
-          <h3 class="acu-dash-section-title">
-            <i class="fa-solid fa-bag-shopping"></i>
-            物品 ({{ bagList.length }})
-          </h3>
-          <div class="acu-bag-grid">
-            <div v-for="item in bagList" :key="item.name" class="acu-bag-item">
-              <i class="fa-solid fa-cube"></i>
-              <span>{{ item.name }}</span>
-              <span class="count">×{{ item.count }}</span>
-              <i class="fa-solid fa-hand-pointer acu-action-icon"></i>
+          <!-- 物品区（可折叠） -->
+          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('items') }">
+            <div class="acu-collapsible-header" @click="toggleSection('items')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-bag-shopping"></i>
+                物品 ({{ bagList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
             </div>
-          </div>
-          
-          <h3 class="acu-dash-section-title" style="margin-top: 12px;">
-            <i class="fa-solid fa-shield-halved"></i>
-            装备 ({{ equipList.length }})
-          </h3>
-          <div class="acu-equip-grid">
-            <div v-for="item in equipList" :key="item.name" class="acu-equip-item">
-              <i class="fa-solid fa-shirt"></i>
-              <span>{{ item.name }}</span>
-            </div>
-          </div>
-          
-          <h3 class="acu-dash-section-title" style="margin-top: 12px;">
-            <i class="fa-solid fa-clipboard-list"></i>
-            任务 ({{ questList.length }})
-          </h3>
-          <div class="acu-quest-list">
-            <div v-for="quest in questList" :key="quest.name" class="acu-quest-item">
-              <div class="q-name" :class="{ 'main-quest': quest.type.includes('主线') }">
-                {{ quest.name }}
+            <div class="acu-collapsible-content">
+              <div v-if="bagList.length" class="acu-bag-grid">
+                <div v-for="item in bagList" :key="item.name" class="acu-bag-item">
+                  <i class="fa-solid fa-cube"></i>
+                  <span>{{ item.name }}</span>
+                  <span class="count">×{{ item.count }}</span>
+                  <i class="fa-solid fa-hand-pointer acu-action-icon"></i>
+                </div>
               </div>
-              <div v-if="quest.progress > 0" class="q-progress">
-                <div class="bar" :style="{ width: quest.progress + '%' }"></div>
+              <div v-else class="acu-empty-state">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <span>背包空空如也</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 装备区（可折叠） -->
+          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('equips') }">
+            <div class="acu-collapsible-header" @click="toggleSection('equips')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-shield-halved"></i>
+                装备 ({{ equipList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div v-if="equipList.length" class="acu-equip-grid">
+                <div v-for="item in equipList" :key="item.name" class="acu-equip-item">
+                  <i class="fa-solid fa-shirt"></i>
+                  <span>{{ item.name }}</span>
+                </div>
+              </div>
+              <div v-else class="acu-empty-state">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>暂无装备</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 任务区（可折叠） -->
+          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('quests') }">
+            <div class="acu-collapsible-header" @click="toggleSection('quests')">
+              <h4 class="acu-section-title">
+                <i class="fa-solid fa-clipboard-list"></i>
+                任务 ({{ questList.length }})
+              </h4>
+              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
+            </div>
+            <div class="acu-collapsible-content">
+              <div v-if="questList.length" class="acu-quest-list">
+                <div v-for="quest in questList" :key="quest.name" class="acu-quest-item">
+                  <div class="q-name" :class="{ 'main-quest': quest.type.includes('主线') }">
+                    {{ quest.name }}
+                  </div>
+                  <div v-if="quest.progress > 0" class="q-progress">
+                    <div class="bar" :style="{ width: quest.progress + '%' }"></div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="acu-empty-state">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>暂无进行中的任务</span>
               </div>
             </div>
           </div>
@@ -715,6 +815,28 @@ function handleDice(name: string, val: any) {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ========== 空状态 ========== */
+.acu-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--acu-space-sm, 8px);
+  padding: var(--acu-space-lg, 16px) var(--acu-space-md, 12px);
+  color: var(--acu-text-sub);
+  opacity: 0.6;
+  
+  i {
+    font-size: var(--acu-font-xl, 20px);
+    opacity: 0.5;
+  }
+  
+  span {
+    font-size: var(--acu-font-sm, 12px);
+    text-align: center;
   }
 }
 
