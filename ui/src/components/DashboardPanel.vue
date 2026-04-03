@@ -287,6 +287,35 @@ const levelProgress = computed(() => {
   };
 });
 
+const radarChart = computed(() => {
+  const baseAttrs = playerInfo.value?.baseAttrs || [];
+  const maxSingle = levelProgress.value?.maxSingle || 100;
+  
+  const attrOrder = ['力量', '敏捷', '体质', '智力', '感知', '魅力'];
+  
+  const attrs: { name: string; value: number; percent: number }[] = attrOrder.map(name => {
+    const attr = baseAttrs.find((a: any) => a.name === name);
+    const value = attr ? Number(attr.value) || 0 : 0;
+    const percent = Math.min(100, (value / maxSingle) * 100);
+    return { name, value, percent };
+  });
+  
+  const points = attrs.map((attr, i) => {
+    const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
+    const radius = (attr.percent / 100) * 40;
+    return {
+      x: 50 + radius * Math.cos(angle),
+      y: 50 + radius * Math.sin(angle)
+    };
+  });
+  
+  const pathData = points.map((p, i) => 
+    (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)
+  ).join(' ') + ' Z';
+  
+  return { attrs, pathData, maxSingle };
+});
+
 const playerHP = computed(() => {
   const attrs = playerInfo.value?.combatAttrs;
   
@@ -446,10 +475,6 @@ const questList = computed(() => {
     };
   });
 });
-
-function handleDice(name: string, val: any) {
-  (window as any).AcuDice?.check({ attribute: name, attributeValue: Number(val) });
-}
 </script>
 
 <template>
@@ -647,30 +672,55 @@ function handleDice(name: string, val: any) {
               <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
             </div>
             <div class="acu-collapsible-content">
-              <div class="acu-attr-visual-grid">
-                <div v-for="attr in playerInfo?.baseAttrs" :key="attr.name" class="acu-attr-visual-item">
-                  <div class="acu-attr-header">
-                    <span class="acu-attr-name">{{ attr.name }}</span>
-                    <span class="acu-attr-value">{{ attr.value }}</span>
-                  </div>
-                  <div class="acu-attr-bar">
-                    <div 
-                      class="acu-attr-fill" 
-                      :style="{ 
-                        width: getAttrPercent(Number(attr.value)) + '%',
-                        background: getAttrColor(getAttrPercent(Number(attr.value)))
-                      }"
-                    ></div>
-                  </div>
-                  <button 
-                    class="acu-dice-btn" 
-                    @click="handleDice(attr.name, attr.value)" 
-                    :title="`投掷 ${attr.name} (${attr.value})`"
-                    aria-label="投掷骰子"
+              <div class="acu-radar-section">
+                <div class="acu-radar-chart">
+                  <svg viewBox="0 0 100 100" class="acu-radar-svg">
+                    <polygon 
+                      class="acu-radar-grid acu-radar-max" 
+                      points="50,10 86.6,30 86.6,70 50,90 13.4,70 13.4,30"
+                    />
+                    <polygon 
+                      class="acu-radar-grid acu-radar-grid-inner" 
+                      points="50,30 73.2,40 73.2,60 50,70 26.8,60 26.8,40"
+                    />
+                    <polygon 
+                      class="acu-radar-area" 
+                      :points="radarChart.pathData.replace(/[MLZ]/g, ' ').trim()"
+                    />
+                    <circle 
+                      v-for="(p, i) in radarChart.attrs" 
+                      :key="i"
+                      class="acu-radar-point"
+                      :cx="50 + (p.percent / 100) * 40 * Math.cos((Math.PI * 2 * i) / 6 - Math.PI / 2)"
+                      :cy="50 + (p.percent / 100) * 40 * Math.sin((Math.PI * 2 * i) / 6 - Math.PI / 2)"
+                      r="2"
+                    />
+                    <text 
+                      v-for="(p, i) in radarChart.attrs" 
+                      :key="'label-'+i"
+                      class="acu-radar-label"
+                      :x="50 + 48 * Math.cos((Math.PI * 2 * i) / 6 - Math.PI / 2)"
+                      :y="50 + 48 * Math.sin((Math.PI * 2 * i) / 6 - Math.PI / 2)"
+                      text-anchor="middle"
+                      dominant-baseline="middle"
+                    >{{ p.value }}</text>
+                  </svg>
+                </div>
+                <div class="acu-radar-attrs">
+                  <div 
+                    v-for="attr in radarChart.attrs" 
+                    :key="attr.name" 
+                    class="acu-radar-attr-item"
                   >
-                    <i class="fa-solid fa-dice-d20"></i>
-                    <span class="acu-dice-hint">投掷</span>
-                  </button>
+                    <span class="acu-radar-attr-name">{{ attr.name }}</span>
+                    <span class="acu-radar-attr-value">{{ attr.value }}/{{ radarChart.maxSingle }}</span>
+                    <div class="acu-radar-attr-bar">
+                      <div 
+                        class="acu-radar-attr-fill"
+                        :style="{ width: attr.percent + '%' }"
+                      ></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -686,30 +736,10 @@ function handleDice(name: string, val: any) {
               <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
             </div>
             <div class="acu-collapsible-content">
-              <div class="acu-attr-visual-grid">
-                <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-attr-visual-item special">
-                  <div class="acu-attr-header">
-                    <span class="acu-attr-name">{{ attr.name }}</span>
-                    <span class="acu-attr-value">{{ attr.value }}</span>
-                  </div>
-                  <div class="acu-attr-bar">
-                    <div 
-                      class="acu-attr-fill" 
-                      :style="{ 
-                        width: getAttrPercent(Number(attr.value)) + '%',
-                        background: getAttrColor(getAttrPercent(Number(attr.value)))
-                      }"
-                    ></div>
-                  </div>
-                  <button 
-                    class="acu-dice-btn" 
-                    @click="handleDice(attr.name, attr.value)" 
-                    :title="`投掷 ${attr.name} (${attr.value})`"
-                    aria-label="投掷骰子"
-                  >
-                    <i class="fa-solid fa-dice-d20"></i>
-                    <span class="acu-dice-hint">投掷</span>
-                  </button>
+              <div class="acu-special-attrs-grid">
+                <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-special-attr-item">
+                  <span class="acu-special-attr-name">{{ attr.name }}</span>
+                  <span class="acu-special-attr-value">{{ attr.value }}%</span>
                 </div>
               </div>
             </div>
@@ -1359,6 +1389,134 @@ function handleDice(name: string, val: any) {
   line-height: 1.3;
 }
 
+/* ========== 六维图 ========== */
+.acu-radar-section {
+  display: flex;
+  gap: var(--acu-space-md, 12px);
+  align-items: flex-start;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.acu-radar-chart {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.acu-radar-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.acu-radar-grid {
+  fill: none;
+  stroke: var(--acu-border);
+  stroke-width: 0.5;
+  
+  &.acu-radar-max {
+    stroke: var(--acu-accent);
+    stroke-width: 1;
+    stroke-dasharray: 3 2;
+    stroke-opacity: 0.6;
+  }
+  
+  &.acu-radar-grid-inner {
+    stroke-opacity: 0.3;
+  }
+}
+
+.acu-radar-area {
+  fill: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.3);
+  stroke: var(--acu-accent);
+  stroke-width: 1.5;
+}
+
+.acu-radar-point {
+  fill: var(--acu-accent);
+}
+
+.acu-radar-label {
+  font-size: 7px;
+  font-weight: 600;
+  fill: var(--acu-text-main);
+}
+
+.acu-radar-attrs {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+  }
+}
+
+.acu-radar-attr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acu-radar-attr-name {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  font-weight: 500;
+}
+
+.acu-radar-attr-value {
+  font-size: 11px;
+  color: var(--acu-text-main);
+  font-weight: 600;
+}
+
+.acu-radar-attr-bar {
+  height: 3px;
+  background: var(--acu-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.acu-radar-attr-fill {
+  height: 100%;
+  background: var(--acu-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ========== 特有属性 ========== */
+.acu-special-attrs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--acu-space-xs, 4px);
+}
+
+.acu-special-attr-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1);
+  border: 1px solid rgba(var(--acu-accent-rgb, 137, 180, 250), 0.3);
+  border-radius: var(--acu-radius-md, 6px);
+}
+
+.acu-special-attr-name {
+  font-size: 11px;
+  color: var(--acu-text-sub);
+}
+
+.acu-special-attr-value {
+  font-size: 11px;
+  color: var(--acu-accent);
+  font-weight: 600;
+}
+
 /* ========== 属性可视化进度条 ========== */
 .acu-attr-visual-grid {
   display: flex;
@@ -1405,11 +1563,6 @@ function handleDice(name: string, val: any) {
       border-radius: var(--acu-radius-full, 9999px);
       transition: width 0.3s ease, background 0.3s ease;
     }
-  }
-  
-  .acu-dice-btn {
-    grid-column: 2;
-    grid-row: 1 / 3;
   }
   
   &.special {
@@ -2139,72 +2292,6 @@ function handleDice(name: string, val: any) {
   .acu-dash-body {
     grid-template-columns: 1fr;
   }
-}
-
-/* ========== 骰子按钮 ========== */
-.acu-dice-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--acu-space-2xs, 2px);
-  padding: var(--acu-space-xs, 4px) var(--acu-space-sm, 8px);
-  border: 1px solid transparent;
-  border-radius: var(--acu-radius-md, 6px);
-  background: transparent;
-  color: var(--acu-text-sub);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  position: relative;
-  overflow: hidden;
-  
-  i {
-    font-size: 12px;
-    opacity: 0.6;
-    transition: all 0.15s ease;
-  }
-  
-  .acu-dice-hint {
-    max-width: 0;
-    overflow: hidden;
-    opacity: 0;
-    font-size: var(--acu-font-xs, 11px);
-    white-space: nowrap;
-    transition: all 0.2s ease;
-  }
-  
-  &:hover {
-    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.15);
-    border-color: var(--acu-accent);
-    color: var(--acu-accent);
-    padding: var(--acu-space-xs, 4px) var(--acu-space-md, 12px);
-    
-    i {
-      opacity: 1;
-      animation: acuDiceShake 0.4s ease;
-    }
-    
-    .acu-dice-hint {
-      max-width: 50px;
-      opacity: 1;
-      margin-left: var(--acu-space-2xs, 2px);
-    }
-  }
-  
-  &:active {
-    transform: scale(0.92);
-    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.25);
-  }
-  
-  &:focus-visible {
-    outline: 2px solid var(--acu-accent);
-    outline-offset: 2px;
-  }
-}
-
-@keyframes acuDiceShake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-15deg); }
-  75% { transform: rotate(15deg); }
 }
 
 /* ========== 战斗状态视觉区分 ========== */

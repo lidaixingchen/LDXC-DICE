@@ -60,9 +60,12 @@ const attackType = ref<'物理' | '法术'>('物理');
 const attackPower = ref<number | string>('');
 const targetDefense = ref<number | string>('');
 const charisma = ref<number | string>('');
-const targetDodgeMod = ref<number | string>('');
+const targetDDC = ref<number | string>('');
 
-const enemyAtkMod = ref<number | string>('');
+const agilityValue = ref<number | string>('');
+const perceptionValue = ref<number | string>('');
+const dodgeBonus = ref<number | string>('');
+const enemyAttackDC = ref<number | string>('');
 const enemyAttackPower = ref<number | string>('');
 const playerDefense = ref<number | string>('');
 
@@ -870,9 +873,7 @@ async function handleCombatCheck(): Promise<void> {
   const masteryBonus = getMasteryBonus(level);
   const mod = modifier.value !== '' ? Number(modifier.value) : 0;
 
-  const baseDDC = getBaseDC(level);
-  const dodgeMod = targetDodgeMod.value !== '' ? Number(targetDodgeMod.value) : 0;
-  const finalDC = baseDDC + dodgeMod;
+  const finalDC = targetDDC.value !== '' ? Number(targetDDC.value) : getBaseDC(level);
 
   const atkPower = attackPower.value !== '' ? Number(attackPower.value) : 10;
   const tgtDefense = targetDefense.value !== '' ? Number(targetDefense.value) : 5;
@@ -904,8 +905,8 @@ async function handleCombatCheck(): Promise<void> {
     outcomeText = '未命中！';
   }
 
-  const levelName = level.replace('级', '');
-  const atkTypeLabel = attackType.value;
+  const atkTypeLabel = attackType.value === 'physical' ? '物理攻击' : '法术攻击';
+  const attrLabel = attackType.value === 'physical' ? '力量' : '智力';
 
   lastResult.value = {
     success: isSuccess,
@@ -916,25 +917,23 @@ async function handleCombatCheck(): Promise<void> {
     criticalSuccess: isCrit,
     criticalFailure: false,
     outcome: outcomeText,
-    message: `D20(${rollTotal}) + 属性(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${atkTypeLabel}伤害: ${finalDamage}${isCrit ? ' (暴击x2)' : ''}`,
+    message: `D20(${rollTotal}) + ${attrLabel}(${attrMod}) + 掌握(${masteryBonus}) = ${finalValue} | ${atkTypeLabel}伤害: ${finalDamage}${isCrit ? ' (暴击x2)' : ''}`,
     diceType: formula,
     presetId: 'combat',
   };
   showResult.value = true;
 
-  const initiator = initiatorName.value || '<user>';
   const content = `<meta:检定结果>
 【AIDM战斗检定 - ${atkTypeLabel}】
 
 🎲 判定过程：
 ・D20投骰：${rollTotal}
-・属性加成：${attrMod}（${attrName.value || '属性'}: ${attrVal}）
+・${attrLabel}加成：${attrMod}（${attrLabel}: ${attrVal}）
 ・掌握加成：${masteryBonus}
 ・额外修正：${mod}
 ・最终值：${finalValue}
 
 📊 DDC对比：${finalValue} ${isHit ? '≥' : '<'} ${finalDC}
-（目标等级${levelName}级，基础DDC ${baseDDC}，闪避加值${dodgeMod}）
 ${isCrit ? '⚡ 暴击命中！' : (isHit ? '✅ 命中！' : '❌ 未命中！')}
 
 ⚔️ 伤害计算：
@@ -947,28 +946,30 @@ ${isCrit ? '・暴击倍率：x2' : ''}
 </meta:检定结果>`;
   await sendToTextarea(content);
 
-  addCheckEntry(lastResult.value, { initiatorName: initiator });
+  addCheckEntry(lastResult.value, { initiatorName: '<user>' });
 }
 
 async function handleDefenseCheck(): Promise<void> {
   const formula = '1d20';
   const level = worldLevel.value;
 
-  const attrVal = attrValue.value !== '' ? Number(attrValue.value) : 10;
-  const attrMod = computeAIDMAttrMod(attrVal);
+  const agiVal = agilityValue.value !== '' ? Number(agilityValue.value) : 10;
+  const perVal = perceptionValue.value !== '' ? Number(perceptionValue.value) : 10;
+  const bestAttrVal = Math.max(agiVal, perVal);
+  const bestAttrName = agiVal >= perVal ? '敏捷' : '感知';
+  const attrMod = computeAIDMAttrMod(bestAttrVal);
   const masteryBonus = getMasteryBonus(level);
-  const dodgeMod = modifier.value !== '' ? Number(modifier.value) : 0;
+  const dodgeVal = dodgeBonus.value !== '' ? Number(dodgeBonus.value) : 0;
 
-  const worldBaseDC = getBaseDC(level);
-  const enemyAttrMod = enemyAtkMod.value !== '' ? Number(enemyAtkMod.value) : 0;
-  const finalDC = worldBaseDC + enemyAttrMod + masteryBonus;
+  const finalDC = enemyAttackDC.value !== '' ? Number(enemyAttackDC.value) : getBaseDC(level);
+  const myDDC = 10 + attrMod + dodgeVal;
 
   const enemyAtkPower = enemyAttackPower.value !== '' ? Number(enemyAttackPower.value) : 10;
   const myDefense = playerDefense.value !== '' ? Number(playerDefense.value) : 5;
 
   const result = roll(formula);
   const rollTotal = result.total;
-  const finalValue = rollTotal + attrMod + dodgeMod;
+  const finalValue = rollTotal + attrMod + masteryBonus + dodgeVal;
 
   const isDodge = finalValue >= finalDC;
 
@@ -985,8 +986,6 @@ async function handleDefenseCheck(): Promise<void> {
     outcomeText = '被击中！';
   }
 
-  const levelName = level.replace('级', '');
-
   lastResult.value = {
     success: isSuccess,
     roll: rollTotal,
@@ -996,25 +995,25 @@ async function handleDefenseCheck(): Promise<void> {
     criticalSuccess: false,
     criticalFailure: false,
     outcome: outcomeText,
-    message: `D20(${rollTotal}) + 属性(${attrMod})${dodgeMod !== 0 ? ` + 闪避(${dodgeMod})` : ''} = ${finalValue} | ${isDodge ? '闪避成功' : `承受伤害: ${baseDamage}`}`,
+    message: `D20(${rollTotal}) + ${bestAttrName}(${attrMod}) + 掌握(${masteryBonus}) + 闪避(${dodgeVal}) = ${finalValue} | ${isDodge ? '闪避成功' : `承受伤害: ${baseDamage}`}`,
     diceType: formula,
     presetId: 'defense',
   };
   showResult.value = true;
 
-  const initiator = initiatorName.value || '<user>';
   const content = `<meta:检定结果>
 【AIDM防守检定】
 
 🎲 判定过程：
 ・D20投骰：${rollTotal}
-・敏捷/感知属性加成：${attrMod}
-・掌握加成：已含于敌方DC中
-・装备闪避加值：${dodgeMod}
+・闪避属性：${bestAttrName}（取高：${bestAttrVal}）
+・属性加成：${attrMod}
+・掌握加成：${masteryBonus}
+・装备闪避：${dodgeVal}
 ・最终值：${finalValue}
 
 📊 DC对比：${finalValue} ${isDodge ? '≥' : '<'} ${finalDC}
-（敌方等级${levelName}级，基础DC ${worldBaseDC}，敌方属性加成${enemyAttrMod}，敌方掌握加成${masteryBonus}）
+・我方DDC：${myDDC}
 ${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
 
 ⚔️ 被击中伤害：
@@ -1025,7 +1024,7 @@ ${isDodge ? '✅ 闪避成功！' : '❌ 被击中！'}
 </meta:检定结果>`;
   await sendToTextarea(content);
 
-  addCheckEntry(lastResult.value, { initiatorName: initiator });
+  addCheckEntry(lastResult.value, { initiatorName: '<user>' });
 }
 
 function quickRoll(type: 'normal' | 'advantage' | 'disadvantage'): void {
@@ -1621,18 +1620,6 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="acu-dice-form-row cols-2">
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">魅力值</div>
-            <input v-model="charisma" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-          <div class="acu-crit-display">
-            <span class="acu-crit-icon">💥</span>
-            <span class="acu-crit-label">暴击率</span>
-            <span class="acu-crit-value">{{ critRate }}%</span>
-          </div>
-        </div>
-
         <div class="acu-dc-quick-selector">
           <button
             v-for="opt in DIFFICULTY_OPTIONS"
@@ -1801,90 +1788,57 @@ onMounted(() => {
         </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">名字</div>
-            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">
-              <span>攻击属性名</span>
-              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
-                <i class="fa-solid fa-dice"></i>
-              </button>
-            </div>
-            <div class="acu-dice-input-wrapper">
-              <input 
-                v-model="attrName" 
-                type="text" 
-                class="acu-dice-input" 
-                placeholder="力量/敏捷"
-                @focus="attrDropdown.update(attributeButtons)"
-                @blur="attrDropdown.close()"
-              />
-              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
-                <div 
-                  v-for="a in attrDropdown.suggestions.value" 
-                  :key="a.name"
-                  class="acu-dropdown-item"
-                  @mousedown.prevent="handleSelectAttribute(a)"
-                >
-                  <span class="acu-dropdown-label">{{ a.name }}</span>
-                  <span class="acu-dropdown-value">{{ a.value }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="acu-dice-field">
-            <div class="acu-dice-form-label">攻击属性值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="留空=10" />
-          </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
-          <div class="acu-dice-field">
             <div class="acu-dice-form-label">攻击类型</div>
             <select v-model="attackType" class="acu-dice-select">
               <option v-for="o in ATTACK_TYPE_OPTIONS" :key="o.value" :value="o.value">{{ o.label }}</option>
             </select>
           </div>
-          <div>
-            <div class="acu-dice-form-label">攻击力</div>
-            <input v-model="attackPower" type="text" class="acu-dice-input" placeholder="10" />
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">攻击属性值</div>
+            <input v-model="attrValue" type="text" class="acu-dice-input" :placeholder="attackType === 'physical' ? '力量' : '智力'" />
           </div>
-          <div>
-            <div class="acu-dice-form-label">目标防御</div>
-            <input v-model="targetDefense" type="text" class="acu-dice-input" placeholder="5" />
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">魅力值</div>
+            <input v-model="charisma" type="text" class="acu-dice-input" placeholder="暴击率计算" />
           </div>
         </div>
 
         <div class="acu-dice-form-row cols-3">
-          <div>
-            <div class="acu-dice-form-label">魅力值</div>
-            <input v-model="charisma" type="text" class="acu-dice-input" placeholder="10" />
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">攻击力</div>
+            <input v-model="attackPower" type="text" class="acu-dice-input" placeholder="含武器加成" />
           </div>
-          <div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">目标DDC</div>
+            <input v-model="targetDDC" type="text" class="acu-dice-input" placeholder="闪避难度" />
+          </div>
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">目标防御</div>
+            <input v-model="targetDefense" type="text" class="acu-dice-input" placeholder="伤害计算用" />
+          </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-2">
+          <div class="acu-dice-field">
             <div class="acu-dice-form-label">修正值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
-          </div>
-          <div>
-            <div class="acu-dice-form-label">目标闪避加值</div>
-            <input v-model="targetDodgeMod" type="text" class="acu-dice-input" placeholder="0" />
           </div>
         </div>
 
         <div class="acu-info-cards">
           <div class="acu-info-card">
-            <div class="label">属性加成</div>
+            <div class="label">{{ attackType === 'physical' ? '力量' : '智力' }}加成</div>
             <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
               {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
             </div>
           </div>
           <div class="acu-info-card">
-            <div class="label">暴击率</div>
-            <div class="value positive">{{ computeCritRate(charisma !== '' ? Number(charisma) : 10) }}%</div>
+            <div class="label">掌握加成</div>
+            <div class="value positive">+{{ getMasteryBonus(worldLevel) }}</div>
           </div>
           <div class="acu-info-card">
-            <div class="label">目标DDC</div>
-            <div class="value">{{ getBaseDC(worldLevel) + (targetDodgeMod !== '' ? Number(targetDodgeMod) : 0) }}</div>
+            <div class="label">暴击率</div>
+            <div class="value positive">{{ computeCritRate(charisma !== '' ? Number(charisma) : 10) }}%</div>
           </div>
         </div>
 
@@ -1915,73 +1869,63 @@ onMounted(() => {
         </div>
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">
-              <span>闪避属性名</span>
-              <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
-                <i class="fa-solid fa-dice"></i>
-              </button>
-            </div>
-            <div class="acu-dice-input-wrapper">
-              <input 
-                v-model="attrName" 
-                type="text" 
-                class="acu-dice-input" 
-                placeholder="敏捷/感知"
-                @focus="attrDropdown.update(attributeButtons)"
-                @blur="attrDropdown.close()"
-              />
-              <div v-if="attrDropdown.isOpen.value" class="acu-dropdown-suggestions">
-                <div 
-                  v-for="a in attrDropdown.suggestions.value" 
-                  :key="a.name"
-                  class="acu-dropdown-item"
-                  @mousedown.prevent="handleSelectAttribute(a)"
-                >
-                  <span class="acu-dropdown-label">{{ a.name }}</span>
-                  <span class="acu-dropdown-value">{{ a.value }}</span>
-                </div>
-              </div>
-            </div>
+            <div class="acu-dice-form-label">敏捷值</div>
+            <input v-model="agilityValue" type="text" class="acu-dice-input" placeholder="敏捷属性" />
           </div>
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">闪避属性值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="敏捷/感知取高" />
+            <div class="acu-dice-form-label">感知值</div>
+            <input v-model="perceptionValue" type="text" class="acu-dice-input" placeholder="感知属性" />
           </div>
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">闪避加值</div>
-            <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
+            <input v-model="dodgeBonus" type="text" class="acu-dice-input" placeholder="装备加成" />
           </div>
         </div>
 
         <div class="acu-dice-form-row cols-3">
-          <div>
-            <div class="acu-dice-form-label">敌方攻击修正</div>
-            <input v-model="enemyAtkMod" type="text" class="acu-dice-input" placeholder="0" />
+          <div class="acu-dice-field">
+            <div class="acu-dice-form-label">敌方攻击DC</div>
+            <input v-model="enemyAttackDC" type="text" class="acu-dice-input" placeholder="命中难度" />
           </div>
-          <div>
+          <div class="acu-dice-field">
             <div class="acu-dice-form-label">敌方攻击力</div>
-            <input v-model="enemyAttackPower" type="text" class="acu-dice-input" placeholder="10" />
+            <input v-model="enemyAttackPower" type="text" class="acu-dice-input" placeholder="伤害计算用" />
           </div>
-          <div>
+          <div class="acu-dice-field">
             <div class="acu-dice-form-label">我方防御</div>
-            <input v-model="playerDefense" type="text" class="acu-dice-input" placeholder="5" />
+            <input v-model="playerDefense" type="text" class="acu-dice-input" placeholder="减伤计算用" />
           </div>
         </div>
 
         <div class="acu-info-cards">
           <div class="acu-info-card">
+            <div class="label">闪避属性</div>
+            <div class="value">{{ Math.max(agilityValue !== '' ? Number(agilityValue) : 10, perceptionValue !== '' ? Number(perceptionValue) : 10) }} ({{ (agilityValue !== '' ? Number(agilityValue) : 10) >= (perceptionValue !== '' ? Number(perceptionValue) : 10) ? '敏捷' : '感知' }})</div>
+          </div>
+          <div class="acu-info-card">
             <div class="label">属性加成</div>
-            <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
-              {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
+            <div class="value" :class="{ positive: computeAIDMAttrMod(Math.max(agilityValue !== '' ? Number(agilityValue) : 10, perceptionValue !== '' ? Number(perceptionValue) : 10)) > 0 }">
+              {{ computeAIDMAttrMod(Math.max(agilityValue !== '' ? Number(agilityValue) : 10, perceptionValue !== '' ? Number(perceptionValue) : 10)) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(Math.max(agilityValue !== '' ? Number(agilityValue) : 10, perceptionValue !== '' ? Number(perceptionValue) : 10)) }}
             </div>
           </div>
           <div class="acu-info-card">
             <div class="label">掌握加成</div>
             <div class="value positive">+{{ getMasteryBonus(worldLevel) }}</div>
           </div>
+        </div>
+
+        <div class="acu-info-cards">
           <div class="acu-info-card">
-            <div class="label">闪避DC</div>
-            <div class="value">{{ getBaseDC(worldLevel) + (enemyAtkMod !== '' ? Number(enemyAtkMod) : 0) }}</div>
+            <div class="label">我方DDC</div>
+            <div class="value">{{ 10 + computeAIDMAttrMod(Math.max(agilityValue !== '' ? Number(agilityValue) : 10, perceptionValue !== '' ? Number(perceptionValue) : 10)) + (dodgeBonus !== '' ? Number(dodgeBonus) : 0) }}</div>
+          </div>
+          <div class="acu-info-card">
+            <div class="label">被击伤害</div>
+            <div class="value">{{ Math.max(1, Math.floor((enemyAttackPower !== '' ? Number(enemyAttackPower) : 10) * (1 - computeDamageReduction(playerDefense !== '' ? Number(playerDefense) : 5, enemyAttackPower !== '' ? Number(enemyAttackPower) : 10)))) }}</div>
+          </div>
+          <div class="acu-info-card">
+            <div class="label">伤害减免</div>
+            <div class="value">{{ Math.round(computeDamageReduction(playerDefense !== '' ? Number(playerDefense) : 5, enemyAttackPower !== '' ? Number(enemyAttackPower) : 10) * 100) }}%</div>
           </div>
         </div>
       </div>
@@ -3713,8 +3657,12 @@ onMounted(() => {
 
 .acu-dual-column {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
+
+  &:has(.acu-quick-panel) {
+    grid-template-columns: 200px 1fr;
+  }
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
