@@ -1,0 +1,222 @@
+/* ===================================
+   排版工具类
+   =================================== */
+
+/* ========== 标题样式 ========== */
+.acu-heading-1,
+.acu-h1 {
+  font-size: var(--acu-heading-1);
+  font-weight: var(--acu-font-weight-bold);
+  line-height: var(--acu-line-height-tight);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--acu-space-lg);
+  color: var(--acu-text-main);
+}
+
+.acu-heading-2,
+.acu-h2 {
+  font-size: var(--acu-heading-2);
+  font-weight: var(--acu-font-weight-semibold);
+  line-height: var(--acu-line-height-tight);
+  letter-spacing: -0.01em;
+  margin-bottom: var(--acu-space-md);
+  color: var(--acu-text-main);
+}
+
+.acu-heading-3,
+.acu-h3 {
+  font-size: var(--acu-heading-3);
+  font-weight: var(--acu-font-weight-semibold);
+  line-height: var(--acu-line-height-tight);
+  margin-bottom: var(--acu-space-md);
+  color: var(--acu-text-main);
+}
+
+.acu-heading-4,
+.acu-h4 {
+  font-size: var(--acu-heading-4);
+  font-weight: var(--acu-font-weight-medium);
+  line-height: var(--acu-line-height-normal);
+  margin-bottom: var(--acu-space-sm);
+  color: var(--acu-text-main);
+}
+
+.acu-heading-5,
+.acu-h5 {
+  font-size: var(--acu-heading-5);
+  font-weight: var(--acu-font-weight-medium);
+  line-height: var(--acu-line-height-normal);
+  margin-bottom: var(--acu-space-sm);
+  color: var(--acu-text-main);
+}
+
+.acu-heading-6,
+.acu-h6 {
+  font-size: var(--acu-heading-6);
+  font-weight: var(--acu-font-weight-medium);
+  line-height: var(--acu-line-height-normal);
+  margin-bottom: var(--acu-space-sm);
+  color: var(--acu-text-sub);
+}
+
+/* ========== 字体大小工具类 ========== */
+.acu-text-xs { font-size: var(--acu-font-xs); }
+.acu-text-sm { font-size: var(--acu-font-sm); }
+.acu-text-md { font-size: var(--acu-font-md); }
+.acu-text-lg { font-size: var(--acu-font-lg); }
+.acu-text-xl { font-size: var(--acu-font-xl); }
+.acu-text-2xl { font-size: var(--acu-font-2xl); }
+.acu-text-3xl { font-size: var(--acu-font-3xl); }
+.acu-text-4xl { font-size: var(--acu-font-4xl); }
+.acu-text-5xl { font-size: var(--acu-font-5xl); }
+.acu-text-6xl { font-size: var(--acu-font-6xl); }
+.acu-text-7xl { font-size: var(--acu-font-7xl); }
+
+/* ========== 字体粗细工具类 ========== */
+.acu-font-normal { font-weight: var(--acu-font-weight-normal); }
+.acu-font-medium { font-weight: var(--acu-font-weight-medium); }
+.acu-font-semibold { font-weight: var(--acu-font-weight-semibold); }
+.acu-font-bold { font-weight: var(--acu-font-weight-bold); }
+
+/* ========== 行高工具类 ========== */
+.acu-leading-tight { line-height: var(--acu-line-height-tight); }
+.acu-leading-normal { line-height: var(--acu-line-height-normal); }
+.acu-leading-relaxed { line-height: var(--acu-line-height-relaxed); }
+.acu-leading-loose { line-height: var(--acu-line-height-loose); }
+
+/* ========== 文本对齐 ========== */
+.acu-text-left { text-align: left; }
+.acu-text-center { text-align: center; }
+.acu-text-right { text-align: right; }
+.acu-text-justify { text-align: justify; }
+
+/* ========== 文本转换 ========== */
+.acu-uppercase { text-transform: uppercase; }
+.acu-lowercase { text-transform: lowercase; }
+.acu-capitalize { text-transform: capitalize; }
+.acu-normal-case { text-transform: none; }
+
+/* ========== 文本装饰 ========== */
+.acu-underline { text-decoration: underline; }
+.acu-line-through { text-decoration: line-through; }
+.acu-no-underline { text-decoration: none; }
+
+/* ========== 字母间距 ========== */
+.acu-tracking-tighter { letter-spacing: -0.05em; }
+.acu-tracking-tight { letter-spacing: -0.025em; }
+.acu-tracking-normal { letter-spacing: 0; }
+.acu-tracking-wide { letter-spacing: 0.025em; }
+.acu-tracking-wider { letter-spacing: 0.05em; }
+.acu-tracking-widest { letter-spacing: 0.1em; }
+
+/* ========== 文本颜色对比度工具类 ========== */
+.acu-text-high-contrast {
+  color: var(--acu-gray-900);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-50);
+  }
+}
+
+.acu-text-medium-contrast {
+  color: var(--acu-gray-700);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-300);
+  }
+}
+
+.acu-text-low-contrast {
+  color: var(--acu-gray-500);
+  
+  .acu-theme-dark & {
+    color: var(--acu-gray-400);
+  }
+}
+
+/* ========== 文本溢出 ========== */
+.acu-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acu-break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.acu-break-all {
+  word-break: break-all;
+}
+
+/* ========== 段落间距 ========== */
+.acu-paragraph {
+  margin-bottom: var(--acu-space-md);
+  line-height: var(--acu-line-height-relaxed);
+}
+
+.acu-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* ========== 列表样式 ========== */
+.acu-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.acu-list-disc {
+  list-style: disc;
+  padding-left: var(--acu-space-xl);
+}
+
+.acu-list-decimal {
+  list-style: decimal;
+  padding-left: var(--acu-space-xl);
+}
+
+.acu-list-item {
+  margin-bottom: var(--acu-space-xs);
+  line-height: var(--acu-line-height-relaxed);
+}
+
+.acu-list-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ========== 响应式排版 ========== */
+@media (max-width: 767.98px) {
+  .acu-heading-1,
+  .acu-h1 {
+    font-size: calc(var(--acu-heading-1) * 0.85);
+  }
+  
+  .acu-heading-2,
+  .acu-h2 {
+    font-size: calc(var(--acu-heading-2) * 0.9);
+  }
+  
+  .acu-heading-3,
+  .acu-h3 {
+    font-size: calc(var(--acu-heading-3) * 0.95);
+  }
+}
+
+/* ========== 打印样式 ========== */
+@media print {
+  .acu-heading-1,
+  .acu-heading-2,
+  .acu-heading-3,
+  .acu-heading-4,
+  .acu-heading-5,
+  .acu-heading-6 {
+    page-break-after: avoid;
+  }
+  
+  .acu-paragraph {
+    orphans: 3;
+    widows: 3;
+  }
+}

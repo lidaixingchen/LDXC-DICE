@@ -2,6 +2,12 @@
    工具类
    =================================== */
 
+/* ========== 导入排版工具类 ========== */
+@import './typography';
+
+/* ========== 导入色彩工具类 ========== */
+@import './colors';
+
 /* ========== 显示工具 ========== */
 .d-none { display: none !important; }
 .d-inline { display: inline !important; }

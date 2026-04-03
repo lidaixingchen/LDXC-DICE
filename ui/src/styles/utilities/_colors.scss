@@ -1,0 +1,237 @@
+/* ===================================
+   色彩工具类
+   =================================== */
+
+/* ========== 语义化色彩工具类 ========== */
+
+/* 成功色 */
+.acu-text-success { color: var(--acu-color-success); }
+.acu-text-success-light { color: var(--acu-color-success-light); }
+.acu-text-success-dark { color: var(--acu-color-success-dark); }
+
+.acu-bg-success { background-color: var(--acu-color-success); }
+.acu-bg-success-light { background-color: var(--acu-color-success-light); }
+.acu-bg-success-dark { background-color: var(--acu-color-success-dark); }
+
+.acu-border-success { border-color: var(--acu-color-success); }
+.acu-border-success-light { border-color: var(--acu-color-success-light); }
+.acu-border-success-dark { border-color: var(--acu-color-success-dark); }
+
+/* 警告色 */
+.acu-text-warning { color: var(--acu-color-warning); }
+.acu-text-warning-light { color: var(--acu-color-warning-light); }
+.acu-text-warning-dark { color: var(--acu-color-warning-dark); }
+
+.acu-bg-warning { background-color: var(--acu-color-warning); }
+.acu-bg-warning-light { background-color: var(--acu-color-warning-light); }
+.acu-bg-warning-dark { background-color: var(--acu-color-warning-dark); }
+
+.acu-border-warning { border-color: var(--acu-color-warning); }
+.acu-border-warning-light { border-color: var(--acu-color-warning-light); }
+.acu-border-warning-dark { border-color: var(--acu-color-warning-dark); }
+
+/* 错误色 */
+.acu-text-error { color: var(--acu-color-error); }
+.acu-text-error-light { color: var(--acu-color-error-light); }
+.acu-text-error-dark { color: var(--acu-color-error-dark); }
+
+.acu-bg-error { background-color: var(--acu-color-error); }
+.acu-bg-error-light { background-color: var(--acu-color-error-light); }
+.acu-bg-error-dark { background-color: var(--acu-color-error-dark); }
+
+.acu-border-error { border-color: var(--acu-color-error); }
+.acu-border-error-light { border-color: var(--acu-color-error-light); }
+.acu-border-error-dark { border-color: var(--acu-color-error-dark); }
+
+/* 信息色 */
+.acu-text-info { color: var(--acu-color-info); }
+.acu-text-info-light { color: var(--acu-color-info-light); }
+.acu-text-info-dark { color: var(--acu-color-info-dark); }
+
+.acu-bg-info { background-color: var(--acu-color-info); }
+.acu-bg-info-light { background-color: var(--acu-color-info-light); }
+.acu-bg-info-dark { background-color: var(--acu-color-info-dark); }
+
+.acu-border-info { border-color: var(--acu-color-info); }
+.acu-border-info-light { border-color: var(--acu-color-info-light); }
+.acu-border-info-dark { border-color: var(--acu-color-info-dark); }
+
+/* ========== 中性色工具类 ========== */
+.acu-text-gray-50 { color: var(--acu-gray-50); }
+.acu-text-gray-100 { color: var(--acu-gray-100); }
+.acu-text-gray-200 { color: var(--acu-gray-200); }
+.acu-text-gray-300 { color: var(--acu-gray-300); }
+.acu-text-gray-400 { color: var(--acu-gray-400); }
+.acu-text-gray-500 { color: var(--acu-gray-500); }
+.acu-text-gray-600 { color: var(--acu-gray-600); }
+.acu-text-gray-700 { color: var(--acu-gray-700); }
+.acu-text-gray-800 { color: var(--acu-gray-800); }
+.acu-text-gray-900 { color: var(--acu-gray-900); }
+
+.acu-bg-gray-50 { background-color: var(--acu-gray-50); }
+.acu-bg-gray-100 { background-color: var(--acu-gray-100); }
+.acu-bg-gray-200 { background-color: var(--acu-gray-200); }
+.acu-bg-gray-300 { background-color: var(--acu-gray-300); }
+.acu-bg-gray-400 { background-color: var(--acu-gray-400); }
+.acu-bg-gray-500 { background-color: var(--acu-gray-500); }
+.acu-bg-gray-600 { background-color: var(--acu-gray-600); }
+.acu-bg-gray-700 { background-color: var(--acu-gray-700); }
+.acu-bg-gray-800 { background-color: var(--acu-gray-800); }
+.acu-bg-gray-900 { background-color: var(--acu-gray-900); }
+
+.acu-border-gray-50 { border-color: var(--acu-gray-50); }
+.acu-border-gray-100 { border-color: var(--acu-gray-100); }
+.acu-border-gray-200 { border-color: var(--acu-gray-200); }
+.acu-border-gray-300 { border-color: var(--acu-gray-300); }
+.acu-border-gray-400 { border-color: var(--acu-gray-400); }
+.acu-border-gray-500 { border-color: var(--acu-gray-500); }
+.acu-border-gray-600 { border-color: var(--acu-gray-600); }
+.acu-border-gray-700 { border-color: var(--acu-gray-700); }
+.acu-border-gray-800 { border-color: var(--acu-gray-800); }
+.acu-border-gray-900 { border-color: var(--acu-gray-900); }
+
+/* ========== 主题色工具类 ========== */
+.acu-text-main { color: var(--acu-text-main); }
+.acu-text-sub { color: var(--acu-text-sub); }
+.acu-text-accent { color: var(--acu-accent); }
+
+.acu-bg-main { background-color: var(--acu-text-main); }
+.acu-bg-sub { background-color: var(--acu-text-sub); }
+.acu-bg-accent { background-color: var(--acu-accent); }
+
+.acu-border-main { border-color: var(--acu-text-main); }
+.acu-border-sub { border-color: var(--acu-text-sub); }
+.acu-border-accent { border-color: var(--acu-accent); }
+
+/* ========== 透明度工具类 ========== */
+.acu-opacity-0 { opacity: 0; }
+.acu-opacity-25 { opacity: 0.25; }
+.acu-opacity-50 { opacity: 0.5; }
+.acu-opacity-75 { opacity: 0.75; }
+.acu-opacity-100 { opacity: 1; }
+
+/* ========== 状态徽章 ========== */
+.acu-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--acu-space-2xs) var(--acu-space-sm);
+  border-radius: var(--acu-radius-full);
+  font-size: var(--acu-font-xs);
+  font-weight: var(--acu-font-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  
+  &.acu-badge-success {
+    background-color: var(--acu-color-success-light);
+    color: var(--acu-color-success-dark);
+  }
+  
+  &.acu-badge-warning {
+    background-color: var(--acu-color-warning-light);
+    color: var(--acu-color-warning-dark);
+  }
+  
+  &.acu-badge-error {
+    background-color: var(--acu-color-error-light);
+    color: var(--acu-color-error-dark);
+  }
+  
+  &.acu-badge-info {
+    background-color: var(--acu-color-info-light);
+    color: var(--acu-color-info-dark);
+  }
+  
+  &.acu-badge-neutral {
+    background-color: var(--acu-gray-100);
+    color: var(--acu-gray-700);
+  }
+}
+
+/* ========== 状态指示器 ========== */
+.acu-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--acu-space-xs);
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+  
+  &.acu-status-success {
+    color: var(--acu-color-success);
+  }
+  
+  &.acu-status-warning {
+    color: var(--acu-color-warning);
+  }
+  
+  &.acu-status-error {
+    color: var(--acu-color-error);
+  }
+  
+  &.acu-status-info {
+    color: var(--acu-color-info);
+  }
+}
+
+/* ========== 渐变背景 ========== */
+.acu-gradient-success {
+  background: linear-gradient(135deg, var(--acu-color-success) 0%, #34d399 100%);
+}
+
+.acu-gradient-warning {
+  background: linear-gradient(135deg, var(--acu-color-warning) 0%, #fbbf24 100%);
+}
+
+.acu-gradient-error {
+  background: linear-gradient(135deg, var(--acu-color-error) 0%, #f87171 100%);
+}
+
+.acu-gradient-info {
+  background: linear-gradient(135deg, var(--acu-color-info) 0%, #60a5fa 100%);
+}
+
+/* ========== 深色主题适配 ========== */
+.acu-theme-dark {
+  .acu-text-high-contrast {
+    color: var(--acu-gray-50);
+  }
+  
+  .acu-text-medium-contrast {
+    color: var(--acu-gray-300);
+  }
+  
+  .acu-text-low-contrast {
+    color: var(--acu-gray-400);
+  }
+  
+  .acu-badge-neutral {
+    background-color: var(--acu-gray-800);
+    color: var(--acu-gray-300);
+  }
+}
+
+/* ========== 浅色主题适配 ========== */
+.acu-theme-retro,
+.acu-theme-modern,
+.acu-theme-forest,
+.acu-theme-ocean,
+.acu-theme-sakura,
+.acu-theme-purple,
+.acu-theme-wechat {
+  .acu-text-high-contrast {
+    color: var(--acu-gray-900);
+  }
+  
+  .acu-text-medium-contrast {
+    color: var(--acu-gray-700);
+  }
+  
+  .acu-text-low-contrast {
+    color: var(--acu-gray-500);
+  }
+}

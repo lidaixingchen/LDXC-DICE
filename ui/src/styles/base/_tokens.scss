@@ -12,6 +12,9 @@
   --acu-space-xl: 20px;
   --acu-space-2xl: 24px;
   --acu-space-3xl: 32px;
+  --acu-space-4xl: 40px;
+  --acu-space-5xl: 48px;
+  --acu-space-6xl: 64px;
   
   /* 额外间距 */
   --acu-space-3px: 3px;
@@ -19,6 +22,11 @@
   --acu-space-6px: 6px;
   --acu-space-10px: 10px;
   --acu-space-15px: 15px;
+  
+  /* 组件特定间距 */
+  --acu-card-padding: var(--acu-space-lg);
+  --acu-panel-padding: var(--acu-space-xl);
+  --acu-section-gap: var(--acu-space-3xl);
 }
 
 /* ========== 圆角系统 ========== */
@@ -36,17 +44,27 @@
 
 /* ========== 字体大小系统 ========== */
 :root {
-  --acu-font-xs: 10px;
-  --acu-font-sm: 11px;
-  --acu-font-md: 12px;
-  --acu-font-lg: 13px;
-  --acu-font-xl: 14px;
-  --acu-font-2xl: 15px;
-  --acu-font-3xl: 16px;
-  --acu-font-4xl: 18px;
-  --acu-font-5xl: 20px;
-  --acu-font-6xl: 22px;
-  --acu-font-7xl: 24px;
+  --acu-font-xs: 11px;
+  --acu-font-sm: 12px;
+  --acu-font-md: 14px;
+  --acu-font-lg: 16px;
+  --acu-font-xl: 18px;
+  --acu-font-2xl: 20px;
+  --acu-font-3xl: 24px;
+  --acu-font-4xl: 28px;
+  --acu-font-5xl: 32px;
+  --acu-font-6xl: 40px;
+  --acu-font-7xl: 48px;
+}
+
+/* ========== 标题层级系统 ========== */
+:root {
+  --acu-heading-1: 32px;
+  --acu-heading-2: 24px;
+  --acu-heading-3: 20px;
+  --acu-heading-4: 18px;
+  --acu-heading-5: 16px;
+  --acu-heading-6: 14px;
 }
 
 /* ========== 字体粗细 ========== */
@@ -59,10 +77,10 @@
 
 /* ========== 行高 ========== */
 :root {
-  --acu-line-height-tight: 1.2;
-  --acu-line-height-normal: 1.4;
-  --acu-line-height-relaxed: 1.5;
-  --acu-line-height-loose: 1.75;
+  --acu-line-height-tight: 1.25;
+  --acu-line-height-normal: 1.5;
+  --acu-line-height-relaxed: 1.625;
+  --acu-line-height-loose: 2;
 }
 
 /* ========== 过渡时间 ========== */
@@ -149,4 +167,50 @@
   --acu-opacity-disabled: 0.5;
   --acu-opacity-hover: 0.8;
   --acu-opacity-active: 0.9;
+}
+
+/* ========== 语义化色彩系统 (WCAG 2.1 AA 合规) ========== */
+:root {
+  /* 成功色 */
+  --acu-color-success: #10b981;
+  --acu-color-success-light: #d1fae5;
+  --acu-color-success-dark: #065f46;
+  
+  /* 警告色 */
+  --acu-color-warning: #f59e0b;
+  --acu-color-warning-light: #fef3c7;
+  --acu-color-warning-dark: #92400e;
+  
+  /* 错误色 */
+  --acu-color-error: #ef4444;
+  --acu-color-error-light: #fee2e2;
+  --acu-color-error-dark: #991b1b;
+  
+  /* 信息色 */
+  --acu-color-info: #3b82f6;
+  --acu-color-info-light: #dbeafe;
+  --acu-color-info-dark: #1e40af;
+  
+  /* 中性色阶 (用于文本和背景) */
+  --acu-gray-50: #f9fafb;
+  --acu-gray-100: #f3f4f6;
+  --acu-gray-200: #e5e7eb;
+  --acu-gray-300: #d1d5db;
+  --acu-gray-400: #9ca3af;
+  --acu-gray-500: #6b7280;
+  --acu-gray-600: #4b5563;
+  --acu-gray-700: #374151;
+  --acu-gray-800: #1f2937;
+  --acu-gray-900: #111827;
+  
+  /* 交互状态色彩 */
+  --acu-state-hover-opacity: 0.08;
+  --acu-state-active-opacity: 0.16;
+  --acu-state-selected-opacity: 0.12;
+  --acu-state-disabled-opacity: 0.38;
+  
+  /* 焦点环 */
+  --acu-focus-ring-color: rgba(var(--acu-accent-rgb), 0.4);
+  --acu-focus-ring-width: 3px;
+  --acu-focus-ring-offset: 2px;
 }
