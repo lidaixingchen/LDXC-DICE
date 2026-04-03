@@ -277,6 +277,7 @@ const showDataDisplay = computed(
     showFavorites.value ||
     showSettings.value ||
     showSave.value ||
+    showGenerate.value ||
     showDiceHistory.value ||
     showPresetManager.value ||
     showOpposedCheck.value ||
@@ -468,7 +469,7 @@ onUnmounted(() => {
   z-index: 31000;
   font-family: var(--acu-font-family, sans-serif);
   display: flex;
-  flex-direction: column-reverse; /* 这是原版保证 选项 和 导航 顺序的关键 */
+  flex-direction: column-reverse;
   width: 100%;
 }
 
@@ -492,8 +493,8 @@ onUnmounted(() => {
 /* 数据展示面板 (绝对定位，向上弹出) */
 .acu-data-display {
   display: none;
+  flex-direction: column;
   position: absolute;
-  bottom: calc(100% + 10px);
   left: 0;
   right: 0;
   width: var(--acu-card-width, 380px);
@@ -504,33 +505,37 @@ onUnmounted(() => {
   background: var(--acu-bg-panel);
   max-height: 80vh;
   overflow: hidden;
-  flex-direction: column;
   z-index: 31010;
 }
 .acu-data-display.visible {
   display: flex;
 }
 
-/* 向下弹出 */
-.acu-wrapper.acu-panel-expand-down .acu-data-display {
-  bottom: auto !important;
-  top: calc(100% + 10px) !important;
+/* 悬浮模式下的弹出方向 */
+.acu-wrapper.acu-mode-fixed.acu-panel-expand-up .acu-data-display {
+  bottom: calc(100% + 10px);
+  top: auto;
 }
 
+.acu-wrapper.acu-mode-fixed.acu-panel-expand-down .acu-data-display {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
+/* 内嵌模式下的布局 */
 .acu-wrapper.acu-mode-embedded .acu-data-display {
-  position: relative !important;
+  position: relative;
   margin-bottom: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* 内嵌模式下通过order控制弹出方向 */
 .acu-wrapper.acu-mode-embedded.acu-panel-expand-up .acu-data-display {
-  bottom: auto !important;
-  top: auto !important;
+  order: 1;
 }
 
 .acu-wrapper.acu-mode-embedded.acu-panel-expand-down .acu-data-display {
-  bottom: auto !important;
-  top: auto !important;
+  order: -1;
 }
 
 /* 选项面板 */

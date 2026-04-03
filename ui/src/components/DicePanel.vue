@@ -1549,6 +1549,10 @@ onMounted(() => {
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
           </div>
           <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">最终DC:</span>
             <span class="acu-dice-info-value">{{ getBaseDC(worldLevel) + (DIFFICULTY_MOD[difficulty] || 0) }}</span>
           </div>
@@ -1831,6 +1835,10 @@ onMounted(() => {
           <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">属性加成:</span>
             <span class="acu-dice-info-value">{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}</span>
+          </div>
+          <div class="acu-dice-info-item">
+            <span class="acu-dice-info-label">掌握加成:</span>
+            <span class="acu-dice-info-value">{{ getMasteryBonus(worldLevel) }}</span>
           </div>
           <div class="acu-dice-info-item">
             <span class="acu-dice-info-label">闪避DC:</span>
