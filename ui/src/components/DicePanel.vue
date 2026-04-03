@@ -1762,10 +1762,6 @@ onMounted(() => {
       <div v-if="checkMode === 'defense' && !isCustomMode">
         <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
-            <div class="acu-dice-form-label">名字</div>
-            <input v-model="initiatorName" type="text" class="acu-dice-input" placeholder="<user>" />
-          </div>
-          <div class="acu-dice-field">
             <div class="acu-dice-form-label">
               <span>闪避属性名</span>
               <button class="acu-random-skill-btn" title="随机技能" @click="randomSkill">
@@ -1798,13 +1794,13 @@ onMounted(() => {
             <div class="acu-dice-form-label">闪避属性值</div>
             <input v-model="attrValue" type="text" class="acu-dice-input" placeholder="敏捷/感知取高" />
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">闪避加值</div>
             <input v-model="modifier" type="text" class="acu-dice-input" placeholder="0" />
           </div>
+        </div>
+
+        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">敌方攻击修正</div>
             <input v-model="enemyAtkMod" type="text" class="acu-dice-input" placeholder="0" />
@@ -1813,9 +1809,6 @@ onMounted(() => {
             <div class="acu-dice-form-label">敌方攻击力</div>
             <input v-model="enemyAttackPower" type="text" class="acu-dice-input" placeholder="10" />
           </div>
-        </div>
-
-        <div class="acu-dice-form-row cols-3">
           <div>
             <div class="acu-dice-form-label">我方防御</div>
             <input v-model="playerDefense" type="text" class="acu-dice-input" placeholder="5" />
@@ -2530,7 +2523,7 @@ onMounted(() => {
 
 .acu-dice-quick-compact {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
 }
 
