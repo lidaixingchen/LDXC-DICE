@@ -2235,23 +2235,6 @@ onMounted(() => {
         </button>
       </div>
 
-      <div class="acu-dice-quick-section">
-        <div class="acu-dice-section-title">
-          <span><i class="fa-solid fa-sliders"></i> 自定义规则</span>
-        </div>
-        <div class="acu-dice-quick-presets">
-          <button
-            v-for="p in QUICK_PRESETS"
-            :key="p.id"
-            class="acu-dice-quick-preset-btn"
-            :class="{ active: isCustomMode && p.id === '__custom__' }"
-            @click="selectQuickPreset(p.id)"
-          >
-            {{ p.name }}
-          </button>
-        </div>
-      </div>
-
       <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
         <template v-if="showResult && lastResult">
           <span class="acu-dice-result-value" :class="{ success: lastResult.success, failure: !lastResult.success }">{{
