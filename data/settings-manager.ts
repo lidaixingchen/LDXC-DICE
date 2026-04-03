@@ -171,6 +171,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     actionButtonIconSize: 12,
     hideDashboardButton: false,
     hideDiceResultFromUser: false,
+    crazyMode: false,
     hiddenTableKeys: [],
     tableOrderKeys: [],
     tableFontSize: 13,

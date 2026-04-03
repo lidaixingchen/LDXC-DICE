@@ -83,8 +83,8 @@ interface StatusEffect {
 let statusIdCounter = 0;
 const activeStatuses = ref<StatusEffect[]>([]);
 const newStatusName = ref('');
-const newStatusType = ref('debuff');
-const newStatusIntensity = ref('medium');
+const newStatusType = ref<'buff' | 'debuff' | 'dot' | 'control' | 'shield'>('debuff');
+const newStatusIntensity = ref<'weak' | 'medium' | 'strong'>('medium');
 const newStatusValue = ref<number | string>('1');
 const newStatusRounds = ref<number | string>('3');
 
@@ -1207,7 +1207,8 @@ function saveGame(slotId: number): void {
     if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return;
   }
 
-  const char = currentCharacter.value;
+  const charName = currentCharacter.value;
+  const char = characters.value.find(c => c.name === charName);
   const attrs: Record<string, number> = {};
   if (char) {
     Object.entries(char.attributes).forEach(([k, v]) => { attrs[k] = v; });
@@ -1256,8 +1257,10 @@ function loadGame(slotId: number): boolean {
 
 function exportSave(): void {
   const spv = getSPV(worldLevel.value);
-  const stats = currentCharacter.value
-    ? deriveCombatStats(currentCharacter.value.attributes, worldLevel.value)
+  const charName = currentCharacter.value;
+  const char = characters.value.find(c => c.name === charName);
+  const stats = char
+    ? deriveCombatStats(char.attributes, worldLevel.value)
     : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 10 };
 
   exportText.value = `═════════════════════════════════

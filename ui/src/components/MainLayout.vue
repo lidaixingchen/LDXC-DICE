@@ -190,8 +190,8 @@ const options = computed(() => {
     for (const key in rawData) {
       if (rawData[key].name?.includes('选项')) {
         const rows = rawData[key].content?.slice(1) || [];
-        rows.forEach(row => {
-          row.slice(1).forEach(cell => {
+        rows.forEach((row: any[]) => {
+          row.slice(1).forEach((cell: any) => {
             if (cell && String(cell).trim()) results.push(String(cell).trim());
           });
         });
@@ -385,7 +385,7 @@ onUnmounted(() => {
         v-for="(item, idx) in navItems"
         :key="item.key"
         class="acu-nav-btn"
-        :class="[item.id || '', { active: isNavItemActive(item) }]"
+        :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
         :style="{ order: idx + 2 }"
         @click="handleNavClick(item.key)"
       >

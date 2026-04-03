@@ -25,12 +25,12 @@ const filteredHistory = computed(() => {
   const all = getAllHistory();
   return all.filter(item => {
     if (filterStatus.value !== 'all') {
-      const status = (item as Record<string, unknown>).effectStatus;
+      const status = (item as unknown as Record<string, unknown>).effectStatus;
       if (!status || status !== filterStatus.value) return false;
     }
     const kw = keyword.value.trim().toLowerCase();
     if (!kw) return true;
-    const raw = item as Record<string, unknown>;
+    const raw = item as unknown as Record<string, unknown>;
     const left = (raw.left || {}) as Record<string, unknown>;
     const right = (raw.right || {}) as Record<string, unknown>;
     const haystack = [

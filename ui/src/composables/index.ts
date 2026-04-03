@@ -297,6 +297,7 @@ export function useDiceSystem(): {
     performCheck,
     performContest,
     roll,
+    evaluatePresetBonus,
   };
 }
 

@@ -62,14 +62,167 @@ const filteredValidationPresets = computed(() => {
 });
 
 function loadAllPresets() {
-  dicePresets.value = presetManager.getAllPresets().filter(p => (p as AdvancedDicePreset).kind === 'advanced' || p.kind === 'dice');
+  dicePresets.value = presetManager.getAllPresets().filter(p => (p as AdvancedDicePreset).kind === 'advanced' || (p as any).kind === 'dice');
   attributePresets.value = [];
   validationPresets.value = [];
 }
 
+function openDiceEditor(id: string | null): void {
+  editingPresetId.value = id;
+  editingPresetType.value = 'dice';
+  if (id) {
+    const preset = dicePresets.value.find(p => p.id === id);
+    if (preset) {
+      editingPresetName.value = preset.name;
+      editingPresetDesc.value = preset.description || '';
+      editingPresetJson.value = JSON.stringify(preset, null, 2);
+    }
+  } else {
+    editingPresetName.value = '';
+    editingPresetDesc.value = '';
+    editingPresetJson.value = '';
+  }
+  jsonError.value = '';
+  viewMode.value = 'dice-editor';
 }
 
+function selectDicePreset(preset: AdvancedDicePreset): void {
+  editingPresetId.value = preset.id;
+  editingPresetName.value = preset.name;
+  editingPresetDesc.value = preset.description || '';
+  editingPresetJson.value = JSON.stringify(preset, null, 2);
 }
+
+function importDiceFromFile(): void {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        data.forEach(p => presetManager.addPreset(p));
+      } else {
+        presetManager.addPreset(data);
+      }
+      loadAllPresets();
+    } catch (err) {
+      jsonError.value = '导入失败: ' + (err as Error).message;
+    }
+  };
+  input.click();
+}
+
+function exportDicePreset(preset: AdvancedDicePreset): void {
+  const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${preset.name || preset.id}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAllDicePresets(): void {
+  const blob = new Blob([JSON.stringify(dicePresets.value, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'all-dice-presets.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function deleteDicePreset(preset: AdvancedDicePreset): void {
+  if (confirm(`确定删除预设 "${preset.name}"？`)) {
+    presetManager.removePreset(preset.id);
+    loadAllPresets();
+  }
+}
+
+function saveDicePreset(): void {
+  try {
+    const data = JSON.parse(editingPresetJson.value);
+    data.id = editingPresetId.value || `custom_${Date.now()}`;
+    data.name = editingPresetName.value || '未命名预设';
+    data.description = editingPresetDesc.value;
+    data.kind = 'advanced';
+    data.version = data.version || '1.0.0';
+    presetManager.addPreset(data);
+    loadAllPresets();
+    viewMode.value = 'main';
+  } catch (err) {
+    jsonError.value = 'JSON 解析错误: ' + (err as Error).message;
+  }
+}
+
+function openAttributeEditor(id: string | null): void {
+  editingPresetId.value = id;
+  editingPresetType.value = 'attribute';
+  editingPresetName.value = '';
+  editingPresetDesc.value = '';
+  editingPresetJson.value = '';
+  jsonError.value = '';
+  viewMode.value = 'attribute-editor';
+}
+
+function selectAttributePreset(preset: any): void {
+  editingPresetId.value = preset.id;
+  editingPresetName.value = preset.name;
+  editingPresetDesc.value = preset.description || '';
+  editingPresetJson.value = JSON.stringify(preset, null, 2);
+}
+
+function saveAttributePreset(): void {
+  try {
+    const data = JSON.parse(editingPresetJson.value);
+    data.id = editingPresetId.value || `attr_${Date.now()}`;
+    data.name = editingPresetName.value || '未命名属性预设';
+    data.description = editingPresetDesc.value;
+    attributePresets.value.push(data);
+    viewMode.value = 'main';
+  } catch (err) {
+    jsonError.value = 'JSON 解析错误: ' + (err as Error).message;
+  }
+}
+
+function openValidationEditor(id: string | null): void {
+  editingPresetId.value = id;
+  editingPresetType.value = 'validation';
+  editingPresetName.value = '';
+  editingPresetDesc.value = '';
+  editingPresetJson.value = '';
+  jsonError.value = '';
+  viewMode.value = 'validation-editor';
+}
+
+function selectValidationPreset(preset: any): void {
+  editingPresetId.value = preset.id;
+  editingPresetName.value = preset.name;
+  editingPresetDesc.value = preset.description || '';
+  editingPresetJson.value = JSON.stringify(preset, null, 2);
+}
+
+function saveValidationPreset(): void {
+  try {
+    const data = JSON.parse(editingPresetJson.value);
+    data.id = editingPresetId.value || `val_${Date.now()}`;
+    data.name = editingPresetName.value || '未命名验证预设';
+    data.description = editingPresetDesc.value;
+    validationPresets.value.push(data);
+    viewMode.value = 'main';
+  } catch (err) {
+    jsonError.value = 'JSON 解析错误: ' + (err as Error).message;
+  }
+}
+
+onMounted(() => {
+  loadAllPresets();
+});
+
 </script>
 
 <template>
@@ -81,7 +234,7 @@ function loadAllPresets() {
       </div>
       <div class="preset-tabs">
         <button
-          v-for="tab in ['dice', 'attribute', 'validation']"
+          v-for="tab in (['dice', 'attribute', 'validation'] as const)"
           :key="tab"
           :class="['active', activeTab === tab]"
           @click="activeTab = tab"
@@ -139,9 +292,10 @@ function loadAllPresets() {
               </div>
             </div>
           </div>
+        </template>
 
-          <template v-else-if="activeTab === 'attribute'">
-            <div class="attribute-section">
+        <template v-else-if="activeTab === 'attribute'">
+          <div class="attribute-section">
               <div class="section-header">
               <span>属性预设</span>
               <button class="add-btn" @click="openAttributeEditor(null)">
@@ -169,9 +323,10 @@ function loadAllPresets() {
               </div>
             </div>
           </div>
+        </template>
 
-          <template v-else-if="activeTab === 'validation'">
-            <div class="validation-section">
+        <template v-else-if="activeTab === 'validation'">
+          <div class="validation-section">
               <div class="section-header">
               <span>验证预设</span>
               <button class="add-btn" @click="openValidationEditor(null)">

@@ -102,7 +102,7 @@ function saveGame(slotId: number): void {
   const char = currentCharacter;
   const attrs: Record<string, number> = {};
   if (char?.value) {
-    Object.entries(char.value.attributes).forEach(([k, v]) => { attrs[k] = v; });
+    Object.entries(char.value.attributes as Record<string, number>).forEach(([k, v]) => { attrs[k] = v; });
   }
 
   const combatData = combat?.value || { active: false, round: 1, enemyName: '', enemyMaxHP: 0, enemyCurrentHP: 0, playerMaxHP: 0, playerCurrentHP: 0, playerShield: 0 };
