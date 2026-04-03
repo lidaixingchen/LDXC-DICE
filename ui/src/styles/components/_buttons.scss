@@ -23,25 +23,56 @@
   user-select: none;
   text-decoration: none;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
   
+  /* 涟漪效果 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+    pointer-events: none;
+  }
+  
+  &:active::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  /* 增强: Hover状态 */
   &:hover {
     background: var(--acu-btn-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--acu-shadow-sm);
     text-decoration: none;
   }
   
-  &:focus {
+  /* 增强: Focus状态 - 更明显的焦点环 */
+  &:focus,
+  &:focus-visible {
     outline: none;
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) var(--acu-focus-ring-color);
+  }
+  
+  /* 增强: Active状态 */
+  &:active {
+    transform: translateY(0);
     box-shadow: none;
   }
   
-  &:active {
-    transform: translateY(1px);
-  }
-  
+  /* 增强: Disabled状态 */
   &:disabled {
     opacity: var(--acu-opacity-disabled);
     cursor: not-allowed;
     pointer-events: none;
+    filter: grayscale(0.5);
   }
 }
 
@@ -220,6 +251,22 @@
     border-radius: 50%;
     animation: acu-btn-spin 0.75s linear infinite;
   }
+  
+  /* 增强: 为不同颜色按钮提供正确的加载动画颜色 */
+  &.acu-btn-primary::after,
+  &.acu-btn-success::after,
+  &.acu-btn-danger::after,
+  &.acu-btn-warning::after {
+    border-color: rgba(255, 255, 255, 0.8);
+    border-right-color: transparent;
+  }
+  
+  &.acu-btn-secondary::after,
+  &.acu-btn-outline::after,
+  &.acu-btn-ghost::after {
+    border-color: var(--acu-text-main);
+    border-right-color: transparent;
+  }
 }
 
 @keyframes acu-btn-spin {
@@ -228,6 +275,60 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* ========== 带图标的按钮 ========== */
+.acu-btn-with-icon {
+  gap: var(--acu-space-sm);
+  
+  i,
+  svg,
+  .icon {
+    font-size: 1.1em;
+    flex-shrink: 0;
+  }
+  
+  /* 左侧图标 */
+  .icon-left {
+    margin-right: var(--acu-space-2xs);
+  }
+  
+  /* 右侧图标 */
+  .icon-right {
+    margin-left: var(--acu-space-2xs);
+  }
+}
+
+/* ========== 按钮徽章 ========== */
+.acu-btn-badge {
+  position: relative;
+  
+  .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 var(--acu-space-2xs);
+    font-size: var(--acu-font-xs);
+    font-weight: var(--acu-font-weight-semibold);
+    line-height: 18px;
+    text-align: center;
+    border-radius: var(--acu-radius-full);
+    background: var(--acu-error-text);
+    color: #fff;
+    border: 2px solid var(--acu-btn-bg);
+    animation: badge-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
   }
 }
 

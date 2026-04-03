@@ -39,6 +39,7 @@
     user-select: none;
     overflow: hidden;
     height: var(--acu-btn-height-sm);
+    position: relative;
 }
 
 .acu-nav-btn span {
@@ -49,15 +50,61 @@
     margin-top: 1px;
 }
 
+/* 增强: Hover状态 */
 .acu-nav-btn:hover {
     background: var(--acu-btn-hover);
     transform: translateY(-2px);
+    box-shadow: var(--acu-shadow-sm);
 }
 
+/* 增强: Focus状态 */
 .acu-nav-btn:focus,
 .acu-nav-btn:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px var(--acu-accent) !important;
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) var(--acu-focus-ring-color) !important;
+}
+
+/* 增强: Active状态 */
+.acu-nav-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* 增强: 活动状态 - 当前选中项 */
+.acu-nav-btn.active,
+.acu-nav-btn[aria-current="page"],
+.acu-nav-btn.router-link-active {
+    background: var(--acu-btn-active-bg);
+    color: var(--acu-btn-active-text);
+    border-color: var(--acu-btn-active-bg);
+    font-weight: var(--acu-font-weight-bold);
+    
+    /* 活动指示器 */
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: var(--acu-btn-active-text);
+        border-radius: var(--acu-radius-full);
+    }
+    
+    &:hover {
+        background: var(--acu-btn-active-bg);
+        filter: brightness(1.1);
+    }
+}
+
+/* 增强: 禁用状态 */
+.acu-nav-btn:disabled,
+.acu-nav-btn.disabled {
+    opacity: var(--acu-opacity-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(0.5);
 }
 
 /* ========== 高度控制 ========== */
@@ -134,4 +181,165 @@
     white-space: nowrap;
     z-index: 31002;
     animation: acuFadeIn 0.3s ease;
+}
+
+/* ========== 增强: 导航徽章 ========== */
+.acu-nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 var(--acu-space-2xs);
+    font-size: var(--acu-font-xs);
+    font-weight: var(--acu-font-weight-semibold);
+    line-height: 18px;
+    text-align: center;
+    border-radius: var(--acu-radius-full);
+    background: var(--acu-color-error);
+    color: #fff;
+    border: 2px solid var(--acu-bg-nav);
+    animation: badge-bounce 0.3s ease-out;
+    z-index: 1;
+}
+
+/* 徽章变体 */
+.acu-nav-badge.badge-success {
+    background: var(--acu-color-success);
+}
+
+.acu-nav-badge.badge-warning {
+    background: var(--acu-color-warning);
+}
+
+.acu-nav-badge.badge-info {
+    background: var(--acu-color-info);
+}
+
+.acu-nav-badge.badge-dot {
+    min-width: 8px;
+    height: 8px;
+    padding: 0;
+    top: 2px;
+    right: 2px;
+}
+
+/* ========== 增强: 导航图标 ========== */
+.acu-nav-icon {
+    font-size: var(--acu-font-lg);
+    flex-shrink: 0;
+    transition: transform var(--acu-transition-fast);
+}
+
+.acu-nav-btn:hover .acu-nav-icon {
+    transform: scale(1.1);
+}
+
+.acu-nav-btn.active .acu-nav-icon {
+    transform: scale(1.05);
+}
+
+/* ========== 增强: 响应式布局 ========== */
+
+/* 大屏幕 (默认) */
+.acu-nav-container {
+    grid-template-columns: repeat(var(--acu-grid-cols, 3), 1fr);
+}
+
+/* 中等屏幕 */
+@media (max-width: 1024px) {
+    .acu-nav-container {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: var(--acu-space-2xs);
+    }
+    
+    .acu-nav-btn {
+        font-size: var(--acu-font-xs);
+        padding: var(--acu-space-2xs) var(--acu-space-xs);
+    }
+}
+
+/* 小屏幕 */
+@media (max-width: 768px) {
+    .acu-nav-container {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: var(--acu-space-2xs);
+        padding: var(--acu-space-xs);
+    }
+    
+    .acu-nav-btn {
+        font-size: var(--acu-font-xs);
+        padding: var(--acu-space-2xs);
+        height: auto;
+        min-height: var(--acu-btn-height-sm);
+        flex-direction: column;
+        gap: var(--acu-space-2xs);
+    }
+    
+    .acu-nav-btn span {
+        font-size: var(--acu-font-xs);
+    }
+    
+    .acu-nav-icon {
+        font-size: var(--acu-font-xl);
+    }
+    
+    /* 移动端隐藏徽章文字，只显示圆点 */
+    .acu-nav-badge:not(.badge-dot) {
+        min-width: 8px;
+        height: 8px;
+        padding: 0;
+        font-size: 0;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+    .acu-nav-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--acu-space-xs);
+    }
+    
+    .acu-nav-btn {
+        padding: var(--acu-space-xs);
+        min-height: 48px;
+    }
+}
+
+/* ========== 增强: 导航分组 ========== */
+.acu-nav-group {
+    display: contents;
+}
+
+.acu-nav-group-title {
+    grid-column: 1 / -1;
+    padding: var(--acu-space-xs) var(--acu-space-sm);
+    font-size: var(--acu-font-xs);
+    font-weight: var(--acu-font-weight-semibold);
+    color: var(--acu-text-sub);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--acu-border);
+    margin-bottom: var(--acu-space-xs);
+}
+
+/* ========== 增强: 导航分隔符 ========== */
+.acu-nav-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: var(--acu-border);
+    margin: var(--acu-space-xs) 0;
+}
+
+/* ========== 动画 ========== */
+@keyframes badge-bounce {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
 }

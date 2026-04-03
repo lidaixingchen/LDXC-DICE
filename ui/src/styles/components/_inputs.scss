@@ -17,24 +17,45 @@
   border-radius: var(--acu-radius-sm);
   outline: none;
   transition: border-color var(--acu-transition-normal) var(--acu-ease-cubic), 
-              box-shadow var(--acu-transition-normal) var(--acu-ease-cubic);
+              box-shadow var(--acu-transition-normal) var(--acu-ease-cubic),
+              background-color var(--acu-transition-normal) var(--acu-ease-cubic);
   box-sizing: border-box;
   
-  &:focus {
+  /* 增强: Focus状态 - 更明显的焦点环 */
+  &:focus,
+  &:focus-visible {
     border-color: var(--acu-accent);
-    box-shadow: 0 0 0 2px rgba(var(--acu-accent-rgb), 0.1);
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) var(--acu-focus-ring-color);
     outline: none;
+    background: var(--acu-input-bg, var(--acu-btn-bg));
   }
   
+  /* 增强: Hover状态 */
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--acu-accent);
+  }
+  
+  /* 增强: Disabled状态 */
   &:disabled {
     opacity: var(--acu-opacity-disabled);
     cursor: not-allowed;
     background: var(--acu-btn-bg);
+    filter: grayscale(0.3);
   }
   
+  /* 增强: Placeholder样式 */
   &::placeholder {
     color: var(--acu-text-sub);
-    opacity: 0.7;
+    opacity: 0.6;
+  }
+  
+  /* 增强: 自动填充样式 */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--acu-input-bg, var(--acu-btn-bg)) inset;
+    -webkit-text-fill-color: var(--acu-text-main);
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 
@@ -65,29 +86,29 @@
 
 /* ========== 输入框状态变体 ========== */
 .acu-input-success {
-  border-color: var(--acu-success-text);
+  border-color: var(--acu-color-success);
   
   &:focus {
-    border-color: var(--acu-success-text);
-    box-shadow: 0 0 0 2px rgba(var(--acu-success-text), 0.1);
+    border-color: var(--acu-color-success);
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) rgba(16, 185, 129, 0.2);
   }
 }
 
 .acu-input-danger {
-  border-color: var(--acu-error-text);
+  border-color: var(--acu-color-error);
   
   &:focus {
-    border-color: var(--acu-error-text);
-    box-shadow: 0 0 0 2px rgba(var(--acu-error-text), 0.1);
+    border-color: var(--acu-color-error);
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) rgba(239, 68, 68, 0.2);
   }
 }
 
 .acu-input-warning {
-  border-color: var(--acu-warning-text);
+  border-color: var(--acu-color-warning);
   
   &:focus {
-    border-color: var(--acu-warning-text);
-    box-shadow: 0 0 0 2px rgba(var(--acu-warning-text), 0.1);
+    border-color: var(--acu-color-warning);
+    box-shadow: 0 0 0 var(--acu-focus-ring-width) rgba(245, 158, 11, 0.2);
   }
 }
 
@@ -217,6 +238,7 @@
     right: var(--acu-space-md);
     color: var(--acu-text-sub);
     pointer-events: none;
+    transition: color var(--acu-transition-fast);
   }
   
   .acu-input-clear {
@@ -235,6 +257,153 @@
       color: var(--acu-accent);
     }
   }
+}
+
+/* ========== 增强: 输入框容器组件 ========== */
+.acu-form-item {
+  margin-bottom: var(--acu-space-lg);
+  
+  /* 标签 */
+  .acu-form-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--acu-space-sm);
+    font-size: var(--acu-font-sm);
+    font-weight: var(--acu-font-weight-medium);
+    color: var(--acu-text-main);
+    
+    /* 必填标记 */
+    &.required::after {
+      content: '*';
+      margin-left: var(--acu-space-2xs);
+      color: var(--acu-color-error);
+    }
+  }
+  
+  /* 输入框包装器 */
+  .acu-input-wrapper {
+    position: relative;
+    
+    /* 左侧图标 */
+    &.has-icon-left .acu-input {
+      padding-left: calc(var(--acu-space-md) + 24px);
+    }
+    
+    .input-icon-left {
+      position: absolute;
+      left: var(--acu-space-md);
+      color: var(--acu-text-sub);
+      pointer-events: none;
+    }
+    
+    /* 右侧图标 */
+    &.has-icon-right .acu-input {
+      padding-right: calc(var(--acu-space-md) + 24px);
+    }
+    
+    .input-icon-right {
+      position: absolute;
+      right: var(--acu-space-md);
+      color: var(--acu-text-sub);
+      pointer-events: none;
+    }
+  }
+  
+  /* 帮助文本 */
+  .acu-form-help {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    margin-top: var(--acu-space-xs);
+    font-size: var(--acu-font-xs);
+    color: var(--acu-text-sub);
+    
+    svg, i {
+      font-size: var(--acu-font-sm);
+    }
+  }
+  
+  /* 错误信息 */
+  .acu-form-error {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    margin-top: var(--acu-space-xs);
+    font-size: var(--acu-font-xs);
+    color: var(--acu-color-error);
+    animation: error-shake 0.3s ease-in-out;
+    
+    svg, i {
+      font-size: var(--acu-font-sm);
+    }
+  }
+  
+  /* 成功信息 */
+  .acu-form-success {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    margin-top: var(--acu-space-xs);
+    font-size: var(--acu-font-xs);
+    color: var(--acu-color-success);
+    
+    svg, i {
+      font-size: var(--acu-font-sm);
+    }
+  }
+}
+
+/* ========== 增强: 验证状态图标 ========== */
+.acu-input-validation-icon {
+  position: absolute;
+  right: var(--acu-space-md);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  
+  /* 成功图标 */
+  &.icon-success {
+    color: var(--acu-color-success);
+    animation: icon-success-pop 0.3s ease-out;
+  }
+  
+  /* 错误图标 */
+  &.icon-error {
+    color: var(--acu-color-error);
+    animation: icon-error-shake 0.3s ease-in-out;
+  }
+  
+  /* 警告图标 */
+  &.icon-warning {
+    color: var(--acu-color-warning);
+    animation: icon-warning-pulse 0.3s ease-out;
+  }
+}
+
+/* ========== 动画 ========== */
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@keyframes icon-success-pop {
+  0% { transform: translateY(-50%) scale(0); }
+  50% { transform: translateY(-50%) scale(1.2); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+@keyframes icon-error-shake {
+  0%, 100% { transform: translateY(-50%) rotate(0deg); }
+  25% { transform: translateY(-50%) rotate(-10deg); }
+  75% { transform: translateY(-50%) rotate(10deg); }
+}
+
+@keyframes icon-warning-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* ========== 输入框标签 ========== */
