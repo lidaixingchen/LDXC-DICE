@@ -2,6 +2,7 @@ import { settingsManager } from '@data/settings-manager';
 import { createApp, type App as VueApp } from 'vue';
 import { initAcuDice } from './api';
 import MainLayout from './components/MainLayout.vue';
+import './styles/themes.scss';
 import './styles/global.scss';
 
 let mainApp: VueApp | null = null;
