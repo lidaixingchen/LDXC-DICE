@@ -149,13 +149,22 @@ const playerInfo = computed(() => {
   const row = p.content[1] || [];
   
   const name = row[1] || '主角';
-  const status = row[2] || '正常';
-  const position = row[3] || '';
+  const level = row[2] || '';
+  const status = row[7] || '正常';
+  const position = row[8] || '';
   
   let baseAttrs: Array<{name: string, value: string}> = [];
   let specialAttrs: Array<{name: string, value: string}> = [];
   let resources: Array<{name: string, value: string}> = [];
-  let combatAttrs: { hp?: number; maxHp?: number; shield?: number } = {};
+  let combatAttrs: { 
+    hp?: number; 
+    maxHp?: number; 
+    shield?: number;
+    physicalDef?: number;
+    magicDef?: number;
+    critRate?: number;
+    ddc?: number;
+  } = {};
   
   headers.forEach((h: string, idx: number) => {
     if (!h) return;
@@ -178,26 +187,85 @@ const playerInfo = computed(() => {
       if (shieldMatch) {
         combatAttrs.shield = parseInt(shieldMatch[1], 10);
       }
+      const physDefMatch = String(val).match(/物理防御[:：]?\s*(\d+)/);
+      if (physDefMatch) {
+        combatAttrs.physicalDef = parseInt(physDefMatch[1], 10);
+      }
+      const magicDefMatch = String(val).match(/法术防御[:：]?\s*(\d+)/);
+      if (magicDefMatch) {
+        combatAttrs.magicDef = parseInt(magicDefMatch[1], 10);
+      }
+      const critMatch = String(val).match(/暴击率[:：]?\s*(\d+)%?/);
+      if (critMatch) {
+        combatAttrs.critRate = parseInt(critMatch[1], 10);
+      }
+      const ddcMatch = String(val).match(/DDC[:：]?\s*(\d+)/);
+      if (ddcMatch) {
+        combatAttrs.ddc = parseInt(ddcMatch[1], 10);
+      }
     }
   });
   
-  return { name, status, position, baseAttrs, specialAttrs, resources, combatAttrs };
+  return { name, level, status, position, baseAttrs, specialAttrs, resources, combatAttrs };
 });
 
+const worldLevel = computed(() => {
+  const g = data.value?.global;
+  if (!g?.content) return null;
+  
+  const headers = g.content[0] || [];
+  const row = g.content[1] || [];
+  
+  const levelIdx = headers.findIndex((h: string) => h?.includes('世界等级'));
+  if (levelIdx === -1) return null;
+  
+  const level = row[levelIdx];
+  if (!level) return null;
+  
+  const levelMatch = String(level).match(/([FESS]{1,3})级/i);
+  return levelMatch ? levelMatch[1].toUpperCase() + '级' : level;
+});
+
+const LEVEL_COLORS: Record<string, string> = {
+  'F级': '#9ca3af',
+  'E级': '#22c55e',
+  'D级': '#3b82f6',
+  'C级': '#8b5cf6',
+  'B级': '#f59e0b',
+  'A级': '#ef4444',
+  'S级': '#ec4899',
+  'SS级': '#f97316',
+  'SSS级': '#ffd700'
+};
+
+function getLevelColor(level: string): string {
+  return LEVEL_COLORS[level] || 'var(--acu-accent)';
+}
+
 const playerHP = computed(() => {
+  const attrs = playerInfo.value?.combatAttrs;
+  
   if (combat?.value?.playerMaxHP) {
     return {
       current: combat.value.playerCurrentHP,
       max: combat.value.playerMaxHP,
       shield: combat.value.playerShield || 0,
+      physicalDef: attrs?.physicalDef,
+      magicDef: attrs?.magicDef,
+      critRate: attrs?.critRate,
+      ddc: attrs?.ddc,
       inCombat: combat.value.active
     };
   }
-  if (playerInfo.value?.combatAttrs?.maxHp) {
+  if (attrs?.maxHp) {
     return {
-      current: playerInfo.value.combatAttrs.hp || 0,
-      max: playerInfo.value.combatAttrs.maxHp,
-      shield: playerInfo.value.combatAttrs.shield || 0,
+      current: attrs.hp || 0,
+      max: attrs.maxHp,
+      shield: attrs.shield || 0,
+      physicalDef: attrs.physicalDef,
+      magicDef: attrs.magicDef,
+      critRate: attrs.critRate,
+      ddc: attrs.ddc,
       inCombat: false
     };
   }
@@ -309,9 +377,20 @@ function handleDice(name: string, val: any) {
         <div class="acu-player-core">
           <!-- 基本信息区 -->
           <div class="acu-player-header">
-            <div class="acu-player-avatar">{{ playerInfo?.name?.charAt(0) || '主' }}</div>
+            <div class="acu-player-avatar" :style="playerInfo?.level ? { borderColor: getLevelColor(playerInfo.level) } : {}">
+              {{ playerInfo?.name?.charAt(0) || '主' }}
+              <span v-if="playerInfo?.level" class="acu-level-badge" :style="{ background: getLevelColor(playerInfo.level) }">
+                {{ playerInfo.level }}
+              </span>
+            </div>
             <div class="acu-player-basic">
-              <div class="acu-player-name">{{ playerInfo?.name || '主角' }}</div>
+              <div class="acu-player-name-row">
+                <span class="acu-player-name">{{ playerInfo?.name || '主角' }}</span>
+                <span v-if="worldLevel" class="acu-world-level" :style="{ color: getLevelColor(worldLevel) }">
+                  <i class="fa-solid fa-globe"></i>
+                  {{ worldLevel }}
+                </span>
+              </div>
               <div class="acu-player-status">
                 <span class="acu-status-tag">{{ playerInfo?.status || '正常' }}</span>
                 <span v-if="playerInfo?.position" class="acu-position-tag">
@@ -345,6 +424,31 @@ function handleDice(name: string, val: any) {
                 <span>{{ playerHP.shield }}</span>
               </div>
             </div>
+            
+            <!-- 扩展战斗属性 -->
+            <div class="acu-combat-stats">
+              <div v-if="playerHP.physicalDef" class="acu-stat-item">
+                <i class="fa-solid fa-shield"></i>
+                <span class="acu-stat-label">物防</span>
+                <span class="acu-stat-value">{{ playerHP.physicalDef }}</span>
+              </div>
+              <div v-if="playerHP.magicDef" class="acu-stat-item">
+                <i class="fa-solid fa-hat-wizard"></i>
+                <span class="acu-stat-label">法防</span>
+                <span class="acu-stat-value">{{ playerHP.magicDef }}</span>
+              </div>
+              <div v-if="playerHP.critRate" class="acu-stat-item">
+                <i class="fa-solid fa-bolt"></i>
+                <span class="acu-stat-label">暴击</span>
+                <span class="acu-stat-value">{{ playerHP.critRate }}%</span>
+              </div>
+              <div v-if="playerHP.ddc" class="acu-stat-item">
+                <i class="fa-solid fa-dice-d20"></i>
+                <span class="acu-stat-label">DDC</span>
+                <span class="acu-stat-value">{{ playerHP.ddc }}</span>
+              </div>
+            </div>
+            
             <div v-if="playerHP.inCombat && combat?.value" class="acu-combat-info">
               <div class="acu-combat-round">
                 <i class="fa-solid fa-swords"></i>
@@ -668,6 +772,44 @@ function handleDice(name: string, val: any) {
   border-top: 1px dashed var(--acu-border);
 }
 
+.acu-combat-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--acu-space-sm, 8px);
+  margin-top: var(--acu-space-sm, 8px);
+  padding: var(--acu-space-sm, 8px);
+  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05);
+  border-radius: var(--acu-radius-md, 6px);
+  
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.acu-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--acu-space-xs, 4px);
+  
+  i {
+    font-size: 14px;
+    color: var(--acu-accent);
+  }
+  
+  .acu-stat-label {
+    font-size: 10px;
+    color: var(--acu-text-sub);
+  }
+  
+  .acu-stat-value {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--acu-text-main);
+  }
+}
+
 .acu-core-resources {
   display: flex;
   flex-wrap: wrap;
@@ -974,6 +1116,20 @@ function handleDice(name: string, val: any) {
   font-weight: bold;
   color: var(--acu-button-text-on-accent, #fff);
   flex-shrink: 0;
+  position: relative;
+}
+
+.acu-level-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: bold;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
 }
 
 .acu-player-basic {
@@ -983,10 +1139,28 @@ function handleDice(name: string, val: any) {
   gap: 6px;
 }
 
+.acu-player-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .acu-player-name {
   font-size: 16px;
   font-weight: bold;
   color: var(--acu-text-main);
+}
+
+.acu-world-level {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  
+  i {
+    font-size: 10px;
+  }
 }
 
 .acu-player-status {

@@ -1539,28 +1539,23 @@ onMounted(() => {
               <div v-if="characters.length === 0" class="acu-dice-empty-hint">无角色数据</div>
             </div>
           </div>
-
-          <div v-if="attributeButtons.length > 0 && !isCustomMode" class="acu-section-card">
-            <div class="acu-card-header">
-              <span class="acu-card-title"><i class="fa-solid fa-chart-bar"></i> 属性快捷</span>
-            </div>
-            <div class="acu-dice-quick-compact">
-              <button
-                v-for="a in attributeButtons.slice(0, 6)"
-                :key="a.name"
-                class="acu-stat-chip"
-                :class="{ active: attrName === a.name }"
-                @click="handleSelectAttribute(a)"
-              >
-                <span class="label">{{ a.name }}</span>
-                <span class="val">{{ a.value }}</span>
-                <span class="mod">{{ computeAIDMAttrMod(a.value) >= 0 ? '+' : '' }}{{ computeAIDMAttrMod(a.value) }}</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <div class="acu-config-panel">
+          <div v-if="attributeButtons.length > 0 && !isCustomMode" class="acu-attr-quick-row">
+            <button
+              v-for="a in attributeButtons.slice(0, 6)"
+              :key="a.name"
+              class="acu-attr-quick-btn"
+              :class="{ active: attrName === a.name }"
+              @click="handleSelectAttribute(a)"
+            >
+              <span class="name">{{ a.name }}</span>
+              <span class="val">{{ a.value }}</span>
+              <span class="mod">{{ computeAIDMAttrMod(a.value) >= 0 ? '+' : '' }}{{ computeAIDMAttrMod(a.value) }}</span>
+            </button>
+          </div>
+
           <div v-if="checkMode === 'standard' && !isCustomMode" class="acu-section-card">
             <div class="acu-card-header">
               <span class="acu-card-title"><i class="fa-solid fa-dice-d20"></i> 检定配置</span>
@@ -3366,6 +3361,62 @@ onMounted(() => {
   border-top: 1px dashed var(--acu-border);
 }
 
+.acu-attr-quick-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.acu-attr-quick-btn {
+  flex: 1 1 calc(16.66% - 4px);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  .name {
+    font-weight: 600;
+    color: var(--acu-text);
+  }
+
+  .val {
+    color: var(--acu-text-sub);
+    font-size: 9px;
+  }
+
+  .mod {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--acu-success);
+  }
+
+  &:hover {
+    border-color: var(--acu-accent);
+    background: rgba(52, 152, 219, 0.1);
+  }
+
+  &.active {
+    border-color: var(--acu-accent);
+    background: rgba(52, 152, 219, 0.15);
+    color: var(--acu-accent);
+
+    .name {
+      color: var(--acu-accent);
+    }
+  }
+}
+
 .acu-quick-action-btn {
   flex: 1;
   display: flex;
@@ -3565,6 +3616,16 @@ onMounted(() => {
     position: static;
     margin-top: 4px;
     width: 100%;
+  }
+
+  .acu-attr-quick-row {
+    flex-wrap: wrap;
+  }
+
+  .acu-attr-quick-btn {
+    flex: 1 1 calc(33.33% - 4px);
+    font-size: 9px;
+    padding: 3px 4px;
   }
 
   .acu-section-card {
