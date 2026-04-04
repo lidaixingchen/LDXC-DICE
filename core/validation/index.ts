@@ -1,3 +1,4 @@
 export * from './core';
 export * from './rules';
 export * from './regex-engine';
+export * from './regex-sync';

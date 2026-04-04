@@ -50,3 +50,16 @@ export {
   validateValue,
 } from './validation-executor';
 export type { RawData, TableData, ValidationError } from './validation-executor';
+export {
+  clearDiffMap,
+  clearSnapshot,
+  generateDiffMap,
+  getCurrentContextId,
+  getCurrentDiffMap,
+  isCellHighlighted,
+  isRowHighlighted,
+  loadSnapshot,
+  saveSnapshot,
+  updateDiffMap,
+} from './snapshot-manager';
+export type { DataSnapshot, DiffResult, SnapshotContext, TableSnapshot } from './snapshot-manager';

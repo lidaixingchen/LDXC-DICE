@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
+import { settingsManager } from '@data/settings-manager';
+import { isRowHighlighted, isCellHighlighted } from '@data/snapshot-manager';
 
 const props = defineProps<{
   initialTable: string;
@@ -15,7 +17,10 @@ const { getTableData } = useDashboard();
 const currentTableKey = ref(props.initialTable);
 const searchTerm = ref('');
 const currentPage = ref(1);
-const itemsPerPage = 50;
+
+const legacySettings = computed(() => settingsManager.getLegacySettings());
+const itemsPerPage = computed(() => legacySettings.value.itemsPerPage || 50);
+const highlightNew = computed(() => legacySettings.value.highlightNew);
 
 watch(
   () => props.initialTable,
@@ -89,6 +94,20 @@ function parseAttr(val: string) {
 function handleDiceClick(name: string, val: string) {
   (window as any).AcuDice?.check({ attribute: name, attributeValue: Number(val) });
 }
+
+function getRowHighlightClass(rowIndex: number): string {
+  if (!highlightNew.value) return '';
+  const tableName = tableData.value?.name || '';
+  if (isRowHighlighted(tableName, rowIndex)) return 'acu-highlight-row';
+  return '';
+}
+
+function getCellHighlightClass(rowIndex: number, colIndex: number): string {
+  if (!highlightNew.value) return '';
+  const tableName = tableData.value?.name || '';
+  if (isCellHighlighted(tableName, rowIndex, colIndex)) return 'acu-highlight-cell';
+  return '';
+}
 </script>
 
 <template>
@@ -128,7 +147,7 @@ function handleDiceClick(name: string, val: string) {
       <!-- 单个表格内容 -->
       <template v-else>
         <div v-if="isVerticalLayout" class="acu-vertical-list">
-          <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-vertical-card">
+          <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-vertical-card" :class="getRowHighlightClass(rowItem.originalIndex)">
             <div class="acu-card-header">
               <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
               <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
@@ -156,7 +175,7 @@ function handleDiceClick(name: string, val: string) {
         </div>
 
         <div v-else class="acu-horizontal-grid">
-          <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-horizontal-card">
+          <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-horizontal-card" :class="getRowHighlightClass(rowItem.originalIndex)">
             <div class="acu-card-header">
               <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
               <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
@@ -281,6 +300,27 @@ function handleDiceClick(name: string, val: string) {
     transform: translateY(-2px);
     border-color: var(--acu-accent);
     box-shadow: 0 4px 12px var(--acu-shadow);
+  }
+}
+
+.acu-highlight-row {
+  animation: acu-highlight-pulse 2s ease-in-out;
+  border-color: rgba(34, 197, 94, 0.5) !important;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.acu-highlight-cell {
+  background: rgba(34, 197, 94, 0.15);
+  border-radius: 2px;
+}
+
+@keyframes acu-highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
   }
 }
 

@@ -148,6 +148,23 @@ const SETTINGS_STORAGE_KEY = 'acu_dice_settings';
 const ISOLATED_LEGACY_UI_CONFIG_STORAGE_KEY = 'acu_ui_config_reset_v1';
 const ORIGINAL_LEGACY_UI_CONFIG_STORAGE_KEY = 'acu_ui_config_v19';
 
+export const FONTS = [
+  { id: 'default', name: '系统默认 (Modern)', val: `'Segoe UI', 'Microsoft YaHei', sans-serif` },
+  { id: 'hanchan', name: '寒蝉全圆体', val: `"寒蝉全圆体", sans-serif` },
+  { id: 'maple', name: 'Maple Mono (代码风)', val: `"Maple Mono NF CN", monospace` },
+  { id: 'huiwen', name: '汇文明朝体 (Huiwen)', val: `"Huiwen-mincho", serif` },
+  { id: 'cooper', name: 'Cooper正楷', val: `"CooperZhengKai", serif` },
+  { id: 'yffyt', name: 'YFFYT (艺术体)', val: `"YFFYT", sans-serif` },
+  { id: 'fusion', name: 'Fusion Pixel (像素风)', val: `"Fusion Pixel 12px M latin", monospace` },
+  { id: 'wenkai', name: '霞鹜文楷 (WenKai)', val: `"LXGW WenKai", serif` },
+  { id: 'notosans', name: '思源黑体 (Noto Sans)', val: `"Noto Sans CJK", sans-serif` },
+  { id: 'zhuque', name: '朱雀仿宋 (Zhuque)', val: `"Zhuque Fangsong (technical preview)", serif` },
+];
+
+export function getFontValue(fontId: string): string {
+  return FONTS.find(f => f.id === fontId)?.val || FONTS[0].val;
+}
+
 const DEFAULT_SETTINGS: DiceSystemSettings = {
   legacy: {
     layout: 'horizontal',

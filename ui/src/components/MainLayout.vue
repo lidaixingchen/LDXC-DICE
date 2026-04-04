@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { settingsManager, type LegacySettings } from '@data/settings-manager';
+import { settingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
+import { syncRulesToEngine } from '@core/validation/regex-sync';
 import { computed, onMounted, onUnmounted, ref, provide } from 'vue';
 import { useDiceSystem, usePresets } from '../composables';
 import { useDashboard } from '../composables/useDashboard';
@@ -324,6 +325,7 @@ onMounted(() => {
   initialize();
   loadPresets();
   loadTables();
+  syncRulesToEngine();
   tableRefreshTimer = setInterval(loadTables, 3000);
 
   window.addEventListener('acu-show-changes-panel', () => {
@@ -372,6 +374,7 @@ onUnmounted(() => {
       '--acu-table-font-size': legacySettings.tableFontSize + 'px',
       '--acu-chart-card-size': legacySettings.chartCardSize + 'px',
       '--acu-bottom-offset': legacySettings.bottomOffset + 'px',
+      '--acu-font-family': getFontValue(legacySettings.fontFamily),
     }"
   >
     <!-- 1. 数据展示区 (基于绝对定位弹出) -->
