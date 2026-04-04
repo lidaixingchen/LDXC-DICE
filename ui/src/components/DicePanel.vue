@@ -16,6 +16,187 @@ const { addCheckEntry, addContestEntry } = useDiceHistory();
 const { characters, currentCharacter, attributeButtons, selectCharacter, getRandomAttribute, getAttributeValue } =
   useCharacterData();
 
+interface SkillData {
+  name: string;
+  type: string;
+  description: string;
+  value: string;
+  cooldown: string;
+}
+
+interface ItemData {
+  name: string;
+  type: string;
+  description: string;
+  quantity: number;
+}
+
+const activeSkills = ref<SkillData[]>([]);
+const usableItems = ref<ItemData[]>([]);
+
+function fillPlayerAttributes(): void {
+  const playerChar = characters.value.find(c => c.name === currentCharacter.value || c.name === '主角');
+  if (!playerChar) return;
+  
+  const attrs = playerChar.attributes;
+  
+  if (attrs['力量'] !== undefined && attrValue.value === '') {
+    attrValue.value = attrs['力量'];
+  }
+  if (attrs['魅力'] !== undefined && charisma.value === '') {
+    charisma.value = attrs['魅力'];
+  }
+  if (attrs['攻击力'] !== undefined && attackPower.value === '') {
+    attackPower.value = attrs['攻击力'];
+  } else if (attrs['物理攻击'] !== undefined && attackPower.value === '') {
+    attackPower.value = attrs['物理攻击'];
+  }
+  
+  if (attrs['敏捷'] !== undefined && agilityValue.value === '') {
+    agilityValue.value = attrs['敏捷'];
+  }
+  if (attrs['感知'] !== undefined && perceptionValue.value === '') {
+    perceptionValue.value = attrs['感知'];
+  }
+  if (attrs['防御'] !== undefined && playerDefense.value === '') {
+    playerDefense.value = attrs['防御'];
+  } else if (attrs['物理防御'] !== undefined && playerDefense.value === '') {
+    playerDefense.value = attrs['物理防御'];
+  }
+}
+
+function loadCombatData(): void {
+  try {
+    const topWin = window.parent || window;
+    const api = (topWin as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
+    if (!api || typeof api.exportTableAsJson !== 'function') return;
+
+    const tableData = api.exportTableAsJson();
+    if (!tableData) return;
+
+    const skills: SkillData[] = [];
+    const items: ItemData[] = [];
+
+    for (const key in tableData) {
+      if (!key.startsWith('sheet_')) continue;
+      const sheet = tableData[key];
+      if (!sheet?.name || !sheet?.content) continue;
+
+      const headers = sheet.content[0] || [];
+      const rows = sheet.content.slice(1) || [];
+
+      if (sheet.name.includes('技能')) {
+        for (const row of rows) {
+          if (!row || !row.some((cell: any) => cell)) continue;
+          const nameCol = headers.findIndex((h: string) => h && h.includes('名称'));
+          const typeCol = headers.findIndex((h: string) => h && h.includes('类型'));
+          const descCol = headers.findIndex((h: string) => h && h.includes('效果'));
+          const valueCol = headers.findIndex((h: string) => h && h.includes('数值'));
+          const cdCol = headers.findIndex((h: string) => h && h.includes('冷却'));
+          
+          const skillType = typeCol >= 0 ? String(row[typeCol] || '') : '';
+          if (skillType === '主动') {
+            skills.push({
+              name: nameCol >= 0 ? String(row[nameCol] || '') : '',
+              type: skillType,
+              description: descCol >= 0 ? String(row[descCol] || '') : '',
+              value: valueCol >= 0 ? String(row[valueCol] || '') : '',
+              cooldown: cdCol >= 0 ? String(row[cdCol] || '') : '',
+            });
+          }
+        }
+      }
+
+      if (sheet.name.includes('物品')) {
+        for (const row of rows) {
+          if (!row || !row.some((cell: any) => cell)) continue;
+          const nameCol = headers.findIndex((h: string) => h && h.includes('名称'));
+          const typeCol = headers.findIndex((h: string) => h && h.includes('类型'));
+          const descCol = headers.findIndex((h: string) => h && h.includes('效果') || h.includes('描述'));
+          const qtyCol = headers.findIndex((h: string) => h && (h.includes('数量') || h.includes('持有')));
+          
+          const itemType = typeCol >= 0 ? String(row[typeCol] || '') : '';
+          if (itemType === '消耗品') {
+            items.push({
+              name: nameCol >= 0 ? String(row[nameCol] || '') : '',
+              type: itemType,
+              description: descCol >= 0 ? String(row[descCol] || '') : '',
+              quantity: qtyCol >= 0 ? parseInt(String(row[qtyCol] || '1'), 10) : 1,
+            });
+          }
+        }
+      }
+    }
+
+    activeSkills.value = skills;
+    usableItems.value = items.filter(i => i.quantity > 0);
+  } catch (e) {
+    console.error('[loadCombatData] 加载失败:', e);
+  }
+}
+
+async function useNormalAttack(): Promise<void> {
+  checkMode.value = 'combat';
+  fillPlayerAttributes();
+  await handleCombatCheck();
+}
+
+async function useSkill(skill: SkillData): Promise<void> {
+  const isDamageSkill = skill.description.includes('伤害') || 
+                       skill.description.includes('攻击') || 
+                       skill.description.includes('打击') || 
+                       skill.description.includes('斩击');
+  
+  if (isDamageSkill && combat.value.active) {
+    checkMode.value = 'combat';
+    fillPlayerAttributes();
+    await handleCombatCheck();
+  } else {
+    let statusContent = '';
+    if (combat.value.active) {
+      statusContent = `
+
+📊 当前状态：
+・👤 玩家：HP ${combat.value.playerCurrentHP}/${combat.value.playerMaxHP}${combat.value.playerShield > 0 ? ` 🛡️${combat.value.playerShield}` : ''}
+・👹 ${combat.value.enemyName}：HP ${combat.value.enemyCurrentHP}/${combat.value.enemyMaxHP}`;
+    }
+    
+    const content = `<meta:战斗行动>
+【使用技能 - ${skill.name}】
+
+📜 技能效果：${skill.description}
+📊 数值加成：${skill.value}
+⏱️ 冷却回合：${skill.cooldown}
+
+玩家使用了「${skill.name}」！${statusContent}
+</meta:战斗行动>`;
+    await sendToTextarea(content);
+  }
+}
+
+async function useItem(item: ItemData): Promise<void> {
+  item.quantity = Math.max(0, item.quantity - 1);
+  
+  let statusContent = '';
+  if (combat.value.active) {
+    statusContent = `
+
+📊 当前状态：
+・👤 玩家：HP ${combat.value.playerCurrentHP}/${combat.value.playerMaxHP}${combat.value.playerShield > 0 ? ` 🛡️${combat.value.playerShield}` : ''}
+・👹 ${combat.value.enemyName}：HP ${combat.value.enemyCurrentHP}/${combat.value.enemyMaxHP}`;
+  }
+  
+  const content = `<meta:战斗行动>
+【使用道具 - ${item.name}】
+
+📜 道具效果：${item.description}
+📦 剩余数量：${item.quantity}
+
+玩家使用了「${item.name}」！${statusContent}
+</meta:战斗行动>`;
+  await sendToTextarea(content);
+}
+
 const nameDropdown = useDropdownSuggestions<{ name: string }>();
 const attrDropdown = useDropdownSuggestions<AttributeButton>();
 
@@ -199,6 +380,8 @@ function startCombat(): void {
     playerCurrentHP: levelConfig.hpBase + (playerDefense.value !== '' ? Number(playerDefense.value) * 5 : 0) + equipment.value.hpBonus,
     playerShield: 0,
   };
+  
+  loadCombatData();
 }
 
 function endCombat(): void {
@@ -2241,6 +2424,43 @@ onMounted(() => {
           <div v-if="combat.round >= 6" class="acu-env-erosion">
             ⚠️ 环境侵蚀生效！每回合承受 {{ Math.floor(combat.playerMaxHP * 0.05) }} 点真实伤害
           </div>
+
+          <div class="acu-combat-actions">
+            <div class="acu-action-row">
+              <button class="acu-action-btn attack" @click="useNormalAttack" title="普通攻击">
+                ⚔️ 普攻
+              </button>
+            </div>
+            <div v-if="activeSkills.length > 0" class="acu-action-row">
+              <div class="acu-action-label">🎯 技能</div>
+              <div class="acu-action-buttons">
+                <button
+                  v-for="skill in activeSkills.slice(0, 4)"
+                  :key="skill.name"
+                  class="acu-action-btn skill"
+                  @click="useSkill(skill)"
+                  :title="skill.description"
+                >
+                  {{ skill.name.length > 4 ? skill.name.slice(0, 4) + '..' : skill.name }}
+                </button>
+              </div>
+            </div>
+            <div v-if="usableItems.length > 0" class="acu-action-row">
+              <div class="acu-action-label">🎒 道具</div>
+              <div class="acu-action-buttons">
+                <button
+                  v-for="item in usableItems.slice(0, 4)"
+                  :key="item.name"
+                  class="acu-action-btn item"
+                  @click="useItem(item)"
+                  :title="item.description"
+                  :disabled="item.quantity <= 0"
+                >
+                  {{ item.name.length > 4 ? item.name.slice(0, 4) + '..' : item.name }}<span v-if="item.quantity > 1">×{{ item.quantity }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </template>
         <div v-else class="acu-empty-hint">点击「开始」进入战斗模式追踪回合与HP</div>
       </div>
@@ -3117,6 +3337,85 @@ onMounted(() => {
   color: #e67e22;
   background: rgba(230, 126, 34, 0.1);
   border: 1px dashed rgba(230, 126, 34, 0.3);
+}
+
+.acu-combat-actions {
+  margin-top: 8px;
+  padding: 6px;
+  background: var(--acu-bg-header);
+  border-radius: 6px;
+}
+
+.acu-action-row {
+  margin-bottom: 6px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.acu-action-label {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  margin-bottom: 4px;
+}
+
+.acu-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.acu-action-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-main);
+  color: var(--acu-text-main);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &.attack {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    
+    &:hover:not(:disabled) {
+      background: rgba(231, 76, 60, 0.2);
+    }
+  }
+  
+  &.skill {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    
+    &:hover:not(:disabled) {
+      background: rgba(52, 152, 219, 0.2);
+    }
+  }
+  
+  &.item {
+    border-color: #27ae60;
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+    
+    &:hover:not(:disabled) {
+      background: rgba(39, 174, 96, 0.2);
+    }
+  }
+  
+  span {
+    font-size: 9px;
+    opacity: 0.7;
+    margin-left: 2px;
+  }
 }
 
 .acu-tools-section {
