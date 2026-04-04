@@ -684,6 +684,56 @@ onMounted(() => {
               @change="updateLegacy({ muteDatabaseToasts: ($event.target as any).checked })"
             />
           </div>
+
+          <div class="acu-group-label">疯狂模式</div>
+          <div class="acu-setting-row checkbox">
+            <label>启用疯狂模式</label>
+            <input
+              type="checkbox"
+              :checked="settings.crazyMode"
+              @change="updateLegacy({ crazyMode: ($event.target as any).checked })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>触发概率 ({{ settings.crazyLevel }}%)</label>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              :value="settings.crazyLevel"
+              @input="updateLegacy({ crazyLevel: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>主角权重 ({{ settings.playerWeight }})</label>
+            <input
+              type="range"
+              min="1"
+              max="100"
+              :value="settings.playerWeight"
+              @input="updateLegacy({ playerWeight: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>在场NPC权重 ({{ settings.inSceneNpcWeight }})</label>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              :value="settings.inSceneNpcWeight"
+              @input="updateLegacy({ inSceneNpcWeight: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>离场NPC权重 ({{ settings.offSceneNpcWeight }})</label>
+            <input
+              type="range"
+              min="0"
+              max="20"
+              :value="settings.offSceneNpcWeight"
+              @input="updateLegacy({ offSceneNpcWeight: parseInt(($event.target as any).value) })"
+            />
+          </div>
         </div>
 
         <!-- 4. 表格 -->

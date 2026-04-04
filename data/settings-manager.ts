@@ -33,6 +33,10 @@ export interface LegacySettings {
   hideDashboardButton: boolean;
   hideDiceResultFromUser: boolean;
   crazyMode: boolean;
+  crazyLevel: number;
+  playerWeight: number;
+  inSceneNpcWeight: number;
+  offSceneNpcWeight: number;
   hiddenTableKeys: string[];
   tableOrderKeys: string[];
   tableFontSize: number;
@@ -192,6 +196,10 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     hideDashboardButton: false,
     hideDiceResultFromUser: false,
     crazyMode: false,
+    crazyLevel: 50,
+    playerWeight: 80,
+    inSceneNpcWeight: 15,
+    offSceneNpcWeight: 5,
     hiddenTableKeys: [],
     tableOrderKeys: [],
     tableFontSize: 13,
