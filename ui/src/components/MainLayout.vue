@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { settingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
 import { syncRulesToEngine } from '@core/validation/regex-sync';
-import { computed, onMounted, onUnmounted, ref, provide } from 'vue';
+import { setDatabaseToastMute, injectToastStyles } from '../utils/toast-manager';
+import { computed, onMounted, onUnmounted, ref, provide, watch } from 'vue';
 import { useDiceSystem, usePresets } from '../composables';
 import { useDashboard } from '../composables/useDashboard';
 import ChangesPanel from './ChangesPanel.vue';
@@ -326,6 +327,8 @@ onMounted(() => {
   loadPresets();
   loadTables();
   syncRulesToEngine();
+  injectToastStyles();
+  setDatabaseToastMute(legacySettings.value.muteDatabaseToasts);
   tableRefreshTimer = setInterval(loadTables, 3000);
 
   window.addEventListener('acu-show-changes-panel', () => {
@@ -334,7 +337,7 @@ onMounted(() => {
     showChanges.value = true;
   });
 
-  window.addEventListener('acu-open-settings-section', ((e: CustomEvent) => {
+  window.addEventListener('acu-open-settings-section', ((e: Event) => {
     closeAllPanels();
     activeTab.value = '';
     showSettings.value = true;
@@ -352,6 +355,13 @@ onMounted(() => {
     showPresetManager.value = true;
   });
 });
+
+watch(
+  () => legacySettings.value.muteDatabaseToasts,
+  muted => {
+    setDatabaseToastMute(muted);
+  },
+);
 
 onUnmounted(() => {
   if (tableRefreshTimer) clearInterval(tableRefreshTimer);

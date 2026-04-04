@@ -3,11 +3,15 @@ import { computed, onMounted, provide, ref, watch, inject } from 'vue';
 import { useCharacterData, useDiceSystem, useDiceHistory, useDropdownSuggestions, usePresets } from '../composables';
 import type { AttributeButton } from '../composables/useCharacterData';
 import type { CheckResult } from '../types';
+import { settingsManager } from '@data/settings-manager';
 
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'switchToOpposed'): void;
 }>();
+
+const legacySettings = computed(() => settingsManager.getLegacySettings());
+const shouldHideResult = computed(() => legacySettings.value.hideDiceResultFromUser);
 
 const { initialize: initDiceSystem, performCheck, roll } = useDiceSystem();
 const { presets, currentPreset, loadPresets, selectPreset } = usePresets();
@@ -812,7 +816,7 @@ async function handleStandardCheck(): Promise<void> {
     diceType: formula,
     presetId: 'standard',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   const initiator = initiatorName.value || '<user>';
   const critText = isCritSuccess ? '✨ 大成功！' : (isCritFailure ? '💀 大失败！' : (isCritHit ? '💥 暴击成功！' : (isSuccess ? '✅ 成功！' : `❌ 失败${triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${hpPenalty}% HP）` : ''}`)));
@@ -880,7 +884,7 @@ async function handleInitiativeCheck(): Promise<void> {
     diceType: formula,
     presetId: 'initiative',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   const content = `<meta:检定结果>
 【AIDM先攻检定】
@@ -973,7 +977,7 @@ async function handleEscapeCheck(): Promise<void> {
     diceType: formula,
     presetId: 'escape',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   const typeLabel = escapeType.value === 'solo' ? '单对单' : (escapeType.value === 'surrounded' ? '被包围' : '有障碍');
   const content = `<meta:检定结果>
@@ -1106,7 +1110,7 @@ async function handleContestCheck(): Promise<void> {
     diceType: formula,
     presetId: 'contest',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   const initiator = initiatorName.value || '<user>';
   const advText = netAdv > 0 ? `优势(+${netAdv})` : (netAdv < 0 ? `劣势(${netAdv})` : '无调整');
@@ -1205,7 +1209,7 @@ async function handleCombatCheck(): Promise<void> {
     diceType: formula,
     presetId: 'combat',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   let combatStatusContent = '';
   if (isHit && combat.value.active) {
@@ -1305,7 +1309,7 @@ async function handleDefenseCheck(): Promise<void> {
     diceType: formula,
     presetId: 'defense',
   };
-  showResult.value = true;
+  showResult.value = !shouldHideResult.value;
 
   let combatStatusContent = '';
   if (!isDodge && combat.value.active) {
@@ -1426,7 +1430,7 @@ async function handleRoll(): Promise<void> {
         diceType: expr,
         presetId: '__custom__',
       };
-      showResult.value = true;
+      showResult.value = !shouldHideResult.value;
 
       const content = `<meta:检定结果>\n元叙事：${initiatorName.value || '<user>'}发起了自定义掷骰【${expr}】，掷出${total}${target !== null ? `，${judgeMode}${target}` : ''}，【${outcomeText}】\n</meta:检定结果>`;
       await sendToTextarea(content);
