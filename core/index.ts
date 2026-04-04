@@ -6,3 +6,5 @@ export * from './emoji-maps';
 export * from './database-ui-override';
 export * from './validation';
 export * from './debug-console';
+export * from './crazy-mode';
+export * from './crazy-mode-trigger';

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { settingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
 import { syncRulesToEngine } from '@core/validation/regex-sync';
+import { setTableDataProvider, type AttributeData } from '@core/crazy-mode';
+import { initCrazyModeTrigger } from '@core/crazy-mode-trigger';
 import { setDatabaseToastMute, injectToastStyles } from '../utils/toast-manager';
 import { computed, onMounted, onUnmounted, ref, provide, watch } from 'vue';
 import { useDiceSystem, usePresets } from '../composables';
@@ -18,7 +20,7 @@ import DiceHistoryPanel from './DiceHistoryPanel.vue';
 import PresetManager from './PresetManager.vue';
 import TableBrowser from './TableBrowser.vue';
 
-const { getTableData } = useDashboard();
+const { getTableData, findTableByKeywords } = useDashboard();
 const { initialize } = useDiceSystem();
 const { loadPresets } = usePresets();
 
@@ -114,6 +116,72 @@ function loadTables() {
     }
   }
   tables.value = newTables;
+}
+
+function setupCrazyModeProvider(): void {
+  setTableDataProvider({
+    getPlayerData: () => {
+      const rawData = getTableData();
+      if (!rawData) return null;
+      const playerTable = findTableByKeywords(rawData, 'player');
+      if (!playerTable || playerTable.rows.length === 0) return null;
+
+      const row = playerTable.rows[0];
+      const headers = playerTable.headers;
+      const name = String(row[headers.findIndex(h => h && String(h).includes('姓名'))] || '主角');
+
+      const attrs: AttributeData[] = [];
+      headers.forEach((h, idx) => {
+        if (!h) return;
+        const headerLower = String(h).toLowerCase();
+        if (headerLower.includes('基础属性') || headerLower.includes('属性')) {
+          const val = String(row[idx] || '');
+          const parts = val.split(/[;；,，]/);
+          for (const part of parts) {
+            const match = part.trim().match(/^(.+?)[：:＝=\s]*(\d+)/);
+            if (match) {
+              attrs.push({ name: match[1].trim(), value: parseInt(match[2], 10) });
+            }
+          }
+        }
+      });
+
+      return { name, attrs };
+    },
+    getNpcData: () => {
+      const rawData = getTableData();
+      if (!rawData) return [];
+      const npcTable = findTableByKeywords(rawData, 'npc');
+      if (!npcTable) return [];
+
+      const { headers, rows } = npcTable;
+      return rows
+        .filter(row => row && row.some(cell => cell))
+        .map(row => {
+          const name = String(row[headers.findIndex(h => h && String(h).includes('姓名'))] || '未知');
+          const inSceneVal = String(row[headers.findIndex(h => h && String(h).includes('在场'))] || '').toLowerCase();
+          const inScene = ['是', 'true', '在场', 'yes', '1'].includes(inSceneVal);
+
+          const attrs: AttributeData[] = [];
+          headers.forEach((h, idx) => {
+            if (!h) return;
+            const headerLower = String(h).toLowerCase();
+            if (headerLower.includes('基础属性') || headerLower.includes('属性')) {
+              const val = String(row[idx] || '');
+              const parts = val.split(/[;；,，]/);
+              for (const part of parts) {
+                const match = part.trim().match(/^(.+?)[：:＝=\s]*(\d+)/);
+                if (match) {
+                  attrs.push({ name: match[1].trim(), value: parseInt(match[2], 10) });
+                }
+              }
+            }
+          });
+
+          return { name, attrs, inScene };
+        });
+    },
+  });
 }
 
 function handleNavClick(key: string) {
@@ -329,6 +397,7 @@ onMounted(() => {
   syncRulesToEngine();
   injectToastStyles();
   setDatabaseToastMute(legacySettings.value.muteDatabaseToasts);
+  setupCrazyModeProvider();
   tableRefreshTimer = setInterval(loadTables, 3000);
 
   window.addEventListener('acu-show-changes-panel', () => {
@@ -354,6 +423,8 @@ onMounted(() => {
     activeTab.value = '';
     showPresetManager.value = true;
   });
+
+  initCrazyModeTrigger();
 });
 
 watch(
