@@ -269,14 +269,39 @@ function selectCombatTarget(name: string): void {
 
 function selectDefenseTarget(name: string): void {
   selectedDefenseTarget.value = name;
-  const char = characters.value.find(c => c.name === name);
-  if (char) {
-    const attrs = char.attributes;
+  const enemyChar = characters.value.find(c => c.name === name);
+  if (enemyChar) {
+    const attrs = enemyChar.attributes;
+    const level = worldLevel.value;
+    const baseDC = getBaseDC(level);
+    
+    const enemyStr = attrs['力量'] || attrs['攻击'] || 10;
+    const enemyInt = attrs['智力'] || 10;
+    const enemyAttrMod = computeAIDMAttrMod(Math.max(enemyStr, enemyInt));
+    const enemyMastery = getMasteryBonus(level);
+    
+    enemyAttackDC.value = baseDC + enemyAttrMod + enemyMastery;
+    
+    if (attrs['攻击力'] !== undefined) {
+      enemyAttackPower.value = attrs['攻击力'];
+    } else if (attrs['物理攻击'] !== undefined) {
+      enemyAttackPower.value = attrs['物理攻击'];
+    }
+  }
+  
+  const playerChar = characters.value.find(c => c.name === currentCharacter.value || c.name === '主角');
+  if (playerChar) {
+    const attrs = playerChar.attributes;
     if (attrs['敏捷'] !== undefined) {
       agilityValue.value = attrs['敏捷'];
     }
     if (attrs['感知'] !== undefined) {
       perceptionValue.value = attrs['感知'];
+    }
+    if (attrs['防御'] !== undefined) {
+      playerDefense.value = attrs['防御'];
+    } else if (attrs['物理防御'] !== undefined) {
+      playerDefense.value = attrs['物理防御'];
     }
   }
 }
