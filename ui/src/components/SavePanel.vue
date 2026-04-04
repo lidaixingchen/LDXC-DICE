@@ -46,8 +46,8 @@ const activeStatuses = inject<Ref<StatusEffect[]>>('aidmStatuses');
 const currentCharacter = inject<any>('aidmCurrentCharacter');
 
 function getSPV(level: string): number {
-  const map: Record<string, number> = { 'F级': 1, 'E级': 2, 'D级': 4, 'C级': 8, 'B级': 16, 'A级': 32, 'S级': 64, 'SS级': 128, 'SSS级': 256 };
-  return map[level] || 1;
+  const map: Record<string, number> = { 'F级': 5, 'E级': 10, 'D级': 15, 'C级': 20, 'B级': 25, 'A级': 35, 'S级': 50, 'SS级': 70, 'SSS级': 95 };
+  return map[level] || 5;
 }
 
 function deriveCombatStats(attrs: Record<string, number>, level: string) {
@@ -63,7 +63,7 @@ function deriveCombatStats(attrs: Record<string, number>, level: string) {
     magicAtk: intVal + eq.magicDmg,
     physDef: end + eq.physDef,
     magicDef: per + eq.magicDef,
-    hp: Math.max(1, end * 5 + (getSPV(level) >= 8 ? 20 : 5) + eq.hpBonus),
+    hp: Math.max(1, end * 5 + 3 * getSPV(level) + eq.hpBonus),
     ddc: 10,
     critRate: Math.min(50, 10 + per),
   };

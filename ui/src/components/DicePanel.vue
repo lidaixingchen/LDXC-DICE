@@ -172,7 +172,7 @@ const combat = inject<any>('aidmCombat');
 
 function startCombat(): void {
   const levelConfig = WORLD_LEVEL_CONFIG[worldLevel.value];
-  const baseHP = levelConfig.hpBase || 100;
+  const baseHP = levelConfig.hpBase || 60;
   
   let enemyName = combat.value.enemyName || '未知敌人';
   let enemyMaxHP = combat.value.enemyMaxHP || baseHP * 2;
@@ -282,7 +282,7 @@ function deriveCombatStats(attrs: Record<string, number>, level: string): Derive
   const per = findAttrValue(attrs, ATTR_MAPPING.perception) || 0;
   const cha = findAttrValue(attrs, ATTR_MAPPING.charisma) || 0;
 
-  const hpBase = WORLD_LEVEL_CONFIG[level]?.hpBase || 25;
+  const hpBase = WORLD_LEVEL_CONFIG[level]?.hpBase || 15;
 
   return {
     physAtk: str + equipment.value.physDmg,
@@ -346,15 +346,15 @@ interface WorldLevelConfig {
 }
 
 const WORLD_LEVEL_CONFIG: Record<string, WorldLevelConfig> = {
-  'F级': { baseDC: 10, masteryBonus: 0, hpBase: 25, singleAttrMax: 30, description: '普通武侠、现代国术' },
-  'E级': { baseDC: 13, masteryBonus: 1, hpBase: 50, singleAttrMax: 45, description: '低武、现代异能' },
-  'D级': { baseDC: 16, masteryBonus: 2, hpBase: 75, singleAttrMax: 60, description: '武侠、低等恐怖' },
-  'C级': { baseDC: 19, masteryBonus: 3, hpBase: 100, singleAttrMax: 80, description: '低等修真、现代灭世' },
-  'B级': { baseDC: 22, masteryBonus: 4, hpBase: 125, singleAttrMax: 100, description: '中等修真、奇幻' },
-  'A级': { baseDC: 25, masteryBonus: 5, hpBase: 175, singleAttrMax: 125, description: '高等仙侠、星球战争' },
-  'S级': { baseDC: 28, masteryBonus: 6, hpBase: 250, singleAttrMax: 150, description: '神话仙侠、克苏鲁' },
-  'SS级': { baseDC: 31, masteryBonus: 6, hpBase: 350, singleAttrMax: 180, description: '多元宇宙、概念战争' },
-  'SSS级': { baseDC: 34, masteryBonus: 8, hpBase: 500, singleAttrMax: 9999, description: '全能领域、超越者' },
+  'F级': { baseDC: 10, masteryBonus: 0, hpBase: 15, singleAttrMax: 30, description: '普通武侠、现代国术' },
+  'E级': { baseDC: 13, masteryBonus: 1, hpBase: 30, singleAttrMax: 45, description: '低武、现代异能' },
+  'D级': { baseDC: 16, masteryBonus: 2, hpBase: 45, singleAttrMax: 60, description: '武侠、低等恐怖' },
+  'C级': { baseDC: 19, masteryBonus: 3, hpBase: 60, singleAttrMax: 80, description: '低等修真、现代灭世' },
+  'B级': { baseDC: 22, masteryBonus: 4, hpBase: 75, singleAttrMax: 100, description: '中等修真、奇幻' },
+  'A级': { baseDC: 25, masteryBonus: 5, hpBase: 105, singleAttrMax: 125, description: '高等仙侠、星球战争' },
+  'S级': { baseDC: 28, masteryBonus: 6, hpBase: 150, singleAttrMax: 150, description: '神话仙侠、克苏鲁' },
+  'SS级': { baseDC: 31, masteryBonus: 6, hpBase: 210, singleAttrMax: 180, description: '多元宇宙、概念战争' },
+  'SSS级': { baseDC: 34, masteryBonus: 8, hpBase: 285, singleAttrMax: 9999, description: '全能领域、超越者' },
 };
 
 const WORLD_LEVELS = Object.keys(WORLD_LEVEL_CONFIG);
@@ -1546,7 +1546,7 @@ function generateSkills(): void {
     const activeCount = roll('1d2+1').total;
     for (let i = 0; i < activeCount; i++) {
       const entry = ACTIVE_SKILL_POOL[Math.floor(Math.random() * ACTIVE_SKILL_POOL.length)];
-      skills.push({ ...entry, type: '主动', spvValue: Math.floor(spv * (Math.random() * 0.5 + 0.8)) });
+      skills.push({ ...entry, type: '主动', spvValue: Math.floor(spv * (Math.random() * 0.5 + 1.6)) });
     }
 
     const passiveCount = roll('1d2').total;
@@ -1559,7 +1559,7 @@ function generateSkills(): void {
       name: ['开锁精通', '快速阅读', '驯兽术', '伪装潜行'][Math.floor(Math.random() * 4)],
       type: '主动',
       effect: '特殊辅助技能',
-      spvValue: Math.floor(spv * 0.8),
+      spvValue: Math.floor(spv * 1.6),
     });
   }
 
