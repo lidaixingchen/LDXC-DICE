@@ -32,3 +32,21 @@ export {
   getValidationRulesByTable,
 } from './validation-presets';
 export type { ValidationPreset, ValidationRuleConfig } from './validation-presets';
+export {
+  checkTableRules,
+  getErrorCount,
+  groupErrorsByTable,
+  validateAllData,
+  validateEnum,
+  validateFormat,
+  validateKeyValue,
+  validateNumeric,
+  validateRelation,
+  validateRequired,
+  validateRow,
+  validateRowLimit,
+  validateSequence,
+  validateTable,
+  validateValue,
+} from './validation-executor';
+export type { RawData, TableData, ValidationError } from './validation-executor';
