@@ -145,7 +145,7 @@ function getTriggerDescription(trigger: MapInteractionTrigger): string {
     case 'region':
       return `区域: ${trigger.regionId || '任意'}`;
     case 'grid':
-      return `格子: ${trigger.data?.gridCell ? `(${trigger.data.gridCell.col}, ${trigger.data.gridCell.row})` : '任意'}`;
+      return `格子: ${trigger.data?.gridCell ? `(${(trigger.data.gridCell as { col: number; row: number }).col}, ${(trigger.data.gridCell as { col: number; row: number }).row})` : '任意'}`;
     case 'custom':
       return `自定义条件`;
     default:

@@ -980,8 +980,8 @@ async function handleCombatCheck(): Promise<void> {
     outcomeText = '未命中！';
   }
 
-  const atkTypeLabel = attackType.value === 'physical' ? '物理攻击' : '法术攻击';
-  const attrLabel = attackType.value === 'physical' ? '力量' : '智力';
+  const atkTypeLabel = attackType.value === '物理' ? '物理攻击' : '法术攻击';
+  const attrLabel = attackType.value === '物理' ? '力量' : '智力';
   const targetName = selectedTarget.value || '目标';
 
   lastResult.value = {
@@ -1938,7 +1938,7 @@ onMounted(() => {
           </div>
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">攻击属性值</div>
-            <input v-model="attrValue" type="text" class="acu-dice-input" :placeholder="attackType === 'physical' ? '力量' : '智力'" />
+            <input v-model="attrValue" type="text" class="acu-dice-input" :placeholder="attackType === '物理' ? '力量' : '智力'" />
           </div>
           <div class="acu-dice-field">
             <div class="acu-dice-form-label">魅力值</div>
@@ -1970,7 +1970,7 @@ onMounted(() => {
 
         <div class="acu-info-cards">
           <div class="acu-info-card">
-            <div class="label">{{ attackType === 'physical' ? '力量' : '智力' }}加成</div>
+            <div class="label">{{ attackType === '物理' ? '力量' : '智力' }}加成</div>
             <div class="value" :class="{ positive: computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 }">
               {{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) > 0 ? '+' : '' }}{{ computeAIDMAttrMod(attrValue !== '' ? Number(attrValue) : 10) }}
             </div>

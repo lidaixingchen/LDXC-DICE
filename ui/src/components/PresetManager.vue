@@ -71,9 +71,9 @@ function importDiceFromFile(): void {
       const text = await file.text();
       const data = JSON.parse(text);
       if (Array.isArray(data)) {
-        data.forEach(p => presetManager.addPreset(p));
+        data.forEach(p => presetManager.registerPreset(p));
       } else {
-        presetManager.addPreset(data);
+        presetManager.registerPreset(data);
       }
       loadAllPresets();
     } catch (err) {
@@ -105,7 +105,7 @@ function exportAllDicePresets(): void {
 
 function deleteDicePreset(preset: AdvancedDicePreset): void {
   if (confirm(`确定删除预设 "${preset.name}"？`)) {
-    presetManager.removePreset(preset.id);
+    presetManager.unregisterPreset(preset.id);
     loadAllPresets();
   }
 }
@@ -118,7 +118,7 @@ function saveDicePreset(): void {
     data.description = editingPresetDesc.value;
     data.kind = 'advanced';
     data.version = data.version || '1.0.0';
-    presetManager.addPreset(data);
+    presetManager.registerPreset(data);
     loadAllPresets();
     viewMode.value = 'main';
   } catch (err) {
