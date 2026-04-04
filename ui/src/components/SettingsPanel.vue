@@ -10,6 +10,7 @@ import {
 } from '@data/settings-manager';
 import { validationPresetManager } from '@data/validation-preset-manager';
 import type { ValidationRuleConfig } from '@data/validation-presets';
+import { groupErrorsByTable, validateAllData, type ValidationError, type RawData } from '@data/validation-executor';
 import { computed, onMounted, ref } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 import AttributeRuleManager from './AttributeRuleManager.vue';
@@ -50,6 +51,9 @@ const currentValidationPreset = ref<string>('');
 const validationRules = ref<ValidationRuleConfig[]>([]);
 const editingRule = ref<ValidationRuleConfig | null>(null);
 const showRuleEditor = ref(false);
+const validationResults = ref<ValidationError[]>([]);
+const validationRunning = ref(false);
+const selectedErrorTable = ref<string | null>(null);
 
 const regexPresets = ref<any[]>([]);
 const currentRegexPreset = ref<string>('');
@@ -216,6 +220,56 @@ function importValidationPreset(event: Event) {
     }
   };
   reader.readAsText(file);
+}
+
+function runValidation() {
+  validationRunning.value = true;
+  validationResults.value = [];
+
+  try {
+    const rawData = getTableData() as RawData | null;
+    if (!rawData) {
+      alert('无法获取表格数据，请确保数据库已加载');
+      validationRunning.value = false;
+      return;
+    }
+
+    const errors = validateAllData(rawData);
+    validationResults.value = errors;
+
+    if (errors.length === 0) {
+      alert('验证通过！所有数据符合规则要求。');
+    } else {
+      console.log('[Validation] 发现', errors.length, '个验证错误');
+    }
+  } catch (err) {
+    console.error('[Validation] 验证执行失败:', err);
+    alert('验证执行失败：' + (err as Error).message);
+  }
+
+  validationRunning.value = false;
+}
+
+function clearValidationResults() {
+  validationResults.value = [];
+  selectedErrorTable.value = null;
+}
+
+function getGroupedErrors(): Record<string, ValidationError[]> {
+  return groupErrorsByTable(validationResults.value);
+}
+
+function getErrorCountByTable(tableName: string): number {
+  return validationResults.value.filter(e => e.tableName === tableName).length;
+}
+
+function selectErrorTable(tableName: string) {
+  selectedErrorTable.value = selectedErrorTable.value === tableName ? null : tableName;
+}
+
+function getSelectedTableErrors(): ValidationError[] {
+  if (!selectedErrorTable.value) return [];
+  return validationResults.value.filter(e => e.tableName === selectedErrorTable.value);
 }
 
 function loadRegexPresets() {
@@ -673,6 +727,64 @@ onMounted(() => {
           </div>
 
           <div class="acu-group-label">验证规则列表</div>
+          <div class="acu-btn-group">
+            <button class="acu-full-btn primary" :disabled="validationRunning" @click="runValidation">
+              <i class="fa-solid" :class="validationRunning ? 'fa-spinner fa-spin' : 'fa-play'"></i>
+              {{ validationRunning ? '验证中...' : '立即验证' }}
+            </button>
+          </div>
+
+          <div v-if="validationResults.length > 0" class="acu-validation-results">
+            <div class="acu-validation-header">
+              <span class="acu-validation-title">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                发现 {{ validationResults.length }} 个验证问题
+              </span>
+              <button class="acu-clear-btn" @click="clearValidationResults">
+                <i class="fa-solid fa-times"></i> 清除
+              </button>
+            </div>
+
+            <div class="acu-validation-tables">
+              <div
+                v-for="(errors, tableName) in getGroupedErrors()"
+                :key="tableName"
+                class="acu-validation-table-item"
+                :class="{ active: selectedErrorTable === tableName }"
+                @click="selectErrorTable(tableName as string)"
+              >
+                <span class="acu-table-name">{{ tableName }}</span>
+                <span class="acu-error-count">{{ (errors as ValidationError[]).length }}</span>
+              </div>
+            </div>
+
+            <div v-if="selectedErrorTable" class="acu-validation-errors">
+              <div
+                v-for="error in getSelectedTableErrors()"
+                :key="`${error.ruleId}-${error.rowIndex}`"
+                class="acu-validation-error-item"
+              >
+                <div class="acu-error-header">
+                  <span class="acu-error-row" v-if="error.rowIndex >= 0">
+                    <i class="fa-solid fa-row"></i> 行 {{ error.rowIndex + 1 }}
+                    <span v-if="error.rowTitle" class="acu-error-row-title">({{ error.rowTitle }})</span>
+                  </span>
+                  <span class="acu-error-column" v-if="error.columnName">{{ error.columnName }}</span>
+                </div>
+                <div class="acu-error-message">{{ error.errorMessage }}</div>
+                <div class="acu-error-value">
+                  <span class="acu-error-label">当前值:</span>
+                  <code>{{ error.currentValue || '(空)' }}</code>
+                </div>
+                <div class="acu-error-rule">
+                  <span class="acu-error-label">规则:</span>
+                  <span>{{ error.ruleName }}</span>
+                  <span class="acu-error-type">({{ error.ruleType }})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="acu-rule-list">
             <div v-for="rule in validationRules" :key="rule.id" class="acu-rule-item">
               <div class="acu-rule-header">
@@ -1347,5 +1459,180 @@ onMounted(() => {
 .preview[data-theme='minepink'] {
   background: #ff69b4;
   border: 1px solid #fff;
+}
+
+/* 验证结果样式 */
+.acu-validation-results {
+  margin-top: 12px;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  background: var(--acu-bg-header);
+  overflow: hidden;
+}
+
+.acu-validation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(231, 76, 60, 0.1);
+  border-bottom: 1px solid #e74c3c;
+}
+
+.acu-validation-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e74c3c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acu-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+  }
+}
+
+.acu-validation-tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--acu-border);
+}
+
+.acu-validation-table-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+  &:hover {
+    border-color: var(--acu-accent);
+  }
+  &.active {
+    background: var(--acu-accent-light);
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+  }
+}
+
+.acu-table-name {
+  color: var(--acu-text-main);
+}
+
+.acu-error-count {
+  background: #e74c3c;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.acu-validation-errors {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.acu-validation-error-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--acu-border);
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: var(--acu-bg-panel);
+  }
+}
+
+.acu-error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.acu-error-row {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--acu-accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.acu-error-row-title {
+  font-weight: normal;
+  color: var(--acu-text-sub);
+  font-size: 10px;
+}
+
+.acu-error-column {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  background: var(--acu-bg-panel);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.acu-error-message {
+  font-size: 11px;
+  color: #e74c3c;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.acu-error-value {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  margin-bottom: 2px;
+  code {
+    background: var(--acu-bg-panel);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: var(--acu-text-main);
+  }
+}
+
+.acu-error-label {
+  color: var(--acu-text-sub);
+  margin-right: 4px;
+}
+
+.acu-error-rule {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+}
+
+.acu-error-type {
+  background: var(--acu-accent-light);
+  color: var(--acu-accent);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  margin-left: 4px;
 }
 </style>
