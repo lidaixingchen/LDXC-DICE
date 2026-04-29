@@ -1,6 +1,7 @@
 import { settingsManager } from '@data/settings-manager';
 import { createApp, type App as VueApp } from 'vue';
 import { initAcuDice } from './api';
+import { interceptTextareaValue, installSendRestoreHook } from './utils/input-injector';
 import MainLayout from './components/MainLayout.vue';
 import './styles/themes.scss';
 import './styles/global.scss';
@@ -218,6 +219,10 @@ function main(): void {
   try {
     renderInterface();
     initAcuDice();
+
+    // 安装输入栏拦截和发送恢复钩子
+    interceptTextareaValue();
+    installSendRestoreHook();
 
     setTimeout(() => {
       setupMutationObserver();

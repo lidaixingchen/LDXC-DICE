@@ -2,6 +2,7 @@ import { createDatabaseAdapter, type DatabaseAdapter } from './adapters/database
 import { AttributeManager } from './core/attribute-manager';
 import { evaluateCondition, evaluateFormula, rollComplexDiceExpression, rollDiceExpression } from './core/dice-roller';
 import { EffectEngine } from './core/effect-engine';
+import { errorHandler } from './core/error-handler';
 import type {
   AdvancedDicePreset,
   DiceRollContext,
@@ -40,6 +41,9 @@ export class DiceSystem {
     this.effectEngine = new EffectEngine(this.dbAdapter);
     this.attributeManager = new AttributeManager(this.dbAdapter);
     this.presetManager = presetManager;
+
+    // 安装全局错误处理器
+    errorHandler.install();
 
     if (config.autoRegisterPresets !== false) {
       registerBuiltinPresets(this.presetManager);
@@ -195,6 +199,7 @@ export {
   createDatabaseAdapter,
   createLogger,
   EffectEngine,
+  errorHandler,
   evaluateCondition,
   evaluateFormula,
   logger,
