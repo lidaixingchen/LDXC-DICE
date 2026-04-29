@@ -233,6 +233,9 @@ export class PresetManager {
       }
 
       try {
+        if (/[{}[\];]/.test(expr)) {
+          continue;
+        }
         const fn = new Function(`return ${expr}`);
         if (fn()) {
           return outcome;

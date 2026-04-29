@@ -211,7 +211,9 @@ export class DebugConsole {
       };
 
       const result = await command.handler(args, context);
-      this.debug(`执行命令: ${input}`, result, 'DebugConsole');
+      if (commandName !== 'clear') {
+        this.debug(`执行命令: ${input}`, result, 'DebugConsole');
+      }
       return result;
     } catch (e) {
       const errorMsg = `命令执行失败: ${e instanceof Error ? e.message : '未知错误'}`;
@@ -246,7 +248,8 @@ export class DebugConsole {
       description: '清除日志',
       usage: 'clear',
       handler: () => {
-        this.clearLogs();
+        this.logs = [];
+        this.saveToStorage();
         return '日志已清除';
       },
     });

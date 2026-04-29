@@ -391,6 +391,30 @@ const navItems = computed(() => {
   return all;
 });
 
+const onShowChangesPanel = () => {
+  closeAllPanels();
+  activeTab.value = '';
+  showChanges.value = true;
+};
+
+const onOpenSettingsSection = (_e: Event) => {
+  closeAllPanels();
+  activeTab.value = '';
+  showSettings.value = true;
+};
+
+const onShowDiceHistory = () => {
+  closeAllPanels();
+  activeTab.value = '';
+  showDiceHistory.value = true;
+};
+
+const onShowPresetManager = () => {
+  closeAllPanels();
+  activeTab.value = '';
+  showPresetManager.value = true;
+};
+
 onMounted(() => {
   initialize();
   loadPresets();
@@ -401,29 +425,10 @@ onMounted(() => {
   setupCrazyModeProvider();
   tableRefreshTimer = setInterval(loadTables, 3000);
 
-  window.addEventListener('acu-show-changes-panel', () => {
-    closeAllPanels();
-    activeTab.value = '';
-    showChanges.value = true;
-  });
-
-  window.addEventListener('acu-open-settings-section', ((e: Event) => {
-    closeAllPanels();
-    activeTab.value = '';
-    showSettings.value = true;
-  }) as EventListener);
-
-  window.addEventListener('acu-show-dice-history', () => {
-    closeAllPanels();
-    activeTab.value = '';
-    showDiceHistory.value = true;
-  });
-
-  window.addEventListener('acu-show-preset-manager', () => {
-    closeAllPanels();
-    activeTab.value = '';
-    showPresetManager.value = true;
-  });
+  window.addEventListener('acu-show-changes-panel', onShowChangesPanel);
+  window.addEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
+  window.addEventListener('acu-show-dice-history', onShowDiceHistory);
+  window.addEventListener('acu-show-preset-manager', onShowPresetManager);
 
   initCrazyModeTrigger();
 });
@@ -437,10 +442,10 @@ watch(
 
 onUnmounted(() => {
   if (tableRefreshTimer) clearInterval(tableRefreshTimer);
-  window.removeEventListener('acu-show-changes-panel', () => {});
-  window.removeEventListener('acu-open-settings-section', () => {});
-  window.removeEventListener('acu-show-dice-history', () => {});
-  window.removeEventListener('acu-show-preset-manager', () => {});
+  window.removeEventListener('acu-show-changes-panel', onShowChangesPanel);
+  window.removeEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
+  window.removeEventListener('acu-show-dice-history', onShowDiceHistory);
+  window.removeEventListener('acu-show-preset-manager', onShowPresetManager);
 });
 </script>
 

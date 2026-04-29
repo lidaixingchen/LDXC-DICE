@@ -1,5 +1,12 @@
 import type { RollResult } from './types';
 
+export class DiceExpressionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DiceExpressionError';
+  }
+}
+
 interface DiceToken {
   type: 'number' | 'dice' | 'operator' | 'paren' | 'modifier';
   value: string | number;
@@ -77,6 +84,87 @@ export function tokenize(expression: string): DiceToken[] {
   }
 
   return tokens;
+}
+
+export function validateTokens(tokens: DiceToken[]): void {
+  if (tokens.length === 0) return;
+
+  let parenDepth = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'paren' && token.value === '(') {
+      parenDepth++;
+    } else if (token.type === 'paren' && token.value === ')') {
+      parenDepth--;
+      if (parenDepth < 0) {
+        throw new DiceExpressionError('括号不匹配：多余的右括号');
+      }
+    }
+  }
+  if (parenDepth > 0) {
+    throw new DiceExpressionError('括号不匹配：缺少右括号');
+  }
+
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (
+      tokens[i].type === 'paren' &&
+      tokens[i].value === '(' &&
+      tokens[i + 1].type === 'paren' &&
+      tokens[i + 1].value === ')'
+    ) {
+      throw new DiceExpressionError('空括号：括号内无表达式');
+    }
+  }
+
+  const first = tokens[0];
+  if (first.type === 'operator' && (first.value === '*' || first.value === '/')) {
+    throw new DiceExpressionError(`表达式不能以运算符 '${first.value}' 开头`);
+  }
+  if (first.type === 'paren' && first.value === ')') {
+    throw new DiceExpressionError('表达式不能以右括号开头');
+  }
+
+  const last = tokens[tokens.length - 1];
+  if (last.type === 'operator') {
+    throw new DiceExpressionError('表达式不能以运算符结尾');
+  }
+  if (last.type === 'paren' && last.value === '(') {
+    throw new DiceExpressionError('表达式不能以左括号结尾');
+  }
+
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const curr = tokens[i];
+    const next = tokens[i + 1];
+
+    if (
+      curr.type === 'number' ||
+      curr.type === 'dice' ||
+      (curr.type === 'paren' && curr.value === ')')
+    ) {
+      if (next.type !== 'operator' && !(next.type === 'paren' && next.value === ')')) {
+        throw new DiceExpressionError(
+          `意外的标记：期望运算符或右括号，但得到 '${next.value}'`,
+        );
+      }
+    }
+
+    if (curr.type === 'operator') {
+      if (next.type === 'operator') {
+        throw new DiceExpressionError(
+          `连续运算符错误：'${curr.value}' 后不能跟 '${next.value}'`,
+        );
+      }
+      if (next.type === 'paren' && next.value === ')') {
+        throw new DiceExpressionError('运算符后不能直接跟右括号');
+      }
+    }
+
+    if (curr.type === 'paren' && curr.value === '(') {
+      if (next.type === 'operator' && next.value !== '+' && next.value !== '-') {
+        throw new DiceExpressionError(`左括号后不能跟运算符 '${next.value}'`);
+      }
+    }
+  }
 }
 
 export function parseDice(token: string): ParsedDice | null {
@@ -209,9 +297,12 @@ export function rollDiceExpression(expression: string): RollResult {
     if (modifier.includes('k') || modifier.includes('b')) {
       keptDice = applyKeepHighest(rawDice, modValue);
       tags.push(`保留最高${modValue}个`);
-    } else if (modifier.includes('p')) {
+    } else if (modifier.includes('d')) {
       keptDice = applyDropLowest(rawDice, modValue);
       tags.push(`移除最低${modValue}个`);
+    } else if (modifier.includes('p')) {
+      keptDice = applyPenetrate(rawDice, sides);
+      tags.push('穿透骰');
     } else if (modifier.includes('e')) {
       keptDice = applyExplode(rawDice, sides, modifierValue);
       tags.push('爆炸骰');
@@ -260,6 +351,20 @@ export function rollComplexDiceExpression(expression: string): RollResult {
     }
   }
 
+  try {
+    validateTokens(tokens);
+  } catch (e) {
+    const errorMsg = e instanceof DiceExpressionError ? e.message : '表达式语法错误';
+    return {
+      total: NaN,
+      rawDice: [],
+      keptDice: [],
+      formula: trimmed,
+      breakdown: errorMsg,
+      tags: ['error'],
+    };
+  }
+
   let pos = 0;
   const allDice: number[] = [];
 
@@ -272,7 +377,7 @@ export function rollComplexDiceExpression(expression: string): RollResult {
     if (token.type === 'number') {
       return token.value as number;
     }
-    return 0;
+    throw new DiceExpressionError(`意外的标记：'${token.value}'`);
   }
 
   function parseExpression(): number {
@@ -312,16 +417,19 @@ export function rollComplexDiceExpression(expression: string): RollResult {
   }
 
   function parseFactor(): number {
-    if (pos >= tokens.length) return 0;
+    if (pos >= tokens.length) {
+      throw new DiceExpressionError('表达式不完整：期望操作数');
+    }
 
     const token = tokens[pos];
 
     if (token.type === 'paren' && token.value === '(') {
       pos++;
       const result = parseExpression();
-      if (pos < tokens.length && tokens[pos].type === 'paren' && tokens[pos].value === ')') {
-        pos++;
+      if (pos >= tokens.length || tokens[pos].type !== 'paren' || tokens[pos].value !== ')') {
+        throw new DiceExpressionError('括号不匹配：缺少右括号');
       }
+      pos++;
       return result;
     }
 
@@ -335,20 +443,40 @@ export function rollComplexDiceExpression(expression: string): RollResult {
       return parseFactor();
     }
 
+    if (token.type !== 'number' && token.type !== 'dice') {
+      throw new DiceExpressionError(`意外的标记：期望数值或骰子表达式，但得到 '${token.value}'`);
+    }
+
     pos++;
     return resolveToken(token);
   }
 
-  const result = parseExpression();
+  try {
+    const result = parseExpression();
 
-  return {
-    total: Math.round(result * 100) / 100,
-    rawDice: allDice,
-    keptDice: allDice,
-    formula: trimmed,
-    breakdown: `${allDice.length > 0 ? allDice.join(' + ') + ' = ' : ''}${result}`,
-    tags: [],
-  };
+    if (pos < tokens.length) {
+      throw new DiceExpressionError(`表达式存在多余内容：'${tokens[pos].value}'`);
+    }
+
+    return {
+      total: Math.round(result * 100) / 100,
+      rawDice: allDice,
+      keptDice: allDice,
+      formula: trimmed,
+      breakdown: `${allDice.length > 0 ? allDice.join(' + ') + ' = ' : ''}${result}`,
+      tags: [],
+    };
+  } catch (e) {
+    const errorMsg = e instanceof DiceExpressionError ? e.message : '表达式解析错误';
+    return {
+      total: NaN,
+      rawDice: allDice,
+      keptDice: allDice,
+      formula: trimmed,
+      breakdown: errorMsg,
+      tags: ['error'],
+    };
+  }
 }
 
 export function evaluateFormula(formula: string, context: Record<string, number>): number {
@@ -400,10 +528,29 @@ export function evaluateCondition(
     return String(val);
   });
 
-  const comparisons = ['>=', '<=', '>', '<', '==', '!='];
+  const hasLogical = expr.includes('&&') || expr.includes('||');
+  const hasComparison = /[><=!]=?/.test(expr);
+
+  if (hasLogical || hasComparison) {
+    try {
+      const safeExpr = expr.replace(/[^0-9+\-*/().<>=!&| ]/g, '');
+      const fn = new Function(`return ${safeExpr}`);
+      const result = fn();
+      if (typeof result === 'boolean') {
+        return { success: true, value: result };
+      }
+      return { success: true, value: !!result };
+    } catch {
+      // fall through
+    }
+  }
+
+  const comparisons = ['>=', '<=', '===', '!==', '==', '!=', '>', '<'];
   for (const op of comparisons) {
-    if (expr.includes(op)) {
-      const [left, right] = expr.split(op).map(s => s.trim());
+    const idx = expr.indexOf(op);
+    if (idx !== -1) {
+      const left = expr.substring(0, idx).trim();
+      const right = expr.substring(idx + op.length).trim();
       const leftVal = evaluateFormula(left, context);
       const rightVal = evaluateFormula(right, context);
 
@@ -415,17 +562,23 @@ export function evaluateCondition(
         case '<=':
           result = leftVal <= rightVal;
           break;
-        case '>':
-          result = leftVal > rightVal;
+        case '===':
+          result = leftVal === rightVal;
           break;
-        case '<':
-          result = leftVal < rightVal;
+        case '!==':
+          result = leftVal !== rightVal;
           break;
         case '==':
           result = leftVal === rightVal;
           break;
         case '!=':
           result = leftVal !== rightVal;
+          break;
+        case '>':
+          result = leftVal > rightVal;
+          break;
+        case '<':
+          result = leftVal < rightVal;
           break;
         default:
           result = false;

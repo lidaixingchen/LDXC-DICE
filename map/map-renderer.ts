@@ -45,6 +45,25 @@ export class MapRenderer {
   private animationFrame: number | null = null;
   private needsRender: boolean = false;
   private options: RenderOptions = { ...DEFAULT_RENDER_OPTIONS };
+  private imageCache: Map<string, HTMLImageElement> = new Map();
+
+  private getOrLoadImage(src: string): HTMLImageElement | null {
+    const cached = this.imageCache.get(src);
+    if (cached) return cached;
+
+    const img = new Image();
+    img.src = src;
+    if (img.complete) {
+      this.imageCache.set(src, img);
+      return img;
+    }
+
+    img.onload = () => {
+      this.imageCache.set(src, img);
+      this.requestRender();
+    };
+    return null;
+  }
 
   constructor() {}
 
@@ -59,6 +78,7 @@ export class MapRenderer {
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
     }
+    this.imageCache.clear();
     this.canvas = null;
     this.ctx = null;
   }
@@ -141,9 +161,8 @@ export class MapRenderer {
 
       case 'image':
         if (background.image) {
-          const img = new Image();
-          img.src = background.image;
-          if (img.complete) {
+          const img = this.getOrLoadImage(background.image);
+          if (img) {
             this.drawImage(ctx, img, background, size);
           } else {
             ctx.fillStyle = '#1e1e2e';
@@ -419,9 +438,8 @@ export class MapRenderer {
     ctx.rotate((rotation * Math.PI) / 180);
 
     if (image) {
-      const img = new Image();
-      img.src = image;
-      if (img.complete) {
+      const img = this.getOrLoadImage(image);
+      if (img) {
         ctx.drawImage(img, -size.width / 2, -size.height / 2, size.width, size.height);
       } else {
         this.renderTokenPlaceholder(ctx, token);

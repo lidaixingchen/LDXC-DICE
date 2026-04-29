@@ -1,6 +1,6 @@
 import { createDatabaseAdapter, type DatabaseAdapter } from './adapters/database-adapter';
 import { AttributeManager } from './core/attribute-manager';
-import { evaluateCondition, evaluateFormula, rollComplexDiceExpression, rollDiceExpression } from './core/dice-roller';
+import { DiceExpressionError, evaluateCondition, evaluateFormula, rollComplexDiceExpression, rollDiceExpression, validateTokens } from './core/dice-roller';
 import { EffectEngine } from './core/effect-engine';
 import { errorHandler } from './core/error-handler';
 import type {
@@ -198,6 +198,7 @@ export {
   AttributeManager,
   createDatabaseAdapter,
   createLogger,
+  DiceExpressionError,
   EffectEngine,
   errorHandler,
   evaluateCondition,
@@ -207,6 +208,7 @@ export {
   registerBuiltinPresets,
   rollComplexDiceExpression,
   rollDiceExpression,
+  validateTokens,
 };
 
 export type {

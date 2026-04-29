@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   tokenize,
+  validateTokens,
+  DiceExpressionError,
   parseDice,
   rollSingleDie,
   rollDiceSet,
@@ -225,6 +227,118 @@ describe('dice-roller', () => {
       const result = rollComplexDiceExpression('2d6+1d4');
       expect(result.total).toBeGreaterThanOrEqual(3);
       expect(result.total).toBeLessThanOrEqual(16);
+    });
+  });
+
+  describe('validateTokens', () => {
+    it('should throw DiceExpressionError for consecutive operators 2++3', () => {
+      const tokens = tokenize('2++3');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('连续运算符错误');
+    });
+
+    it('should throw DiceExpressionError for consecutive operators 2+*3', () => {
+      const tokens = tokenize('2+*3');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('连续运算符错误');
+    });
+
+    it('should throw DiceExpressionError for unmatched opening parenthesis', () => {
+      const tokens = tokenize('(2+3');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('缺少右括号');
+    });
+
+    it('should throw DiceExpressionError for unmatched closing parenthesis', () => {
+      const tokens = tokenize('2+3)');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('多余的右括号');
+    });
+
+    it('should throw DiceExpressionError for empty parentheses', () => {
+      const tokens = tokenize('()');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('空括号');
+    });
+
+    it('should throw DiceExpressionError for expression starting with *', () => {
+      const tokens = tokenize('*3');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow("不能以运算符 '*' 开头");
+    });
+
+    it('should throw DiceExpressionError for expression ending with operator', () => {
+      const tokens = tokenize('2+3+');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('不能以运算符结尾');
+    });
+
+    it('should throw DiceExpressionError for operator before closing paren', () => {
+      const tokens = tokenize('(2+)3');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow('运算符后不能直接跟右括号');
+    });
+
+    it('should throw DiceExpressionError for * after opening paren', () => {
+      const tokens = tokenize('(*3)+2');
+      expect(() => validateTokens(tokens)).toThrow(DiceExpressionError);
+      expect(() => validateTokens(tokens)).toThrow("左括号后不能跟运算符 '*'");
+    });
+
+    it('should allow unary minus at start', () => {
+      const tokens = tokenize('-1d6+3');
+      expect(() => validateTokens(tokens)).not.toThrow();
+    });
+
+    it('should allow unary plus at start', () => {
+      const tokens = tokenize('+1d6+3');
+      expect(() => validateTokens(tokens)).not.toThrow();
+    });
+
+    it('should allow unary minus after opening paren', () => {
+      const tokens = tokenize('(-3)+2');
+      expect(() => validateTokens(tokens)).not.toThrow();
+    });
+
+    it('should pass validation for valid expressions', () => {
+      expect(() => validateTokens(tokenize('1d6+3'))).not.toThrow();
+      expect(() => validateTokens(tokenize('(1d6+2)*3'))).not.toThrow();
+      expect(() => validateTokens(tokenize('2d6-1d4+5'))).not.toThrow();
+    });
+  });
+
+  describe('rollComplexDiceExpression error handling', () => {
+    it('should return error result for 2++3', () => {
+      const result = rollComplexDiceExpression('2++3');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+      expect(result.breakdown).toContain('连续运算符');
+    });
+
+    it('should return error result for unmatched parenthesis', () => {
+      const result = rollComplexDiceExpression('(2+3');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+      expect(result.breakdown).toContain('括号');
+    });
+
+    it('should return error result for empty parentheses', () => {
+      const result = rollComplexDiceExpression('()');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+    });
+
+    it('should return error result for expression ending with operator', () => {
+      const result = rollComplexDiceExpression('2+3+');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+    });
+
+    it('should still handle valid expressions correctly', () => {
+      const result = rollComplexDiceExpression('1d6+5');
+      expect(result.total).toBeGreaterThanOrEqual(6);
+      expect(result.total).toBeLessThanOrEqual(11);
+      expect(result.tags).not.toContain('error');
     });
   });
 

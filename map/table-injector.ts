@@ -341,7 +341,12 @@ export class TableInjector {
       case 'function':
         if (transform.function) {
           try {
-            const fn = new Function('value', `return ${transform.function}`);
+            const body = transform.function;
+            if (body.length > 500 || /[{}[\];]/.test(body)) {
+              console.warn('[TableInjector] 函数体不安全，已跳过');
+              return value;
+            }
+            const fn = new Function('value', `return ${body}`);
             return fn(value);
           } catch (e) {
             console.warn('[TableInjector] 函数执行失败:', e);
@@ -360,7 +365,11 @@ export class TableInjector {
         if (transform.conditions) {
           for (const cond of transform.conditions) {
             try {
-              const fn = new Function('value', `return ${cond.condition}`);
+              const condBody = cond.condition;
+              if (condBody.length > 500 || /[{}[\];]/.test(condBody)) {
+                continue;
+              }
+              const fn = new Function('value', `return ${condBody}`);
               if (fn(value)) {
                 return cond.value;
               }
