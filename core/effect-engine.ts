@@ -354,7 +354,10 @@ export class EffectEngine {
 
       const condResult = evaluateCondition(expr, exprContext);
       if (condResult.success && condResult.value !== undefined) {
-        const val = typeof condResult.value === 'boolean' ? (condResult.value ? 1 : 0) : Number(condResult.value);
+        if (typeof condResult.value === 'boolean') {
+          return condResult.value ? 1 : 0;
+        }
+        const val = Number(condResult.value);
         if (Number.isFinite(val)) return val;
       }
 
@@ -370,6 +373,7 @@ export class EffectEngine {
       for (const tableDef of randomTables) {
         if (!tableDef || !tableDef.dice) continue;
         const tableRoll = rollComplexDiceExpression(tableDef.dice);
+        if (Number.isNaN(tableRoll.total)) continue;
         outputVars[`$${tableDef.name}Roll`] = tableRoll.total;
         const rawResult = tableDef.entries?.[tableRoll.total] ?? String(tableRoll.total);
         outputVars[`$${tableDef.name}Result`] = this.renderTemplateText(rawResult, outputVars);
@@ -445,9 +449,11 @@ export class EffectEngine {
             
             if (secEffect.randomTable) {
               const tableRoll = rollComplexDiceExpression(secEffect.randomTable.dice);
-              outputVars.$tableRoll = tableRoll.total;
-              const rawTableResult = secEffect.randomTable.entries[tableRoll.total] || `未知(${tableRoll.total})`;
-              outputVars.$tableResult = this.renderTemplateText(rawTableResult, outputVars);
+              if (!Number.isNaN(tableRoll.total)) {
+                outputVars.$tableRoll = tableRoll.total;
+                const rawTableResult = secEffect.randomTable.entries[tableRoll.total] || `未知(${tableRoll.total})`;
+                outputVars.$tableResult = this.renderTemplateText(rawTableResult, outputVars);
+              }
             }
             appendNamedRandomTables(outputVars, secEffect.randomTables);
 
@@ -502,7 +508,9 @@ export class EffectEngine {
               generatedForCurrentMatch.push(infoResult);
             } else {
               const subCheckDice = subCheck.dice || '1d100';
-              const subCheckRoll = rollComplexDiceExpression(subCheckDice).total;
+              const subCheckRollResult = rollComplexDiceExpression(subCheckDice);
+              if (Number.isNaN(subCheckRollResult.total)) continue;
+              const subCheckRoll = subCheckRollResult.total;
               const subCheckOperator = subCheck.operator || 'lte';
               const subCheckPassed = compare(subCheckOperator, subCheckRoll, subCheckAttrValue);
               const branch = subCheckPassed ? subCheck.success : subCheck.failure;
@@ -522,9 +530,11 @@ export class EffectEngine {
 
               if (branch?.randomTable) {
                 const tableRoll = rollComplexDiceExpression(branch.randomTable.dice);
-                subCheckVars.$tableRoll = tableRoll.total;
-                const rawTableResult = branch.randomTable.entries[tableRoll.total] || `未知(${tableRoll.total})`;
-                subCheckVars.$tableResult = this.renderTemplateText(rawTableResult, subCheckVars);
+                if (!Number.isNaN(tableRoll.total)) {
+                  subCheckVars.$tableRoll = tableRoll.total;
+                  const rawTableResult = branch.randomTable.entries[tableRoll.total] || `未知(${tableRoll.total})`;
+                  subCheckVars.$tableResult = this.renderTemplateText(rawTableResult, subCheckVars);
+                }
               }
               appendNamedRandomTables(subCheckVars, branch?.randomTables as SecondaryEffect['randomTables'] | undefined);
 

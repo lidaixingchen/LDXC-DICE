@@ -6,6 +6,7 @@
 
 import type { LevelPresetConfig } from './attribute-presets';
 import { AIDM_ATTRIBUTE_PRESET } from './attribute-presets';
+import { compareVersion } from '../utils/helpers';
 
 const STORAGE_KEY_PRESETS = 'acu_attribute_presets_v1';
 const STORAGE_KEY_ACTIVE_PRESET = 'acu_active_attribute_preset_id';
@@ -130,17 +131,7 @@ export const BUILTIN_ATTRIBUTE_PRESETS: StoredAttributePreset[] = [
   },
 ];
 
-function compareVersion(v1: string, v2: string): number {
-  const parts1 = v1.split('.').map(Number);
-  const parts2 = v2.split('.').map(Number);
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 < p2) return -1;
-    if (p1 > p2) return 1;
-  }
-  return 0;
-}
+const STORAGE_KEY_PRESETS_V2 = 'acu_attribute_presets_v2';
 
 export class AttributePresetManager {
   private cache: StoredAttributePreset[] | null = null;

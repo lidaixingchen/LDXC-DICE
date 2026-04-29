@@ -421,7 +421,11 @@ export class SettingsManager {
     group: K,
     field: F,
   ): DiceSystemSettings[K][F] {
-    return this.settings[group][field];
+    const value = this.settings[group][field];
+    if (value && typeof value === 'object') {
+      return JSON.parse(JSON.stringify(value)) as DiceSystemSettings[K][F];
+    }
+    return value;
   }
 
   updateSettings(updates: Partial<DiceSystemSettings>): void {

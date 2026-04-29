@@ -83,6 +83,10 @@ export class DiceSystem {
     }
 
     const roll = this.roll(preset.diceExpression);
+    if (Number.isNaN(roll.total)) {
+      log.error(`骰子表达式解析失败: "${preset.diceExpression}"`);
+      return null;
+    }
     const modifier = context.modifier || 0;
     const total = roll.total + modifier + (context.attributeValue ? Math.floor((context.attributeValue - 6) / 10) : 0);
 
@@ -105,7 +109,8 @@ export class DiceSystem {
     let output = matchedOutcome.outputTemplate || '';
 
     for (const [key, value] of Object.entries(formulaContext)) {
-      output = output.replace(new RegExp(`\\$${key}\\b`, 'g'), String(value));
+      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      output = output.replace(new RegExp(`\\$${escapedKey}\\b`, 'g'), String(value));
     }
     output = output.replace(/\$result/g, matchedOutcome.name);
     output = output.replace(/\$attributeName/g, context.attributeName || '属性');

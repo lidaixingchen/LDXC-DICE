@@ -206,6 +206,7 @@ export class MapManager {
 
   setCurrentMap(id: string): boolean {
     if (!this.maps.has(id)) return false;
+    this.saveToStorage();
     this.currentMapId = id;
     this.setupAutoSave();
     this.notifyChange(this.getCurrentMap());

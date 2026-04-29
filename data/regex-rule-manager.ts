@@ -211,6 +211,10 @@ export class RegexRuleManager {
   private syncToEngine(preset: RegexPreset): void {
     for (const rule of preset.rules) {
       try {
+        if (regexEngine.getRule(rule.id)) {
+          regexEngine.removeRule(rule.id);
+        }
+
         const engineRule: RegexRule = {
           id: rule.id,
           name: rule.name,

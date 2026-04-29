@@ -56,12 +56,18 @@ export function tokenize(expression: string): DiceToken[] {
       continue;
     }
 
-    if (/[dkbpe]/i.test(char) && current.match(/^\d*$/)) {
+    if (/[dkbp]/i.test(char) && current.match(/^\d*$/)) {
       current += char.toLowerCase();
       i++;
-      while (i < expression.length && /[0-9bkpe]/i.test(expression[i])) {
-        current += expression[i].toLowerCase();
-        i++;
+      const hasD = current.includes('d');
+      while (i < expression.length) {
+        const next = expression[i];
+        if (/[0-9bkp]/i.test(next) || (hasD && /e/i.test(next))) {
+          current += next.toLowerCase();
+          i++;
+        } else {
+          break;
+        }
       }
       tokens.push({ type: 'dice', value: current });
       current = '';
@@ -501,14 +507,16 @@ export function evaluateFormula(formula: string, context: Record<string, number>
   try {
     const safeExpr = expr.replace(/[^0-9+\-*/().]/g, '');
     if (safeExpr !== expr.replace(/\s/g, '')) {
-      return rollComplexDiceExpression(expr).total;
+      const rollResult = rollComplexDiceExpression(expr);
+      return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
     }
 
     const fn = new Function(`return ${safeExpr}`);
     const result = fn();
     return typeof result === 'number' && !isNaN(result) ? result : 0;
   } catch {
-    return rollComplexDiceExpression(expr).total;
+    const rollResult = rollComplexDiceExpression(expr);
+    return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
   }
 }
 

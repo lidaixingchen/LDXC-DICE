@@ -233,7 +233,8 @@ export class PresetManager {
 
       let expr = condition;
       for (const [key, value] of Object.entries(context)) {
-        const regex = new RegExp(`\\$${key}\\b`, 'g');
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\$${escapedKey}\\b`, 'g');
         expr = expr.replace(regex, String(value));
       }
 

@@ -7,20 +7,9 @@
 import type { AdvancedDicePreset, OutcomeLevel } from '../core/types';
 import { PRESET_FORMAT_VERSION } from '../core/types';
 import { BUILTIN_PRESETS } from './builtin-presets';
+import { compareVersion } from '../utils/helpers';
 
 type PresetVersion = '1.0.0' | '1.1.0' | '1.2.0' | '1.3.0' | '1.4.0' | '1.5.0' | '1.6.0' | '1.7.0' | '2.0.0';
-
-function compareVersion(v1: string, v2: string): number {
-  const parts1 = v1.split('.').map(Number);
-  const parts2 = v2.split('.').map(Number);
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 < p2) return -1;
-    if (p1 > p2) return 1;
-  }
-  return 0;
-}
 
 function migrateOutcome(outcome: Record<string, unknown>): OutcomeLevel {
   const migrated: OutcomeLevel = {

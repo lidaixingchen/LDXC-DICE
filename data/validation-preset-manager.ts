@@ -6,6 +6,7 @@
 
 import { AIDM_VALIDATION_PRESET } from './validation-presets';
 import type { ValidationRuleConfig, ValidationPreset } from './validation-presets';
+import { compareVersion } from '../utils/helpers';
 
 const STORAGE_KEY_PRESETS = 'acu_validation_presets_v1';
 const STORAGE_KEY_ACTIVE_PRESET = 'acu_active_preset_id';
@@ -18,18 +19,6 @@ export interface StoredValidationPreset {
   rules: ValidationRuleConfig[];
   version: string;
   createdAt: string;
-}
-
-function compareVersion(v1: string, v2: string): number {
-  const parts1 = v1.split('.').map(Number);
-  const parts2 = v2.split('.').map(Number);
-  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-    const p1 = parts1[i] || 0;
-    const p2 = parts2[i] || 0;
-    if (p1 < p2) return -1;
-    if (p1 > p2) return 1;
-  }
-  return 0;
 }
 
 export class ValidationPresetManager {
