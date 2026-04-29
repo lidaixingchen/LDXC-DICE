@@ -215,6 +215,9 @@ export class Memoizer {
       defaultTTL: options.ttl || 60000,
     });
 
+    const cacheId = `${fn.name || 'anonymous'}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    Memoizer.caches.set(cacheId, cache as LRUCache<unknown>);
+
     const memoized = ((...args: Parameters<T>) => {
       const key = options.key
         ? options.key(...args)

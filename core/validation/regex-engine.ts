@@ -163,15 +163,13 @@ export class RegexEngine {
         id: 'condition_logical',
         name: '逻辑运算符',
         description: '规范化逻辑运算符',
-        pattern: /\b(and|or|not)\b/gi,
+        pattern: /\b(and|or)\b|\bnot\s+/gi,
         replacement: (match: RegExpMatchArray) => {
-          const op = match[1];
-          const map: Record<string, string> = {
-            and: '&&',
-            or: '||',
-            not: '!',
-          };
-          return map[op.toLowerCase()] || op;
+          const m = match[0].trim();
+          if (m.toLowerCase() === 'and') return '&&';
+          if (m.toLowerCase() === 'or') return '||';
+          if (m.toLowerCase().startsWith('not')) return '!';
+          return match[0];
         },
         enabled: true,
         priority: 70,
@@ -313,28 +311,28 @@ export class RegexEngine {
           ? new RegExp(rule.pattern, rule.flags || 'g')
           : new RegExp(rule.pattern.source, rule.pattern.flags || rule.flags || 'g');
 
-        const matches = [...current.matchAll(pattern)];
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(current)) !== null) {
+          const replacement = typeof rule.replacement === 'function'
+            ? rule.replacement(match, fullContext)
+            : rule.replacement;
 
-        if (matches.length > 0) {
-          for (const match of matches.reverse()) {
-            const replacement = typeof rule.replacement === 'function'
-              ? rule.replacement(match, fullContext)
-              : rule.replacement;
+          const startPos = match.index;
+          const endPos = startPos + match[0].length;
 
-            const startPos = match.index!;
-            const endPos = startPos + match[0].length;
+          appliedRules.push({
+            ruleId: rule.id,
+            ruleName: rule.name,
+            match: match[0],
+            replacement,
+            position: { start: startPos, end: endPos },
+          });
 
-            appliedRules.push({
-              ruleId: rule.id,
-              ruleName: rule.name,
-              match: match[0],
-              replacement,
-              position: { start: startPos, end: endPos },
-            });
+          current = current.slice(0, startPos) + replacement + current.slice(endPos);
+          changed = true;
 
-            current = current.slice(0, startPos) + replacement + current.slice(endPos);
-            changed = true;
-          }
+          if (!pattern.global) break;
+          pattern.lastIndex = startPos + replacement.length;
         }
       }
     }

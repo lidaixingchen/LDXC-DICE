@@ -7,13 +7,8 @@ const TOAST_MUTE_SELECTORS = [
   '.acu-toast-container .acu-toast',
 ];
 
-function escapeCssSelector(selector: string): string {
-  return CSS.escape(selector);
-}
-
 function buildMuteCss(): string {
-  const safeSelectors = TOAST_MUTE_SELECTORS.map(s => escapeCssSelector(s));
-  return `${safeSelectors.join(',\n')} {\n  display: none !important;\n}\n`;
+  return `${TOAST_MUTE_SELECTORS.join(',\n')} {\n  display: none !important;\n}\n`;
 }
 
 function collectDocuments(): Document[] {

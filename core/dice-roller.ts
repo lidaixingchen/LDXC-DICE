@@ -410,7 +410,10 @@ export function rollComplexDiceExpression(expression: string): RollResult {
       if (token.value === '*') {
         left *= right;
       } else {
-        left = right !== 0 ? left / right : Infinity;
+        if (right === 0) {
+          throw new DiceExpressionError('除零错误：除数不能为零');
+        }
+        left /= right;
       }
     }
 

@@ -340,6 +340,26 @@ describe('dice-roller', () => {
       expect(result.total).toBeLessThanOrEqual(11);
       expect(result.tags).not.toContain('error');
     });
+
+    it('should return error result for division by zero', () => {
+      const result = rollComplexDiceExpression('10/0');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+      expect(result.breakdown).toContain('除零错误');
+    });
+
+    it('should return error result for division by zero in complex expression', () => {
+      const result = rollComplexDiceExpression('(5+5)/(2-2)');
+      expect(result.total).toBeNaN();
+      expect(result.tags).toContain('error');
+      expect(result.breakdown).toContain('除零错误');
+    });
+
+    it('should handle normal division correctly', () => {
+      const result = rollComplexDiceExpression('10/2');
+      expect(result.total).toBe(5);
+      expect(result.tags).not.toContain('error');
+    });
   });
 
   describe('evaluateFormula', () => {

@@ -216,7 +216,7 @@ function parsePlayerData(tableData: ReturnType<typeof findTableByKeywords>): Das
     if (!val) return;
 
     const headerLower = String(h).toLowerCase();
-    if (headerLower.includes('基础属性') || headerLower.includes('属性')) {
+    if (headerLower.includes('基础属性') || (headerLower.includes('属性') && !headerLower.includes('特有'))) {
       baseAttrs.push(...parseAttributeString(String(val)));
     } else if (headerLower.includes('特有属性') || headerLower.includes('特殊')) {
       specialAttrs.push(...parseAttributeString(String(val)));

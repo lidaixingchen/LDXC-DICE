@@ -64,6 +64,7 @@ export class PresetManager {
         severity: 'error',
         code: 'MISSING_ID',
       });
+      result.valid = false;
       return result;
     }
 

@@ -269,14 +269,16 @@ export class MapRenderer {
 
   private renderHexGrid(ctx: CanvasRenderingContext2D, grid: MapGrid, size: { width: number; height: number }): void {
     const gridSize = grid.size;
-    const hexHeight = gridSize * Math.sqrt(3);
     const hexWidth = gridSize * 2;
+    const hexHeight = gridSize * Math.sqrt(3);
+    const colSpacing = hexWidth * 0.75;
+    const rowSpacing = hexHeight;
 
     ctx.beginPath();
-    for (let row = 0; row < size.height / hexHeight + 1; row++) {
-      for (let col = 0; col < size.width / (hexWidth * 0.75) + 1; col++) {
-        const x = col * hexWidth * 0.75;
-        const y = row * hexHeight + (col % 2 === 1 ? hexHeight / 2 : 0);
+    for (let col = 0; col < size.width / colSpacing + 1; col++) {
+      for (let row = 0; row < size.height / rowSpacing + 1; row++) {
+        const x = col * colSpacing + (row % 2 === 1 ? colSpacing / 2 : 0);
+        const y = row * rowSpacing;
         this.drawHexagon(ctx, x, y, gridSize);
       }
     }
@@ -622,10 +624,16 @@ export class MapRenderer {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const worldX = (screenX - centerX) / viewport.zoom + viewport.x;
-    const worldY = (screenY - centerY) / viewport.zoom + viewport.y;
+    const dx = (screenX - centerX) / viewport.zoom;
+    const dy = (screenY - centerY) / viewport.zoom;
 
-    return { x: worldX, y: worldY };
+    const rotation = (viewport.rotation || 0) * Math.PI / 180;
+    const cos = Math.cos(-rotation);
+    const sin = Math.sin(-rotation);
+    const rotX = dx * cos - dy * sin;
+    const rotY = dx * sin + dy * cos;
+
+    return { x: rotX + viewport.x, y: rotY + viewport.y };
   }
 
   worldToScreen(worldX: number, worldY: number, viewport: MapViewport): MapPosition {
@@ -635,10 +643,16 @@ export class MapRenderer {
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const screenX = (worldX - viewport.x) * viewport.zoom + centerX;
-    const screenY = (worldY - viewport.y) * viewport.zoom + centerY;
+    const dx = worldX - viewport.x;
+    const dy = worldY - viewport.y;
 
-    return { x: screenX, y: screenY };
+    const rotation = (viewport.rotation || 0) * Math.PI / 180;
+    const cos = Math.cos(rotation);
+    const sin = Math.sin(rotation);
+    const rotX = dx * cos - dy * sin;
+    const rotY = dx * sin + dy * cos;
+
+    return { x: rotX * viewport.zoom + centerX, y: rotY * viewport.zoom + centerY };
   }
 
   snapToGrid(position: MapPosition, grid: MapGrid): MapPosition {

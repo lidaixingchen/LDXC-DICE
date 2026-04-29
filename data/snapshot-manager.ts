@@ -263,6 +263,12 @@ export function generateDiffMap(
         }
       }
     }
+
+    for (const [key, entry] of oldTitleMap) {
+      if (!matchedOldIndices.has(entry.index)) {
+        result.deletedRows.add(`${tableName}-row-${entry.index - 1}`);
+      }
+    }
   }
 
   return result;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { getCurrentDiffMap, updateDiffMap, type DiffResult } from '../../../data/snapshot-manager';
 import { useDashboard } from '../composables/useDashboard';
 
 const emit = defineEmits<{
@@ -9,16 +10,64 @@ const emit = defineEmits<{
 const { getTableData } = useDashboard();
 const viewMode = ref<'full' | 'validation'>('full');
 
-// 模拟原版变更检测逻辑 (这里仅做 UI 排版展示，实际对比由后端/composable处理)
-// 假设我们从后端拿到了一组格式化的 changes 数据
-const mockChanges = [
-  { type: 'modified', table: '主角信息', field: 'HP', old: '10', new: '8', title: '主角' },
-  { type: 'added', table: '物品表', title: '生锈的铁剑' },
-  { type: 'deleted', table: '重要角色表', title: '路人甲' }
-];
+const diffResult = ref<DiffResult | null>(null);
+
+function refreshDiff() {
+  diffResult.value = getCurrentDiffMap();
+}
+
+let refreshTimer: ReturnType<typeof setInterval> | null = null;
+onMounted(() => {
+  refreshDiff();
+  refreshTimer = setInterval(refreshDiff, 3000);
+});
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer);
+});
+
+interface ChangeItem {
+  type: 'modified' | 'added' | 'deleted';
+  table: string;
+  field?: string;
+  old?: string;
+  new?: string;
+  title: string;
+}
+
+const changes = computed<ChangeItem[]>(() => {
+  const diff = diffResult.value;
+  if (!diff) return [];
+
+  const items: ChangeItem[] = [];
+
+  for (const key of diff.addedRows) {
+    const parts = key.split('-row-');
+    items.push({ type: 'added', table: parts[0] || '', title: `行 ${parts[1] || ''}` });
+  }
+
+  for (const key of diff.deletedRows) {
+    const parts = key.split('-row-');
+    items.push({ type: 'deleted', table: parts[0] || '', title: `行 ${parts[1] || ''}` });
+  }
+
+  for (const key of diff.modifiedCells) {
+    const parts = key.split('-');
+    items.push({ type: 'modified', table: parts[0] || '', field: `列 ${parts[2] || ''}`, old: '-', new: '-', title: `行 ${parts[1] || ''}` });
+  }
+
+  return items;
+});
 
 function handleAction(action: string) {
-  console.log('Action:', action);
+  if (action === 'accept-all') {
+    const tableData = getTableData();
+    if (tableData) {
+      updateDiffMap(tableData, true);
+    }
+    refreshDiff();
+  } else if (action === 'reject-all') {
+    diffResult.value = null;
+  }
 }
 </script>
 
@@ -41,10 +90,10 @@ function handleAction(action: string) {
         <!-- 分组展示 -->
         <div class="acu-changes-group">
           <div class="acu-changes-group-header">
-            <i class="fa-solid fa-chevron-down"></i> <i class="fa-solid fa-table"></i> 变更项 ({{ mockChanges.length }})
+            <i class="fa-solid fa-chevron-down"></i> <i class="fa-solid fa-table"></i> 变更项 ({{ changes.length }})
           </div>
           <div class="acu-changes-group-body">
-            <div v-for="(c, idx) in mockChanges" :key="idx" class="acu-change-item" :class="`acu-change-${c.type}`">
+            <div v-for="(c, idx) in changes" :key="idx" class="acu-change-item" :class="`acu-change-${c.type}`">
               <span class="acu-change-badge">{{ c.type === 'modified' ? '更' : c.type === 'added' ? '新' : '删' }}</span>
               <div class="acu-change-info">
                 <span class="field" v-if="c.field">{{ c.title }}.{{ c.field }}</span>

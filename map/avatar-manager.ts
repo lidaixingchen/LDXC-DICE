@@ -390,6 +390,7 @@ export class AvatarManager {
 
   clearAll(): void {
     this.avatars.clear();
+    this.categories.clear();
     this.initializeDefaultCategories();
     this.saveToStorage();
   }

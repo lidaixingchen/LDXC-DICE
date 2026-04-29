@@ -14,6 +14,7 @@ export interface CrazyParticipant {
   isPlayer: boolean;
   inScene: boolean;
   weight: number;
+  level?: string;
 }
 
 export interface CrazyRollResult {
@@ -196,9 +197,9 @@ export function generateCrazyRoll(): CrazyRollResult | null {
   const formula = '1d20';
   const roll = rollDice(formula);
   const attrMod = computeAttrMod(attr.value);
-  const masteryBonus = getMasteryBonus('C级');
+  const masteryBonus = getMasteryBonus(participant.level || 'C级');
   const total = roll + attrMod + masteryBonus;
-  const dc = 10;
+  const dc = attr.value || 10;
 
   const result = judgeResult(roll, dc, true);
 

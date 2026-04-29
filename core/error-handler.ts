@@ -68,35 +68,37 @@ class ErrorHandlerImpl {
    * 安装全局错误处理器（注册 window.onerror + unhandledrejection）
    * 可在应用初始化时调用
    */
+  private boundUnhandledRejection: ((event: PromiseRejectionEvent) => void) | null = null;
+
   install(): void {
     if (this.installed) return;
+    if (typeof window === 'undefined') return;
     this.installed = true;
 
-    // window.onerror
     window.onerror = (message, source, lineno, colno, error): boolean => {
       this.handleError(error || message, source ?? null, lineno ?? null, colno ?? null, error?.stack);
-      return false; // 不阻止默认错误处理
+      return false;
     };
 
-    // unhandledrejection
-    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    this.boundUnhandledRejection = (event: PromiseRejectionEvent) => {
       this.handleError(event.reason, null, null, null, event.reason?.stack);
-    });
+    };
+    window.addEventListener('unhandledrejection', this.boundUnhandledRejection);
 
-    // 恢复上次的错误状态
     this.checkAndRestore();
 
     console.info('[ErrorHandler] 全局错误处理器已安装');
   }
 
-  /**
-   * 卸载全局错误处理器
-   */
   uninstall(): void {
     if (!this.installed) return;
+    if (typeof window === 'undefined') return;
     this.installed = false;
     window.onerror = null;
-    window.removeEventListener('unhandledrejection', this.handleError as unknown as EventListener);
+    if (this.boundUnhandledRejection) {
+      window.removeEventListener('unhandledrejection', this.boundUnhandledRejection);
+      this.boundUnhandledRejection = null;
+    }
     console.info('[ErrorHandler] 全局错误处理器已卸载');
   }
 
@@ -190,12 +192,13 @@ class ErrorHandlerImpl {
 
       // 持久化错误标志
       try {
-        localStorage.setItem(STORAGE_KEY_ERROR_FLAG, 'true');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY_ERROR_FLAG, 'true');
+        }
       } catch {
         // localStorage 不可用，忽略
       }
 
-      // 显示紧急入口按钮
       this.showEmergencyButton();
 
       // 调用回调
@@ -227,7 +230,7 @@ class ErrorHandlerImpl {
    */
   private showEmergencyButton(): void {
     try {
-      // 检查是否已存在
+      if (typeof document === 'undefined') return;
       let btn = document.getElementById('acu-emergency-debug-btn');
       if (btn) {
         btn.style.display = 'block';
@@ -268,15 +271,17 @@ class ErrorHandlerImpl {
 
       btn.onclick = () => {
         try {
-          // 尝试触发调试控制台显示
           const detail = {
             logs: debugConsole.getLogs(undefined, 200),
             message: '检测到脚本错误，请查看下方调试日志',
           };
-          // 派发自定义事件，让 UI 层响应
-          window.dispatchEvent(new CustomEvent('acu:emergency-debug', { detail }));
+          if (typeof CustomEvent !== 'undefined' && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('acu:emergency-debug', { detail }));
+          }
         } catch {
-          alert('脚本出现错误，请打开浏览器开发者工具（F12）查看控制台');
+          if (typeof alert !== 'undefined') {
+            alert('脚本出现错误，请打开浏览器开发者工具（F12）查看控制台');
+          }
         }
       };
 
@@ -290,6 +295,7 @@ class ErrorHandlerImpl {
    * 隐藏紧急入口按钮
    */
   hideEmergencyButton(): void {
+    if (typeof document === 'undefined') return;
     const btn = document.getElementById('acu-emergency-debug-btn');
     if (btn) {
       btn.style.display = 'none';
@@ -305,6 +311,7 @@ class ErrorHandlerImpl {
    */
   checkAndRestore(): void {
     try {
+      if (typeof localStorage === 'undefined') return;
       const errorDetected = localStorage.getItem(STORAGE_KEY_ERROR_FLAG) === 'true';
       if (errorDetected) {
         // 自动开启调试控制台
@@ -328,7 +335,9 @@ class ErrorHandlerImpl {
     this.state.fatalErrorDetected = false;
     this.hideEmergencyButton();
     try {
-      localStorage.removeItem(STORAGE_KEY_ERROR_FLAG);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(STORAGE_KEY_ERROR_FLAG);
+      }
     } catch {
       // 忽略
     }
