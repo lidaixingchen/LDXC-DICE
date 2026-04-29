@@ -74,7 +74,7 @@ class ErrorHandlerImpl {
 
     // window.onerror
     window.onerror = (message, source, lineno, colno, error): boolean => {
-      this.handleError(error || message, source, lineno, colno, error?.stack);
+      this.handleError(error || message, source ?? null, lineno ?? null, colno ?? null, error?.stack);
       return false; // 不阻止默认错误处理
     };
 

@@ -1,6 +1,7 @@
 import { generateCrazyRollText, shouldTriggerCrazyMode, getCrazyModeConfig } from './crazy-mode';
 
-const DICE_RESULT_REGEX = /<meta:检定结果>[\s\S]*?<\/meta:检定结果>/g;
+const DICE_RESULT_REGEX = /<meta:检定结果>[\s\S]*?<\/meta:检定结果>/;
+const DICE_RESULT_REGEX_GLOBAL = /<meta:检定结果>[\s\S]*?<\/meta:检定结果>/g;
 const PLACEHOLDER_TEXT = '[投骰结果已隐藏]';
 
 let lastTriggerTime = 0;

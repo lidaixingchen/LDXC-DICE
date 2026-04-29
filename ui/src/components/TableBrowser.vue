@@ -87,11 +87,12 @@ const processedRows = computed(() => {
 });
 
 const paginatedRows = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return processedRows.value.slice(start, start + itemsPerPage);
+  const perPage = itemsPerPage.value;
+  const start = (currentPage.value - 1) * perPage;
+  return processedRows.value.slice(start, start + perPage);
 });
 
-const totalPages = computed(() => Math.ceil(processedRows.value.length / itemsPerPage));
+const totalPages = computed(() => Math.ceil(processedRows.value.length / itemsPerPage.value));
 
 function isInvalidValue(val: any): boolean {
   const s = String(val || '')

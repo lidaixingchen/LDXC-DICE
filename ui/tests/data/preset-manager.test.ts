@@ -269,6 +269,216 @@ describe('PresetManager', () => {
       const outcome = manager.matchOutcome(preset, 70, { roll: 70 });
       expect(outcome?.id).toBe('high');
     });
+
+    it('should reject expression with function calls like alert', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: 'alert(1)', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression with function calls like eval', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: 'eval(1)', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression with object property access', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: 'window_location', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression with string literals', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: "'hello'", effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression with curly braces', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: '{x:1}', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression with semicolons', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: '1;2', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject expression exceeding max length', () => {
+      const longExpr = '1' + '+1'.repeat(300);
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'long', name: '超长', condition: longExpr, effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should allow valid comparison expressions', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'a', name: 'A', condition: '$roll >= 50 && $roll < 90', effects: [] },
+          { id: 'b', name: 'B', condition: '$roll >= 90', effects: [] },
+          { id: 'c', name: 'C', condition: '$roll < 50', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 70, { roll: 70 });
+      expect(outcome?.id).toBe('a');
+    });
+
+    it('should allow modulo operator in expressions', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'even', name: '偶数', condition: '$roll % 2 === 0', effects: [] },
+          { id: 'odd', name: '奇数', condition: '$roll % 2 !== 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('even');
+    });
+
+    it('should allow ternary operator in expressions', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'a', name: 'A', condition: '($roll >= 50 ? 1 : 0) === 1', effects: [] },
+          { id: 'b', name: 'B', condition: '($roll >= 50 ? 1 : 0) === 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 70, { roll: 70 });
+      expect(outcome?.id).toBe('a');
+    });
+
+    it('should allow underscore identifiers in expressions', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'a', name: 'A', condition: '$attr_mod >= 2', effects: [] },
+          { id: 'b', name: 'B', condition: '$attr_mod < 2', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50, attr_mod: 3 });
+      expect(outcome?.id).toBe('a');
+    });
+
+    it('should reject dangerous patterns like Function constructor', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: 'Function(1)', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
+
+    it('should reject dangerous patterns like __proto__', () => {
+      const preset: AdvancedDicePreset = {
+        id: 'test',
+        name: '测试',
+        kind: 'advanced',
+        diceExpression: '1d100',
+        outcomes: [
+          { id: 'hack', name: '注入', condition: '__proto__', effects: [] },
+          { id: 'safe', name: '安全', condition: '$roll >= 0', effects: [] },
+        ],
+      };
+
+      const outcome = manager.matchOutcome(preset, 50, { roll: 50 });
+      expect(outcome?.id).toBe('safe');
+    });
   });
 
   describe('validateAllPresets', () => {

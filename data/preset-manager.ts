@@ -219,6 +219,10 @@ export class PresetManager {
     return JSON.stringify(preset, null, 2);
   }
 
+  private static readonly SAFE_EXPR_REGEX = /^[0-9a-zA-Z_+\-*/%().><=!&|?:,\s]+$/;
+  private static readonly DANGEROUS_PATTERNS = /\b(alert|eval|Function|fetch|XMLHttpRequest|import|require|process|global|window|document|console|setTimeout|setInterval|__proto__|constructor|prototype)\b/i;
+  private static readonly MAX_EXPR_LENGTH = 500;
+
   matchOutcome(preset: AdvancedDicePreset, roll: number, context: Record<string, number>): OutcomeLevel | null {
     const sortedOutcomes = [...preset.outcomes].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
 
@@ -233,7 +237,11 @@ export class PresetManager {
       }
 
       try {
-        if (/[{}[\];]/.test(expr)) {
+        if (
+          expr.length > PresetManager.MAX_EXPR_LENGTH ||
+          !PresetManager.SAFE_EXPR_REGEX.test(expr) ||
+          PresetManager.DANGEROUS_PATTERNS.test(expr)
+        ) {
           continue;
         }
         const fn = new Function(`return ${expr}`);

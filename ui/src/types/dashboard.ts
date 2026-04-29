@@ -152,6 +152,7 @@ export interface RelationNode {
   name: string;
   type: 'player' | 'npc';
   avatar?: string;
+  group?: string;
 }
 
 export interface RelationEdge {

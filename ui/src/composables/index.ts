@@ -18,6 +18,24 @@ export { useCharacterData, useDropdownSuggestions } from './useCharacterData';
 export type { AttributeButton, Character } from './useCharacterData';
 export { useDashboard } from './useDashboard';
 export { useMvu } from './useMvu';
+export { useCombatState } from './useCombatState';
+export { useStandardCheck } from './useStandardCheck';
+export { useContestCheck } from './useContestCheck';
+export { useCombatCheck } from './useCombatCheck';
+export { useDefenseCheck } from './useDefenseCheck';
+export { useInitiativeCheck } from './useInitiativeCheck';
+export { useEscapeCheck } from './useEscapeCheck';
+export { useStatusEffects } from './useStatusEffects';
+export { useEquipment } from './useEquipment';
+export { sendToTextarea } from './useTextareaSender';
+export type {
+  StandardCheckExecuteParams,
+  ContestCheckExecuteParams,
+  CombatCheckExecuteParams,
+  DefenseCheckExecuteParams,
+  InitiativeCheckExecuteParams,
+  EscapeCheckExecuteParams,
+} from './check-params';
 
 let diceSystemInstance: DiceSystem | null = null;
 

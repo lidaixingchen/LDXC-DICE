@@ -75,6 +75,7 @@ export function tokenize(expression: string): DiceToken[] {
     }
 
     i++;
+    throw new DiceExpressionError(`无法识别的字符: '${char}' (位置 ${i})`);
   }
 
   if (current) {
@@ -409,7 +410,7 @@ export function rollComplexDiceExpression(expression: string): RollResult {
       if (token.value === '*') {
         left *= right;
       } else {
-        left = right !== 0 ? left / right : 0;
+        left = right !== 0 ? left / right : Infinity;
       }
     }
 

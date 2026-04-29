@@ -57,6 +57,8 @@ export interface CheckResult {
   presetId: string;
   attributeName?: string;
   effects?: EffectResult[];
+  hpPenalty?: number;
+  triggerPenalty?: boolean;
 }
 
 export interface ContestResult {

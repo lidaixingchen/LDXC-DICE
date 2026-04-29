@@ -93,6 +93,7 @@ export class MapRenderer {
     this.canvas.height = rect.height * dpr;
 
     if (this.ctx) {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.scale(dpr, dpr);
     }
   }

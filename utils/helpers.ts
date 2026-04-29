@@ -46,7 +46,27 @@ export function deepClone<T>(obj: T): T {
 }
 
 export function isEqual(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  if (a === b) return true;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== typeof b) return false;
+
+  if (typeof a === 'number' && isNaN(a as number) && typeof b === 'number' && isNaN(b as number)) return true;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => isEqual(item, b[index]));
+  }
+
+  if (typeof a === 'object' && typeof b === 'object') {
+    const aObj = a as Record<string, unknown>;
+    const bObj = b as Record<string, unknown>;
+    const keysA = Object.keys(aObj);
+    const keysB = Object.keys(bObj);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every(key => Object.prototype.hasOwnProperty.call(bObj, key) && isEqual(aObj[key], bObj[key]));
+  }
+
+  return false;
 }
 
 export function formatNumber(num: number, decimals: number = 0): string {
