@@ -577,6 +577,27 @@ export class MapManager {
 
       const map = data.map as DiceMap;
 
+      if (typeof map.name !== 'string') map.name = '未命名地图';
+      if (!Array.isArray(map.tokens)) map.tokens = [];
+      if (!Array.isArray(map.shapes)) map.shapes = [];
+      if (!Array.isArray(map.interactions)) map.interactions = [];
+      if (!map.fog || typeof map.fog !== 'object') {
+        map.fog = { enabled: false, mode: 'none', regions: [] };
+      }
+      if (!Array.isArray(map.fog.regions)) map.fog.regions = [];
+      if (!map.layers || !Array.isArray(map.layers)) {
+        map.layers = this.createDefaultLayers();
+      }
+      if (!map.size || typeof map.size !== 'object') {
+        map.size = { ...DEFAULT_MAP_SIZE };
+      }
+      if (!map.grid || typeof map.grid !== 'object') {
+        map.grid = { ...DEFAULT_GRID };
+      }
+      if (!map.settings || typeof map.settings !== 'object') {
+        map.settings = { ...DEFAULT_MAP_SETTINGS };
+      }
+
       if (this.maps.has(map.id)) {
         map.id = `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }

@@ -157,7 +157,8 @@ function computeAttrMod(attrValue: number): number {
   return -3;
 }
 
-function getMasteryBonus(level: string): number {
+function getMasteryBonus(level: string | undefined): number {
+  if (!level) return 0;
   const levelMap: Record<string, number> = {
     F级: 0,
     E级: 1,
@@ -169,7 +170,7 @@ function getMasteryBonus(level: string): number {
     SS级: 7,
     SSS级: 8,
   };
-  return levelMap[level] ?? 2;
+  return levelMap[level] ?? 0;
 }
 
 function judgeResult(roll: number, target: number, isD20: boolean): string {
@@ -197,7 +198,7 @@ export function generateCrazyRoll(): CrazyRollResult | null {
   const formula = '1d20';
   const roll = rollDice(formula);
   const attrMod = computeAttrMod(attr.value);
-  const masteryBonus = getMasteryBonus(participant.level || 'C级');
+  const masteryBonus = getMasteryBonus(participant.level);
   const total = roll + attrMod + masteryBonus;
   const dc = attr.value || 10;
 

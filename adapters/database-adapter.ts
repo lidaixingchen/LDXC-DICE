@@ -301,10 +301,15 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
       if (options.initValue !== undefined) {
         const sheet = data[targetSheetKey];
         const headers = sheet.content[0] as string[];
-        targetColIndex = headers.length;
-        headers.push(attrName);
-        for (let i = 1; i < sheet.content.length; i++) {
-          sheet.content[i].push(null);
+        const existingIdx = headers.findIndex(h => String(h).trim() === attrName);
+        if (existingIdx >= 0) {
+          targetColIndex = existingIdx;
+        } else {
+          targetColIndex = headers.length;
+          headers.push(attrName);
+          for (let i = 1; i < sheet.content.length; i++) {
+            sheet.content[i].push(null);
+          }
         }
       } else {
         return { success: false, oldValue: 0, newValue: 0, error: `属性 ${attrName} 不存在且未提供 initValue` };

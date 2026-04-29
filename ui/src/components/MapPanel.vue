@@ -326,6 +326,12 @@ function editToken(token: MapToken): void {
   showTokenEditor.value = true;
 }
 
+function editSelectedToken(): void {
+  if (!currentMap.value) return;
+  const token = currentMap.value.tokens.find(t => t.id === selectedTokens.value[0]);
+  if (token) editToken(token);
+}
+
 function saveTokenEdit(): void {
   if (!currentMap.value || !editingToken.value) return;
 
@@ -540,7 +546,7 @@ watch(selectedTokens, () => {
 
       <div v-if="selectedTokens.length > 0" class="acu-selection-bar">
         <span>已选择 {{ selectedTokens.length }} 个令牌</span>
-        <button class="acu-btn acu-btn-sm" @click="editToken(currentMap?.tokens.find(t => t.id === selectedTokens[0])!)">
+        <button class="acu-btn acu-btn-sm" @click="editSelectedToken">
           <i class="fa-solid fa-edit"></i>
           编辑
         </button>

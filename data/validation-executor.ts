@@ -136,7 +136,7 @@ export function validateKeyValue(value: unknown, config: Record<string, unknown>
   const valueMax = config.valueMax as number | undefined;
 
   const pairs = strValue.split(';').filter(p => p.trim());
-  if (pairs.length === 0) return false;
+  if (pairs.length === 0) return true;
 
   for (const pair of pairs) {
     const colonIndex = pair.indexOf(':');
