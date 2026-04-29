@@ -32,7 +32,8 @@ const favorites = computed(() => {
     const rowKeys = allBookmarks[tableKey];
     
     for (const rowKey of rowKeys) {
-      const rowIndex = parseInt(rowKey);
+      const rowIndex = parseInt(rowKey, 10);
+      if (isNaN(rowIndex)) continue;
       const row = table.content[rowIndex + 1]; // +1 因为第一行是表头
       
       if (!row) continue;

@@ -64,6 +64,7 @@ async function handleRoll(): Promise<void> {
     const diceCfg = getDiceConfig();
     const formula = diceType.value;
     const isDND = formula === '1d20';
+    const diceFace = parseInt(formula.split('d')[1] || '100', 10);
     
     const iMod = initiatorMod.value !== '' ? Number(initiatorMod.value) : 0;
     const oMod = opponentMod.value !== '' ? Number(opponentMod.value) : 0;
@@ -77,8 +78,8 @@ async function handleRoll(): Promise<void> {
     const iTotal = iRoll.total + iMod;
     const oTotal = oRoll.total + oMod;
     
-    const critSuccessMax = isDND ? 20 : diceCfg.critSuccessMax || 5;
-    const critFailMin = isDND ? 1 : diceCfg.critFailMin || 96;
+    const critSuccessMax = isDND ? 20 : (diceCfg.critSuccessMax || (diceFace === 100 ? 5 : Math.max(1, Math.floor(diceFace * 0.05))));
+    const critFailMin = isDND ? 1 : (diceCfg.critFailMin || (diceFace === 100 ? 96 : Math.floor(diceFace * 0.95) + 1));
     
     let iSuccess = isDND ? iTotal >= iTarget : iTotal <= iTarget;
     let oSuccess = isDND ? oTotal >= oTarget : oTotal <= oTarget;
@@ -307,9 +308,9 @@ onMounted(() => {
       <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
         <template v-if="showResult && lastResult">
           <span class="acu-winner-text">{{ lastResult.winner === 'tie' ? '平局！' : (lastResult.winner === 'initiator' ? (initiatorName || '发起方') : (opponentName || '对抗方')) + ' 获胜！' }}</span>
-          <button class="acu-dice-retry-btn" @click.stop="showResult = false">
+          <span class="acu-dice-retry-btn" @click.stop="showResult = false" role="button" tabindex="0">
             <i class="fa-solid fa-rotate-right"></i>
-          </button>
+          </span>
         </template>
         <template v-else>
           <i class="fa-solid fa-dice" :class="{ 'fa-spin': isRolling }"></i>

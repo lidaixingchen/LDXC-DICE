@@ -12,19 +12,23 @@ function buildMuteCss(): string {
 }
 
 function collectDocuments(): Document[] {
+  const seen = new Set<Document>();
   const docs: Document[] = [];
   const tryAddDoc = (w: Window | null | undefined) => {
     try {
       const doc = w?.document;
-      if (doc && !docs.includes(doc)) docs.push(doc);
+      if (doc && !seen.has(doc)) {
+        seen.add(doc);
+        docs.push(doc);
+      }
     } catch {
       return;
     }
   };
 
   tryAddDoc(window);
-  tryAddDoc(window.parent);
-  tryAddDoc(window.top);
+  if (window.parent !== window) tryAddDoc(window.parent);
+  if (window.top !== window && window.top !== window.parent) tryAddDoc(window.top);
   return docs;
 }
 

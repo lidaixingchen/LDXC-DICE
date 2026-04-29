@@ -86,6 +86,7 @@ export function deferLow(callback: () => void): () => void {
 export class ChunkLoader<T> {
   private chunks: Map<string, Promise<T>> = new Map();
   private loaded: Map<string, T> = new Map();
+  private accessOrder: string[] = [];
 
   constructor(
     private loader: (key: string) => Promise<T>,
@@ -96,24 +97,34 @@ export class ChunkLoader<T> {
   ) {
     if (options.preload) {
       for (const key of options.preload) {
-        this.load(key);
+        this.load(key).catch(() => {});
       }
     }
   }
 
   async load(key: string): Promise<T> {
     const cached = this.loaded.get(key);
-    if (cached) return cached;
+    if (cached) {
+      this.touchAccess(key);
+      return cached;
+    }
 
     const pending = this.chunks.get(key);
     if (pending) return pending;
 
-    const promise = this.loader(key);
+    let promise: Promise<T>;
+    try {
+      promise = this.loader(key);
+    } catch (e) {
+      throw e;
+    }
+
     this.chunks.set(key, promise);
 
     try {
       const result = await promise;
       this.loaded.set(key, result);
+      this.accessOrder.push(key);
       this.chunks.delete(key);
 
       this.evictIfNeeded();
@@ -125,12 +136,20 @@ export class ChunkLoader<T> {
     }
   }
 
+  private touchAccess(key: string): void {
+    const idx = this.accessOrder.indexOf(key);
+    if (idx >= 0) {
+      this.accessOrder.splice(idx, 1);
+    }
+    this.accessOrder.push(key);
+  }
+
   private evictIfNeeded(): void {
     const maxCache = this.options.maxCache ?? 10;
-    if (this.loaded.size > maxCache) {
-      const firstKey = this.loaded.keys().next().value;
-      if (firstKey) {
-        this.loaded.delete(firstKey);
+    while (this.loaded.size > maxCache && this.accessOrder.length > 0) {
+      const lruKey = this.accessOrder.shift();
+      if (lruKey && this.loaded.has(lruKey)) {
+        this.loaded.delete(lruKey);
       }
     }
   }
@@ -140,12 +159,17 @@ export class ChunkLoader<T> {
   }
 
   get(key: string): T | undefined {
-    return this.loaded.get(key);
+    const value = this.loaded.get(key);
+    if (value !== undefined) {
+      this.touchAccess(key);
+    }
+    return value;
   }
 
   clear(): void {
     this.chunks.clear();
     this.loaded.clear();
+    this.accessOrder = [];
   }
 
   preload(keys: string[]): void {
@@ -158,6 +182,7 @@ export class ChunkLoader<T> {
 export class ImagePreloader {
   private cache: Map<string, HTMLImageElement> = new Map();
   private loading: Map<string, Promise<HTMLImageElement>> = new Map();
+  private accessOrder: string[] = [];
   private maxSize: number;
 
   constructor(maxSize: number = 50) {
@@ -166,7 +191,10 @@ export class ImagePreloader {
 
   load(src: string): Promise<HTMLImageElement> {
     const cached = this.cache.get(src);
-    if (cached) return Promise.resolve(cached);
+    if (cached) {
+      this.touchAccess(src);
+      return Promise.resolve(cached);
+    }
 
     const loading = this.loading.get(src);
     if (loading) return loading;
@@ -175,6 +203,7 @@ export class ImagePreloader {
       const img = new Image();
       img.onload = () => {
         this.cache.set(src, img);
+        this.accessOrder.push(src);
         this.loading.delete(src);
         this.evictIfNeeded();
         resolve(img);
@@ -190,17 +219,29 @@ export class ImagePreloader {
     return promise;
   }
 
+  private touchAccess(src: string): void {
+    const idx = this.accessOrder.indexOf(src);
+    if (idx >= 0) {
+      this.accessOrder.splice(idx, 1);
+    }
+    this.accessOrder.push(src);
+  }
+
   private evictIfNeeded(): void {
-    if (this.cache.size > this.maxSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        this.cache.delete(firstKey);
+    while (this.cache.size > this.maxSize && this.accessOrder.length > 0) {
+      const lruKey = this.accessOrder.shift();
+      if (lruKey && this.cache.has(lruKey)) {
+        this.cache.delete(lruKey);
       }
     }
   }
 
   get(src: string): HTMLImageElement | undefined {
-    return this.cache.get(src);
+    const value = this.cache.get(src);
+    if (value !== undefined) {
+      this.touchAccess(src);
+    }
+    return value;
   }
 
   has(src: string): boolean {
@@ -216,6 +257,7 @@ export class ImagePreloader {
   clear(): void {
     this.cache.clear();
     this.loading.clear();
+    this.accessOrder = [];
   }
 }
 

@@ -5,7 +5,7 @@ const MAX_CONTEXTS = 20;
 
 function getContextId(): string {
   try {
-    const chatId = (window as any). SillyTavern?.getContext()?.chatId;
+    const chatId = (window as any).SillyTavern?.getContext()?.chatId;
     if (chatId) return chatId;
   } catch {}
   return 'default';

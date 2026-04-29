@@ -87,10 +87,15 @@ export class TableInjector {
   private handlers: Map<string, InjectionHandler> = new Map();
   private cache: Map<string, { data: Record<string, unknown>[]; timestamp: number }> = new Map();
   private cacheTimeout: number = 60000;
+  private tokenCallback: ((tokenData: Record<string, unknown>) => void) | null = null;
 
   constructor() {
     this.loadFromStorage();
     this.initializeDefaultHandlers();
+  }
+
+  onTokenCreated(callback: (tokenData: Record<string, unknown>) => void): void {
+    this.tokenCallback = callback;
   }
 
   private loadFromStorage(): void {
@@ -322,7 +327,11 @@ export class TableInjector {
       case 'contains':
         return String(value).includes(String(filter.value));
       case 'matches':
-        return new RegExp(String(filter.value)).test(String(value));
+        try {
+          return new RegExp(String(filter.value)).test(String(value));
+        } catch {
+          return false;
+        }
       default:
         return true;
     }
@@ -422,6 +431,10 @@ export class TableInjector {
         }
 
         injected++;
+
+        if (this.tokenCallback) {
+          this.tokenCallback(mappedData);
+        }
       } catch (e) {
         skipped++;
         errors.push(`处理失败: ${e instanceof Error ? e.message : '未知错误'}`);

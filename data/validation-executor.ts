@@ -362,7 +362,7 @@ export function validateAllData(rawData: RawData): ValidationError[] {
               currentValue: `${rowCount} 行`,
               errorMessage:
                 rule.errorMessage ||
-                `行数 ${rowCount} 超出限制 (${rule.config?.min || 0}-${rule.config?.max || '∞'})`,
+                `行数 ${rowCount} 超出限制 (${rule.config?.min ?? 0}-${rule.config?.max ?? '∞'})`,
               severity: 'warning',
             });
           }
@@ -438,7 +438,7 @@ export function checkTableRules(
     }
 
     if (!newSheet) {
-      if (rule.ruleType === 'rowLimit' && rule.config?.min && (rule.config.min as number) > 0) {
+      if (rule.ruleType === 'rowLimit' && rule.config?.min !== undefined && (rule.config.min as number) > 0) {
         violations.push({
           rule,
           ruleId: rule.id,
@@ -471,7 +471,7 @@ export function checkTableRules(
             currentValue: `${rowCount} 行`,
             errorMessage:
               rule.errorMessage ||
-              `表 "${rule.targetTable}" 行数 ${rowCount} 超出限制 (${rule.config?.min || 0}-${rule.config?.max || '∞'})`,
+              `表 "${rule.targetTable}" 行数 ${rowCount} 超出限制 (${rule.config?.min ?? 0}-${rule.config?.max ?? '∞'})`,
             severity: 'error',
           });
         }

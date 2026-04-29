@@ -374,7 +374,8 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
       const cleanData = JSON.parse(JSON.stringify(data));
       const importResult = await this.api.importTableAsJson(cleanData);
       if (!importResult) {
-        return { success: false, oldValue, newValue, error: '数据导入失败（返回 false）' };
+        sheet.content[targetRowIndex + 1][targetColIndex] = oldValue;
+        return { success: false, oldValue, newValue: oldValue, error: '数据导入失败（返回 false）' };
       }
     }
 

@@ -240,7 +240,6 @@ export function isNpcTableName(name: string): boolean {
  */
 export function compareVersion(v1: string, v2: string): number {
   const normalizeVersion = (v: string): string => {
-    if (typeof v === 'number') return `${v}.0.0`;
     if (typeof v !== 'string') return '0.0.0';
     return v;
   };

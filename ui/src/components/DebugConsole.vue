@@ -65,8 +65,8 @@ function formatTime(timestamp: number): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    milliSecond: '3-digit',
-  } as any);
+    fractionalSecondDigits: 3,
+  } as Intl.DateTimeFormatOptions);
 }
 
 function formatData(data: unknown): string {

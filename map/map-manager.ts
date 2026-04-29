@@ -218,7 +218,7 @@ export class MapManager {
     return Array.from(this.maps.values());
   }
 
-  updateMap(id: string, updates: Partial<DiceMap>): boolean {
+  updateMap(id: string, updates: Partial<Omit<DiceMap, 'id' | 'createdAt'>>): boolean {
     const map = this.maps.get(id);
     if (!map) return false;
 

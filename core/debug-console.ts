@@ -34,6 +34,8 @@ export class DebugConsole {
   private maxLogs: number = 1000;
   private enabled: boolean = false;
   private logLevel: LogLevel = 'info';
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+  private dirty: boolean = false;
 
   constructor() {
     this.loadFromStorage();
@@ -60,6 +62,30 @@ export class DebugConsole {
   }
 
   private saveToStorage(): void {
+    this.dirty = true;
+    if (this.saveTimer) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      if (!this.dirty) return;
+      this.dirty = false;
+      try {
+        localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(this.logs.slice(-this.maxLogs)));
+        localStorage.setItem(
+          VARIABLES_STORAGE_KEY,
+          JSON.stringify(Object.fromEntries(this.variables))
+        );
+      } catch (e) {
+        console.warn('[DebugConsole] 保存数据失败:', e);
+      }
+    }, 500);
+  }
+
+  private saveToStorageSync(): void {
+    this.dirty = false;
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
     try {
       localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(this.logs.slice(-this.maxLogs)));
       localStorage.setItem(
@@ -144,7 +170,7 @@ export class DebugConsole {
 
   clearLogs(): void {
     this.logs = [];
-    this.saveToStorage();
+    this.saveToStorageSync();
   }
 
   getVariable(name: string): unknown {
@@ -172,7 +198,7 @@ export class DebugConsole {
 
   clearVariables(): void {
     this.variables.clear();
-    this.saveToStorage();
+    this.saveToStorageSync();
   }
 
   registerCommand(command: DebugCommand): void {
@@ -419,7 +445,11 @@ export class DebugConsole {
         }
       }
 
-      this.saveToStorage();
+      if (this.logs.length > this.maxLogs) {
+        this.logs = this.logs.slice(-this.maxLogs);
+      }
+
+      this.saveToStorageSync();
       return { success: true, imported, errors };
     } catch (e) {
       errors.push(`解析失败: ${e instanceof Error ? e.message : '未知错误'}`);

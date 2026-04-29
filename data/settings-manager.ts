@@ -402,6 +402,11 @@ export class SettingsManager {
   }
 
   private setupAutoSave(): void {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+
     if (this.settings.general.autoSave) {
       this.autoSaveTimer = setInterval(() => {
         this.saveToStorage();
@@ -440,6 +445,7 @@ export class SettingsManager {
       }
     }
     this.saveToStorage();
+    this.setupAutoSave();
     this.notifyChange();
   }
 
@@ -450,6 +456,9 @@ export class SettingsManager {
   ): void {
     (this.settings[group] as unknown as Record<string, unknown>)[field as string] = value;
     this.saveToStorage();
+    if (group === 'general' && (field === 'autoSave' || field === 'autoSaveInterval')) {
+      this.setupAutoSave();
+    }
     this.notifyChange();
   }
 

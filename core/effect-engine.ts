@@ -689,8 +689,8 @@ export class EffectEngine {
       ? successResults[successResults.length - 1]
       : results[results.length - 1];
 
-    const delta = lastSuccess.newValue - lastSuccess.oldValue;
-    const operation = delta > 0 ? '增加' : delta < 0 ? '减少' : '设置为';
+    const totalDelta = successResults.reduce((sum, r) => sum + (r.newValue - r.oldValue), 0);
+    const operation = totalDelta > 0 ? '增加' : totalDelta < 0 ? '减少' : '设置为';
 
     const summaries = successResults.map(r => {
       const d = r.newValue - r.oldValue;
@@ -699,14 +699,14 @@ export class EffectEngine {
     });
 
     return {
-      effectTarget: lastSuccess.effectId,
+      effectTarget: successResults.map(r => r.effectId).join(', '),
       effectOperation: operation,
-      effectDelta: Math.abs(delta),
-      effectDeltaFormula: `${Math.abs(delta)}`,
-      effectOldValue: lastSuccess.oldValue,
-      effectNewValue: lastSuccess.newValue,
+      effectDelta: Math.abs(totalDelta),
+      effectDeltaFormula: `${Math.abs(totalDelta)}`,
+      effectOldValue: successResults.length > 0 ? successResults[0].oldValue : 0,
+      effectNewValue: successResults.length > 0 ? successResults[successResults.length - 1].newValue : 0,
       effectSummary: successResults.length > 0
-        ? `${operation} ${Math.abs(delta)} (${lastSuccess.oldValue} → ${lastSuccess.newValue})`
+        ? `${operation} ${Math.abs(totalDelta)} (${successResults[0].oldValue} → ${successResults[successResults.length - 1].newValue})`
         : '',
       effectText: summaries.join('; '),
       hasEffect: successResults.length > 0,

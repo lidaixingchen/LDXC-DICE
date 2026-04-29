@@ -58,11 +58,13 @@ function isContest(entry: HistoryEntry): entry is ContestHistoryEntry {
 
 function toggleExpand(detailId: string | undefined) {
   if (!detailId) return;
-  if (expandedIds.value.has(detailId)) {
-    expandedIds.value.delete(detailId);
+  const next = new Set(expandedIds.value);
+  if (next.has(detailId)) {
+    next.delete(detailId);
   } else {
-    expandedIds.value.add(detailId);
+    next.add(detailId);
   }
+  expandedIds.value = next;
 }
 
 function isExpanded(detailId: string | undefined): boolean {
