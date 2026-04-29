@@ -89,7 +89,8 @@ function createAcuDiceAPI(): AcuDiceAPI {
 export function initAcuDice(): void {
   const rootWindow = resolveRootWindow();
 
-  if ('AcuDice' in rootWindow) {
+  const existing = (rootWindow as any).AcuDice;
+  if (existing && typeof existing === 'object' && 'version' in existing && 'check' in existing) {
     console.info('[AcuDice] Already initialized');
     return;
   }

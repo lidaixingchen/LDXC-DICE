@@ -276,11 +276,15 @@ export class InteractionEngine {
     if (!condition) return true;
 
     try {
+      const contextVars = Object.entries(context).map(([key, val]) => {
+        const safeVal = typeof val === 'function' ? 'undefined' : JSON.stringify(val);
+        return `var ${key} = ${safeVal};`;
+      }).join('\n');
+
       const fn = new Function(
-        'context',
-        `with(context) { return ${condition}; }`,
+        `${contextVars}\nreturn (${condition});`,
       );
-      return fn(context);
+      return fn();
     } catch (e) {
       console.warn('[InteractionEngine] 条件评估失败:', e);
       return false;

@@ -91,7 +91,7 @@ function handleMouseMove(event: MouseEvent): void {
     const dx = event.clientX - lastMousePos.value.x;
     const dy = event.clientY - lastMousePos.value.y;
     viewport.value.x -= dx / viewport.value.zoom;
-    viewport.value.y -= dy / viewport.value.y;
+    viewport.value.y -= dy / viewport.value.zoom;
     lastMousePos.value = { x: event.clientX, y: event.clientY };
     render();
   }

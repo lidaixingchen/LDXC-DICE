@@ -260,51 +260,93 @@ export function rollComplexDiceExpression(expression: string): RollResult {
     }
   }
 
-  const values: number[] = [];
-  const operators: string[] = [];
-  let currentDice: number[] = [];
+  let pos = 0;
+  const allDice: number[] = [];
 
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-
+  function resolveToken(token: DiceToken): number {
     if (token.type === 'dice') {
       const result = rollDiceExpression(String(token.value));
-      values.push(result.total);
-      currentDice = currentDice.concat(result.keptDice);
-    } else if (token.type === 'number') {
-      values.push(token.value as number);
-    } else if (token.type === 'operator') {
-      operators.push(String(token.value));
+      allDice.push(...result.keptDice);
+      return result.total;
     }
+    if (token.type === 'number') {
+      return token.value as number;
+    }
+    return 0;
   }
 
-  let result = values[0] || 0;
-  for (let i = 0; i < operators.length; i++) {
-    const op = operators[i];
-    const nextValue = values[i + 1] || 0;
+  function parseExpression(): number {
+    let left = parseTerm();
 
-    switch (op) {
-      case '+':
-        result += nextValue;
-        break;
-      case '-':
-        result -= nextValue;
-        break;
-      case '*':
-        result *= nextValue;
-        break;
-      case '/':
-        result = nextValue !== 0 ? result / nextValue : 0;
-        break;
+    while (pos < tokens.length) {
+      const token = tokens[pos];
+      if (token.type !== 'operator' || (token.value !== '+' && token.value !== '-')) break;
+      pos++;
+      const right = parseTerm();
+      if (token.value === '+') {
+        left += right;
+      } else {
+        left -= right;
+      }
     }
+
+    return left;
   }
+
+  function parseTerm(): number {
+    let left = parseFactor();
+
+    while (pos < tokens.length) {
+      const token = tokens[pos];
+      if (token.type !== 'operator' || (token.value !== '*' && token.value !== '/')) break;
+      pos++;
+      const right = parseFactor();
+      if (token.value === '*') {
+        left *= right;
+      } else {
+        left = right !== 0 ? left / right : 0;
+      }
+    }
+
+    return left;
+  }
+
+  function parseFactor(): number {
+    if (pos >= tokens.length) return 0;
+
+    const token = tokens[pos];
+
+    if (token.type === 'paren' && token.value === '(') {
+      pos++;
+      const result = parseExpression();
+      if (pos < tokens.length && tokens[pos].type === 'paren' && tokens[pos].value === ')') {
+        pos++;
+      }
+      return result;
+    }
+
+    if (token.type === 'operator' && token.value === '-') {
+      pos++;
+      return -parseFactor();
+    }
+
+    if (token.type === 'operator' && token.value === '+') {
+      pos++;
+      return parseFactor();
+    }
+
+    pos++;
+    return resolveToken(token);
+  }
+
+  const result = parseExpression();
 
   return {
     total: Math.round(result * 100) / 100,
-    rawDice: currentDice,
-    keptDice: currentDice,
+    rawDice: allDice,
+    keptDice: allDice,
     formula: trimmed,
-    breakdown: `${currentDice.length > 0 ? currentDice.join(' + ') + ' = ' : ''}${result}`,
+    breakdown: `${allDice.length > 0 ? allDice.join(' + ') + ' = ' : ''}${result}`,
     tags: [],
   };
 }

@@ -42,14 +42,19 @@ export class EffectEngine {
 
   private async runInSaveQueue<T>(fn: () => Promise<T>): Promise<T> {
     const previousPromise = this.saveQueuePromise;
-    let resolveQueue: () => void;
-    this.saveQueuePromise = new Promise(resolve => { resolveQueue = resolve; });
+    let resolveThis: () => void;
+    this.saveQueuePromise = new Promise<void>(resolve => {
+      resolveThis = resolve;
+    });
 
     try {
       await previousPromise;
       return await fn();
+    } catch (e) {
+      console.error('[EffectEngine] 保存队列执行失败:', e);
+      throw e;
     } finally {
-      resolveQueue!();
+      resolveThis!();
     }
   }
 
@@ -269,7 +274,30 @@ export class EffectEngine {
       }
 
       if (latestModifiedSheetKeys.size > 0) {
-        await this.dbAdapter.saveData(latestTransactionalData, Array.from(latestModifiedSheetKeys));
+        // 重试机制：保存失败时最多重试 2 次
+        let saveAttempts = 0;
+        let saveSuccess = false;
+        while (saveAttempts < 3 && !saveSuccess) {
+          try {
+            saveAttempts++;
+            const result = await this.dbAdapter.saveData(latestTransactionalData, Array.from(latestModifiedSheetKeys));
+            if (result !== false) {
+              saveSuccess = true;
+            } else if (saveAttempts < 3) {
+              console.warn(`[EffectEngine] 数据保存尝试 #${saveAttempts} 失败，重试中...`);
+            }
+          } catch (saveError) {
+            if (saveAttempts >= 3) {
+              console.error(`[EffectEngine] 数据保存失败（已重试 ${saveAttempts} 次）:`, saveError);
+              return allResults.map(r =>
+                r.success
+                  ? { ...r, success: false, error: `数据保存失败（重试 ${saveAttempts} 次）` }
+                  : r,
+              );
+            }
+            console.warn(`[EffectEngine] 数据保存异常，重试中... (${saveAttempts})`);
+          }
+        }
       }
 
       deferredSecondaryCallbacks.forEach(run => run());
@@ -674,6 +702,88 @@ export class EffectEngine {
       hasEffect: successResults.length > 0,
       effectCount: successResults.length,
       effectResults: JSON.stringify(results),
+    };
+  }
+
+  /**
+   * 构建效果元数据行（供输出模板使用）
+   * 原系统 buildEffectMetaLines 等价实现
+   */
+  buildEffectMetaLines(
+    results: EffectResult[],
+    options?: { branchReasonText?: string },
+  ): string[] {
+    if (!results || results.length === 0) return [];
+
+    const settledHeader = '【已填表】以下数值效果已同步填表，无需重复填表。';
+    const lines = results
+      .filter(item => item.success)
+      .map(item => {
+        if (item.outputMessage) return item.outputMessage;
+
+        const target = item.target || '属性';
+        const delta = item.newValue - item.oldValue;
+        const sign = delta > 0 ? '+' : '';
+        const primaryBranch = item.branchLabel?.startsWith('L1/') ? item.branchLabel.slice(3) : '';
+        const formulaDetail =
+          item.formulaText && item.rolledValue !== undefined
+            ? `，${primaryBranch ? `按${primaryBranch}分支` : '按当前分支'}算式${item.formulaText}得到${item.rolledValue}`
+            : '';
+        const reasonPrefix = primaryBranch ? `命中${primaryBranch}分支后，` : '';
+        return `${reasonPrefix}${target}从${item.oldValue}变为${item.newValue}（变化${sign}${delta}${formulaDetail}）`;
+      });
+
+    if (lines.length > 0) return [settledHeader, ...lines];
+    if (options?.branchReasonText) return [settledHeader, options.branchReasonText];
+    return [];
+  }
+
+  /**
+   * 预计算待执行效果的输出模板变量（执行前预览）
+   * 原系统 computePendingEffectVariables 等价实现
+   */
+  computePendingEffectVariables(effects: Effect[] | undefined): Record<string, string | number | boolean> {
+    if (!effects || effects.length === 0) {
+      return {
+        effectTarget: '',
+        effectOperation: '',
+        effectDelta: 0,
+        effectDeltaFormula: '',
+        effectOldValue: 0,
+        effectNewValue: 0,
+        effectSummary: '',
+        effectText: '',
+        hasEffect: false,
+        effectCount: 0,
+        effectResults: '[]',
+      };
+    }
+
+    const firstEffect = effects[0];
+    const operationMap: Record<string, string> = {
+      add: '增加',
+      subtract: '减少',
+      set: '设置为',
+    };
+    const operation = operationMap[firstEffect.operation] || firstEffect.operation;
+
+    const summaries = effects.map(e => {
+      const op = operationMap[e.operation] || e.operation;
+      return `${e.target}: ${op} ${e.value}`;
+    });
+
+    return {
+      effectTarget: firstEffect.target,
+      effectOperation: operation,
+      effectDelta: 0,
+      effectDeltaFormula: firstEffect.value,
+      effectOldValue: 0,
+      effectNewValue: 0,
+      effectSummary: `${firstEffect.target} ${operation} ${firstEffect.value}`,
+      effectText: summaries.join('; '),
+      hasEffect: true,
+      effectCount: effects.length,
+      effectResults: JSON.stringify(effects.map(e => ({ effectId: e.id, pending: true }))),
     };
   }
 

@@ -13,6 +13,7 @@ import DicePanel from './DicePanel.vue';
 import FavoritesPanel from './FavoritesPanel.vue';
 import GeneratePanel from './GeneratePanel.vue';
 import MvuPanel from './MvuPanel.vue';
+import OpposedCheckPanel from './OpposedCheckPanel.vue';
 import RelationGraph from './RelationGraph.vue';
 import SettingsPanel from './SettingsPanel.vue';
 import SavePanel from './SavePanel.vue';

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import type { AdvancedDicePreset } from '@core/types';
 import { presetManager } from '@data/preset-manager';
+import PresetConflictDialog from './PresetConflictDialog.vue';
 
 type ViewMode = 'main' | 'dice-editor';
 
@@ -12,6 +13,11 @@ const emit = defineEmits<{
 const viewMode = ref<ViewMode>('main');
 
 const dicePresets = ref<AdvancedDicePreset[]>([]);
+
+// 预设导入冲突弹窗状态
+const showConflictDialog = ref(false);
+const conflictPresetData = ref<AdvancedDicePreset | null>(null);
+const conflictExistingNames = ref<string[]>([]);
 
 const editingPresetId = ref<string | null>(null);
 const editingPresetName = ref('');
@@ -60,6 +66,45 @@ function selectDicePreset(preset: AdvancedDicePreset): void {
   editingPresetJson.value = JSON.stringify(preset, null, 2);
 }
 
+function hasNameConflict(preset: AdvancedDicePreset): boolean {
+  return dicePresets.value.some(p => p.name === preset.name);
+}
+
+function resolveConflictOverwrite(): void {
+  if (!conflictPresetData.value) return;
+  showConflictDialog.value = false;
+  presetManager.registerPreset(conflictPresetData.value);
+  loadAllPresets();
+  conflictPresetData.value = null;
+}
+
+function resolveConflictRename(newName: string): void {
+  if (!conflictPresetData.value) return;
+  showConflictDialog.value = false;
+  conflictPresetData.value.name = newName;
+  conflictPresetData.value.id = `${conflictPresetData.value.id}_${Date.now()}`;
+  presetManager.registerPreset(conflictPresetData.value);
+  loadAllPresets();
+  conflictPresetData.value = null;
+}
+
+function resolveConflictCancel(): void {
+  showConflictDialog.value = false;
+  conflictPresetData.value = null;
+  conflictExistingNames.value = [];
+}
+
+function doImport(preset: AdvancedDicePreset): void {
+  if (hasNameConflict(preset)) {
+    conflictPresetData.value = preset;
+    conflictExistingNames.value = dicePresets.value.map(p => p.name);
+    showConflictDialog.value = true;
+  } else {
+    presetManager.registerPreset(preset);
+    loadAllPresets();
+  }
+}
+
 function importDiceFromFile(): void {
   const input = document.createElement('input');
   input.type = 'file';
@@ -71,11 +116,10 @@ function importDiceFromFile(): void {
       const text = await file.text();
       const data = JSON.parse(text);
       if (Array.isArray(data)) {
-        data.forEach(p => presetManager.registerPreset(p));
+        data.forEach(p => doImport(p as AdvancedDicePreset));
       } else {
-        presetManager.registerPreset(data);
+        doImport(data as AdvancedDicePreset);
       }
-      loadAllPresets();
     } catch (err) {
       jsonError.value = '导入失败: ' + (err as Error).message;
     }
@@ -229,6 +273,16 @@ onMounted(() => {
         </div>
       </div>
     </div>
+    <!-- 预设导入冲突弹窗 -->
+    <PresetConflictDialog
+      v-if="showConflictDialog && conflictPresetData"
+      :preset-name="conflictPresetData.name"
+      preset-type="检定"
+      :existing-names="conflictExistingNames"
+      @overwrite="resolveConflictOverwrite"
+      @rename="resolveConflictRename"
+      @cancel="resolveConflictCancel"
+    />
   </div>
 </template>
 

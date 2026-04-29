@@ -344,12 +344,12 @@ export const COC7_CHECK: AdvancedDicePreset = {
     {
       id: 'crit_success',
       name: '大成功',
-      condition: '$roll <= $attr / 5',
+      condition: '$roll === 1',
       priority: 100,
       isSuccess: true,
       color: '#FFD700',
       icon: '🌟',
-      outputTemplate: '🌟 **大成功！** $roll <= $attr/5',
+      outputTemplate: '🌟 **大成功！** $roll === 1',
     },
     {
       id: 'extreme_success',
@@ -394,7 +394,7 @@ export const COC7_CHECK: AdvancedDicePreset = {
     {
       id: 'fumble',
       name: '大失败',
-      condition: '($roll >= 96 && $attr < 50) || $roll >= 100',
+      condition: '$roll >= 96',
       priority: 100,
       isSuccess: false,
       color: '#8B0000',

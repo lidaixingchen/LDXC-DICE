@@ -18,6 +18,14 @@ const currentTableKey = ref(props.initialTable);
 const searchTerm = ref('');
 const currentPage = ref(1);
 
+// 行内编辑状态
+const editingCell = ref<{ rowIdx: number; colIdx: number } | null>(null);
+const editingValue = ref('');
+
+// 新行添加
+const showAddRow = ref(false);
+const newRowData = ref<string[]>([]);
+
 const legacySettings = computed(() => settingsManager.getLegacySettings());
 const itemsPerPage = computed(() => legacySettings.value.itemsPerPage || 50);
 const highlightNew = computed(() => legacySettings.value.highlightNew);
@@ -26,6 +34,8 @@ watch(
   () => props.initialTable,
   newVal => {
     currentTableKey.value = newVal;
+    editingCell.value = null;
+    showAddRow.value = false;
   },
 );
 
@@ -47,6 +57,11 @@ const tableData = computed(() => {
   return data ? data[currentTableKey.value] : null;
 });
 
+const headers = computed(() => {
+  if (!tableData.value?.content?.length) return [];
+  return tableData.value.content[0] as string[];
+});
+
 function isSpecialTable(tableName: string): boolean {
   const name = tableName.toLowerCase();
   return name.includes('纪要') || name.includes('选项') || name.includes('summary') || name.includes('option');
@@ -59,7 +74,6 @@ const isVerticalLayout = computed(() => {
 
 const processedRows = computed(() => {
   if (!tableData.value?.content) return [];
-  const headers = tableData.value.content[0];
   const rows = tableData.value.content.slice(1);
 
   let result = rows.map((r: any, idx: number) => ({ data: r, originalIndex: idx }));
@@ -102,11 +116,104 @@ function getRowHighlightClass(rowIndex: number): string {
   return '';
 }
 
+function isEditing(rowIdx: number, colIdx: number): boolean {
+  return editingCell.value?.rowIdx === rowIdx && editingCell.value?.colIdx === colIdx;
+}
+
+function getCellClass(rowIdx: number, colIdx: number): string {
+  const highlight = getCellHighlightClass(rowIdx, colIdx);
+  const edit = isEditing(rowIdx, colIdx) ? 'acu-cell-editing' : '';
+  return [highlight, edit].filter(Boolean).join(' ');
+}
+
 function getCellHighlightClass(rowIndex: number, colIndex: number): string {
   if (!highlightNew.value) return '';
   const tableName = tableData.value?.name || '';
   if (isCellHighlighted(tableName, rowIndex, colIndex)) return 'acu-highlight-cell';
   return '';
+}
+
+// ========== 行内编辑 ==========
+
+function startEdit(rowIdx: number, colIdx: number): void {
+  editingCell.value = { rowIdx, colIdx };
+  editingValue.value = String(tableData.value?.content?.[rowIdx + 1]?.[colIdx] ?? '');
+}
+
+function confirmEdit(): void {
+  if (!editingCell.value || !tableData.value?.content) return;
+  const { rowIdx, colIdx } = editingCell.value;
+  const contentRow = rowIdx + 1;
+  if (contentRow < tableData.value.content.length) {
+    tableData.value.content[contentRow][colIdx] = editingValue.value;
+    // 触发响应式更新
+    tableData.value.content = [...tableData.value.content];
+  }
+  editingCell.value = null;
+}
+
+function cancelEdit(): void {
+  editingCell.value = null;
+}
+
+function onEditKeydown(e: KeyboardEvent): void {
+  if (e.key === 'Enter') {
+    confirmEdit();
+  } else if (e.key === 'Escape') {
+    cancelEdit();
+  }
+}
+
+// ========== 增删行 ==========
+
+function addRow(): void {
+  showAddRow.value = true;
+  newRowData.value = headers.value.map(() => '');
+}
+
+function confirmAddRow(): void {
+  if (!tableData.value?.content) return;
+  tableData.value.content.push([...newRowData.value]);
+  tableData.value.content = [...tableData.value.content];
+  showAddRow.value = false;
+  newRowData.value = [];
+  // 跳转到最后一页
+  currentPage.value = totalPages.value;
+}
+
+function cancelAddRow(): void {
+  showAddRow.value = false;
+  newRowData.value = [];
+}
+
+function deleteRow(rowIdx: number): void {
+  const tableName = tableData.value?.name || '';
+  const rowLabel = tableData.value?.content?.[rowIdx + 1]?.[1] || tableData.value?.content?.[rowIdx + 1]?.[0] || `行 ${rowIdx + 1}`;
+  if (!confirm(`确定删除「${tableName}」中的「${rowLabel}」？\n此操作将立即保存到数据库。`)) return;
+  if (!tableData.value?.content) return;
+
+  tableData.value.content.splice(rowIdx + 1, 1);
+  tableData.value.content = [...tableData.value.content];
+
+  // 如果删除后当前页为空，回到上一页
+  const total = Math.ceil((tableData.value.content.length - 1) / itemsPerPage.value);
+  if (currentPage.value > total && total > 0) {
+    currentPage.value = total;
+  }
+  editingCell.value = null;
+}
+
+// ========== 导出 ==========
+
+function exportTableJson(): void {
+  if (!tableData.value) return;
+  const blob = new Blob([JSON.stringify(tableData.value.content, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${tableData.value.name || currentTableKey.value}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 
@@ -146,27 +253,85 @@ function getCellHighlightClass(rowIndex: number, colIndex: number): string {
 
       <!-- 单个表格内容 -->
       <template v-else>
+        <!-- 工具栏 -->
+        <div class="acu-table-toolbar">
+          <button class="acu-toolbar-btn" title="添加行" @click="addRow">
+            <i class="fa-solid fa-plus"></i> 添加行
+          </button>
+          <button class="acu-toolbar-btn" title="导出JSON" @click="exportTableJson">
+            <i class="fa-solid fa-file-export"></i> 导出
+          </button>
+        </div>
+
+        <!-- 新行编辑 -->
+        <div v-if="showAddRow" class="acu-add-row-panel">
+          <div class="acu-add-row-title"><i class="fa-solid fa-plus-circle"></i> 新行</div>
+          <div class="acu-add-row-fields">
+            <div v-for="(h, hIdx) in headers" :key="hIdx" class="acu-add-field">
+              <label class="acu-add-label">{{ h }}</label>
+              <input
+                v-model="newRowData[hIdx]"
+                type="text"
+                class="acu-add-input"
+                :placeholder="h"
+                @keydown.enter="confirmAddRow"
+                @keydown.escape="cancelAddRow"
+              />
+            </div>
+          </div>
+          <div class="acu-add-row-actions">
+            <button class="acu-btn-primary" @click="confirmAddRow">
+              <i class="fa-solid fa-check"></i> 确认
+            </button>
+            <button class="acu-btn-cancel" @click="cancelAddRow">
+              <i class="fa-solid fa-times"></i> 取消
+            </button>
+          </div>
+        </div>
+
         <div v-if="isVerticalLayout" class="acu-vertical-list">
           <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-vertical-card" :class="getRowHighlightClass(rowItem.originalIndex)">
             <div class="acu-card-header">
               <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
               <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
+              <button class="acu-card-delete-btn" title="删除行" @click.stop="deleteRow(rowItem.originalIndex)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
             </div>
             <div class="acu-card-body">
               <template v-for="(cell, cIdx) in rowItem.data" :key="cIdx">
                 <div v-if="Number(cIdx) > 0 && !isInvalidValue(cell)" class="acu-field-row">
                   <span class="acu-field-label">
-                    {{ tableData?.content[0][cIdx]?.replace(/[\(（\[【][^)）\]】]*[\)）\]】]/g, '').trim() || '字段' }}
+                    {{ headers[cIdx]?.replace(/[\(（\[【][^)）\]】]*[\)）\]】]/g, '').trim() || '字段' }}
                   </span>
-                  <span class="acu-field-value">
-                    <template v-if="parseAttr(String(cell))">
-                      <span class="acu-attr-val">{{ parseAttr(String(cell))?.value }}</span>
+                  <span class="acu-field-value" :class="getCellClass(rowItem.originalIndex, cIdx)">
+                    <template v-if="isEditing(rowItem.originalIndex, cIdx)">
+                      <input
+                        v-model="editingValue"
+                        type="text"
+                        class="acu-inline-edit"
+                        @blur="confirmEdit"
+                        @keydown="onEditKeydown"
+                        autofocus
+                      />
+                    </template>
+                    <template v-else-if="parseAttr(String(cell))">
+                      <span class="acu-attr-val" @dblclick="startEdit(rowItem.originalIndex, cIdx)">
+                        {{ parseAttr(String(cell))?.value }}
+                      </span>
                       <i
                         class="fa-solid fa-dice-d20 acu-dice-icon"
                         @click="handleDiceClick(parseAttr(String(cell))!.name, parseAttr(String(cell))!.value)"
                       ></i>
                     </template>
-                    <template v-else>{{ cell }}</template>
+                    <template v-else>
+                      <span class="acu-cell-display" @dblclick="startEdit(rowItem.originalIndex, cIdx)">
+                        {{ cell }}
+                      </span>
+                    </template>
+                    <span v-if="!isEditing(rowItem.originalIndex, cIdx)" class="acu-edit-hint" @click="startEdit(rowItem.originalIndex, cIdx)">
+                      <i class="fa-solid fa-pencil"></i>
+                    </span>
                   </span>
                 </div>
               </template>
@@ -179,22 +344,44 @@ function getCellHighlightClass(rowIndex: number, colIndex: number): string {
             <div class="acu-card-header">
               <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
               <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
+              <button class="acu-card-delete-btn" title="删除行" @click.stop="deleteRow(rowItem.originalIndex)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
             </div>
             <div class="acu-card-body">
               <template v-for="(cell, cIdx) in rowItem.data" :key="cIdx">
                 <div v-if="Number(cIdx) > 0 && !isInvalidValue(cell)" class="acu-field-row">
                   <span class="acu-field-label">
-                    {{ tableData?.content[0][cIdx]?.replace(/[\(（\[【][^)）\]】]*[\)）\]】]/g, '').trim() || '字段' }}
+                    {{ headers[cIdx]?.replace(/[\(（\[【][^)）\]】]*[\)）\]】]/g, '').trim() || '字段' }}
                   </span>
-                  <span class="acu-field-value">
-                    <template v-if="parseAttr(String(cell))">
-                      <span class="acu-attr-val">{{ parseAttr(String(cell))?.value }}</span>
+                  <span class="acu-field-value" :class="getCellClass(rowItem.originalIndex, cIdx)">
+                    <template v-if="isEditing(rowItem.originalIndex, cIdx)">
+                      <input
+                        v-model="editingValue"
+                        type="text"
+                        class="acu-inline-edit"
+                        @blur="confirmEdit"
+                        @keydown="onEditKeydown"
+                        autofocus
+                      />
+                    </template>
+                    <template v-else-if="parseAttr(String(cell))">
+                      <span class="acu-attr-val" @dblclick="startEdit(rowItem.originalIndex, cIdx)">
+                        {{ parseAttr(String(cell))?.value }}
+                      </span>
                       <i
                         class="fa-solid fa-dice-d20 acu-dice-icon"
                         @click="handleDiceClick(parseAttr(String(cell))!.name, parseAttr(String(cell))!.value)"
                       ></i>
                     </template>
-                    <template v-else>{{ cell }}</template>
+                    <template v-else>
+                      <span class="acu-cell-display" @dblclick="startEdit(rowItem.originalIndex, cIdx)">
+                        {{ cell }}
+                      </span>
+                    </template>
+                    <span v-if="!isEditing(rowItem.originalIndex, cIdx)" class="acu-edit-hint" @click="startEdit(rowItem.originalIndex, cIdx)">
+                      <i class="fa-solid fa-pencil"></i>
+                    </span>
                   </span>
                 </div>
               </template>
@@ -301,6 +488,163 @@ function getCellHighlightClass(rowIndex: number, colIndex: number): string {
     border-color: var(--acu-accent);
     box-shadow: 0 4px 12px var(--acu-shadow);
   }
+}
+
+/* 工具栏 */
+.acu-table-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--acu-border, #313244);
+}
+
+.acu-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--acu-border, #45475a);
+  border-radius: 6px;
+  background: var(--acu-bg-card, #313244);
+  color: var(--acu-text-main, #cdd6f4);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: var(--acu-accent-light, #45475a);
+    border-color: var(--acu-accent, #89b4fa);
+  }
+}
+
+/* 新行编辑面板 */
+.acu-add-row-panel {
+  margin: 8px 12px;
+  padding: 12px;
+  background: var(--acu-bg-card, #313244);
+  border: 1px solid var(--acu-accent, #89b4fa);
+  border-radius: 8px;
+}
+
+.acu-add-row-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-accent, #89b4fa);
+  margin-bottom: 8px;
+}
+
+.acu-add-row-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.acu-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 0 120px;
+}
+
+.acu-add-label {
+  font-size: 9px;
+  color: var(--acu-text-sub, #6c7086);
+}
+
+.acu-add-input {
+  padding: 4px 6px;
+  border: 1px solid var(--acu-border, #45475a);
+  border-radius: 4px;
+  background: var(--acu-bg-main, #1e1e2e);
+  color: var(--acu-text-main, #cdd6f4);
+  font-size: 11px;
+  outline: none;
+
+  &:focus {
+    border-color: var(--acu-accent, #89b4fa);
+  }
+}
+
+.acu-add-row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.acu-btn-primary {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  background: var(--acu-accent, #89b4fa);
+  color: #1e1e2e;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.acu-btn-cancel {
+  padding: 4px 10px;
+  border: 1px solid var(--acu-border, #45475a);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--acu-text-main, #cdd6f4);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* 行内编辑 */
+.acu-inline-edit {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid var(--acu-accent, #89b4fa);
+  border-radius: 3px;
+  background: var(--acu-bg-main, #1e1e2e);
+  color: var(--acu-text-main, #cdd6f4);
+  font-size: 10px;
+  outline: none;
+}
+
+.acu-cell-display {
+  cursor: pointer;
+}
+
+.acu-edit-hint {
+  opacity: 0;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 8px;
+  color: var(--acu-text-sub, #6c7086);
+  transition: opacity 0.15s;
+}
+
+.acu-field-value:hover .acu-edit-hint {
+  opacity: 1;
+}
+
+.acu-cell-editing {
+  border-radius: 3px;
+  outline: 1px solid var(--acu-accent, #89b4fa);
+}
+
+.acu-card-delete-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub, #6c7086);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 9px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: all 0.15s;
+
+  &:hover {
+    background: var(--acu-danger, #f38ba8);
+    color: white;
+  }
+}
+
+.acu-card-header:hover .acu-card-delete-btn {
+  opacity: 1;
 }
 
 .acu-highlight-row {

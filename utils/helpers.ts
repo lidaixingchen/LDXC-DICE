@@ -136,6 +136,107 @@ export function generateId(prefix: string = ''): string {
   return prefix ? `${prefix}_${timestamp}${random}` : `${timestamp}${random}`;
 }
 
+/**
+ * 去除字符串中的孤立代理对（surrogate pair），避免 encodeURIComponent 报错
+ */
+export function stripLoneSurrogates(value: string): string {
+  let sanitized = '';
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        sanitized += value[i] + value[i + 1];
+        i++;
+      } else {
+        sanitized += '�';
+      }
+      continue;
+    }
+    if (code >= 0xdc00 && code <= 0xdfff) {
+      sanitized += '�';
+      continue;
+    }
+    sanitized += value[i];
+  }
+  return sanitized;
+}
+
+/**
+ * 安全地 encodeURIComponent（处理孤立代理对）
+ */
+export function safeEncodeURIComponent(value: unknown): string {
+  const text = String(value ?? '');
+  try {
+    return encodeURIComponent(text);
+  } catch {
+    return encodeURIComponent(stripLoneSurrogates(text));
+  }
+}
+
+/**
+ * 安全地 decodeURIComponent（处理孤立代理对）
+ */
+export function safeDecodeURIComponent(value: unknown): string {
+  const text = String(value ?? '');
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return stripLoneSurrogates(text);
+  }
+}
+
+/**
+ * 生成唯一名称（处理重名，追加 (2), (3)...）
+ */
+export function generateUniqueName(baseName: string, existingNames: string[]): string {
+  if (!existingNames.includes(baseName)) return baseName;
+  let counter = 2;
+  let newName = `${baseName} (${counter})`;
+  while (existingNames.includes(newName)) {
+    counter++;
+    newName = `${baseName} (${counter})`;
+  }
+  return newName;
+}
+
+/**
+ * 检测当前设备是否为移动端
+ */
+export function isMobileDevice(): boolean {
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+/**
+ * 判断表名是否为 NPC 表（兼容新旧模板）
+ */
+export function isNpcTableName(name: string): boolean {
+  return name === '重要人物表' || name === '重要角色表';
+}
+
+/**
+ * 比较语义化版本号 (x.y.z)
+ * @returns -1 | 0 | 1
+ */
+export function compareVersion(v1: string, v2: string): number {
+  const normalizeVersion = (v: string): string => {
+    if (typeof v === 'number') return `${v}.0.0`;
+    if (typeof v !== 'string') return '0.0.0';
+    return v;
+  };
+  const nv1 = normalizeVersion(v1);
+  const nv2 = normalizeVersion(v2);
+  const parts1 = nv1.split('.').map(Number);
+  const parts2 = nv2.split('.').map(Number);
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 < p2) return -1;
+    if (p1 > p2) return 1;
+  }
+  return 0;
+}
+
 export function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
