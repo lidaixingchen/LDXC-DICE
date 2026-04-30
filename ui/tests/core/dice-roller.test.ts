@@ -382,6 +382,12 @@ describe('dice-roller', () => {
       const result = evaluateFormula('($a + $b) * 2', { a: 3, b: 4 });
       expect(result).toBe(14);
     });
+
+    it('should support built-in math helpers used by presets', () => {
+      expect(evaluateFormula('floor(($attr - 10) / 2)', { attr: 12 })).toBe(1);
+      expect(evaluateFormula('max(0, floor(($attr - 6) / 10))', { attr: 16 })).toBe(1);
+      expect(evaluateFormula('abs($bonusPenalty)', { bonusPenalty: -3 })).toBe(3);
+    });
   });
 
   describe('evaluateCondition', () => {

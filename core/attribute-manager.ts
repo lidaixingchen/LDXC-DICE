@@ -81,6 +81,13 @@ export class AttributeManager {
               if (h?.includes(searchName)) acc.push(idx);
               return acc;
             }, []);
+            if (partialMatches.length > 1) {
+              console.warn(
+                `Ambiguous partial attribute match for "${searchName}" on character "${characterName}" in sheet "${sheet.name}": ${partialMatches
+                  .map(idx => String(headers[idx]))
+                  .join(', ')}`,
+              );
+            }
             colIndex = partialMatches.length === 1 ? partialMatches[0] : -1;
           }
           if (colIndex >= 0 && colIndex < row.length) {

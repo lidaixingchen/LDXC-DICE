@@ -261,6 +261,15 @@ describe('validation/rules', () => {
       expect(result.errors.some(e => e.code === 'dice_expression_valid')).toBe(true);
     });
 
+    it('should handle variable expressions consistently across repeated validations', () => {
+      const preset = { ...createValidPreset(), diceExpression: '$roll + 1' };
+      const rule = presetValidationRules.find(r => r.id === 'dice_expression_valid');
+      const context = { path: 'preset', root: preset, options: createValidator().getOptions() };
+
+      expect(rule?.validate(preset, context)).toBe(true);
+      expect(rule?.validate(preset, context)).toBe(true);
+    });
+
     it('should detect empty outcomes', () => {
       const preset = { ...createValidPreset(), outcomes: [] };
       const result = validatePreset(preset);

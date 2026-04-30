@@ -161,8 +161,8 @@ export function useCharacterData() {
       });
       console.log('[useCharacterData] 加载角色:', characters.value.length, '个');
 
-      if (chars.length > 0) {
-        selectCharacter(chars[0].name);
+      if (characters.value.length > 0) {
+        selectCharacter(characters.value[0].name);
       } else {
         attributeButtons.value = Object.entries(allAttrs).map(([name, value]) => ({ name, value }));
       }

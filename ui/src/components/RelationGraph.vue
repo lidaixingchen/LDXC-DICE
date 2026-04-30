@@ -66,6 +66,11 @@ function calculateForceLayout() {
     });
   });
 
+  // 归一化节点 ID（兼容有无 node_ 前缀两种格式）
+  function nodeKey(id: string): string {
+    return nodePositions.value.has(id) ? id : `node_${id}`;
+  }
+
   // 简化为导迭代
   const iterations = 50;
   const repulsion = 8000;
@@ -74,7 +79,10 @@ function calculateForceLayout() {
 
   for (let iter = 0; iter < iterations; iter++) {
     const forces: Map<string, { fx: number; fy: number }> = new Map();
-    nodes.value.forEach(n => forces.set(n.id, { fx: 0, fy: 0 }));
+    nodes.value.forEach(n => {
+      forces.set(n.id, { fx: 0, fy: 0 });
+      forces.set(`node_${n.id}`, { fx: 0, fy: 0 });
+    });
 
     // 排斥力（所有节点对）
     for (let i = 0; i < n; i++) {
@@ -97,8 +105,10 @@ function calculateForceLayout() {
 
     // 吸引力（沿着边）
     edges.value.forEach(edge => {
-      const sourcePos = nodePositions.value.get(edge.source) || nodePositions.value.get(`node_${edge.source}`);
-      const targetPos = nodePositions.value.get(edge.target) || nodePositions.value.get(`node_${edge.target}`);
+      const sourceKey = nodeKey(edge.source);
+      const targetKey = nodeKey(edge.target);
+      const sourcePos = nodePositions.value.get(sourceKey) || nodePositions.value.get(`node_${edge.source}`);
+      const targetPos = nodePositions.value.get(targetKey) || nodePositions.value.get(`node_${edge.target}`);
       if (!sourcePos || !targetPos) return;
 
       const dx = targetPos.x - sourcePos.x;
@@ -106,8 +116,8 @@ function calculateForceLayout() {
       const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
       const force = dist * attraction;
 
-      const sourceForce = forces.get(edge.source) || forces.get(`node_${edge.source}`);
-      const targetForce = forces.get(edge.target) || forces.get(`node_${edge.target}`);
+      const sourceForce = forces.get(sourceKey);
+      const targetForce = forces.get(targetKey);
       if (sourceForce) {
         sourceForce.fx += (dx / dist) * force;
         sourceForce.fy += (dy / dist) * force;

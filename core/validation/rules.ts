@@ -3,7 +3,7 @@ import type { ValidationRule, ValidationContext, ValidationResult } from './core
 import { createValidator } from './core';
 
 const DICE_EXPRESSION_REGEX = /^(\d+)?d(\d+)([bkpe]{1,2})?(\d+)?([+-]\d+)*$/i;
-const VARIABLE_REGEX = /\$([a-zA-Z_][a-zA-Z0-9_]*)/g;
+const VARIABLE_REGEX = /\$([a-zA-Z_][a-zA-Z0-9_]*)/;
 const CONDITION_REGEX = /^[\d\s+\-*/().<>=!&|?$a-zA-Z_]+$/;
 
 export const presetValidationRules: ValidationRule<AdvancedDicePreset>[] = [

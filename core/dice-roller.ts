@@ -22,6 +22,14 @@ interface ParsedDice {
 const DICE_REGEX = /^(\d+)?d(\d+)([bkpe]{1,2})?(\d+)?$/i;
 const MODIFIER_REGEX = /^[+-]$/;
 const NUMBER_REGEX = /^\d+(\.\d+)?$/;
+const SAFE_FORMULA_FUNCTIONS = {
+  abs: Math.abs,
+  ceil: Math.ceil,
+  floor: Math.floor,
+  max: Math.max,
+  min: Math.min,
+  round: Math.round,
+} as const;
 
 export function tokenize(expression: string): DiceToken[] {
   const tokens: DiceToken[] = [];
@@ -505,15 +513,17 @@ export function evaluateFormula(formula: string, context: Record<string, number>
   });
 
   try {
-    const exprLower = expr.toLowerCase().replace(/\s/g, '');
-    const safeExpr = exprLower.replace(/[^0-9+\-*/().a-z]/g, '');
-    if (safeExpr !== exprLower) {
+    const normalizedExpr = expr.toLowerCase().replace(/\s/g, '');
+    const safeExpr = normalizedExpr.replace(/[^0-9+\-*/().,a-z]/g, '');
+    // 只允许基础算符和已知数学函数；更复杂的表达式走回退解析。
+    if (safeExpr !== normalizedExpr) {
       const rollResult = rollComplexDiceExpression(expr);
       return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
     }
 
-    const fn = new Function(`return ${safeExpr}`);
-    const result = fn();
+    const helperNames = Object.keys(SAFE_FORMULA_FUNCTIONS) as Array<keyof typeof SAFE_FORMULA_FUNCTIONS>;
+    const fn = new Function(...helperNames, `return ${safeExpr}`);
+    const result = fn(...helperNames.map(name => SAFE_FORMULA_FUNCTIONS[name]));
     return typeof result === 'number' && !isNaN(result) ? result : 0;
   } catch {
     const rollResult = rollComplexDiceExpression(expr);

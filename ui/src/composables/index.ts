@@ -141,6 +141,11 @@ export function useDiceSystem(): {
       .replace(/\babs\s*\(/g, 'Math.abs(')
       .replace(/\bpow\s*\(/g, 'Math.pow(');
 
+    // 安全检测：禁止函数体闭合、对象访问和语句分隔
+    if (/[;{}[\]']/.test(normalized)) {
+      return diceSystemInstance!.evaluateFormula(formula, context);
+    }
+
     try {
       const fn = new Function('Math', `return (${normalized});`);
       const value = fn(Math);

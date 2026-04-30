@@ -1,5 +1,6 @@
 import { useDiceSystem, usePanelState, usePresets } from './composables';
 import { eventBus } from './event-bus';
+import { APP_VERSION } from './version';
 import type {
   AcuDiceAPI,
   AcuDiceEvent,
@@ -29,7 +30,7 @@ function createAcuDiceAPI(): AcuDiceAPI {
   loadPresets();
 
   return {
-    version: '2.0.0',
+    version: APP_VERSION,
 
     roll(formula: string) {
       return roll(formula);

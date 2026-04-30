@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, type Ref } from 'vue';
+import { CombatCalculationService } from '../services/CombatCalculationService';
+import { WorldConfigService } from '../services/WorldConfigService';
 
 const SAVE_KEY = 'aidm_save_slots';
 
@@ -44,30 +46,6 @@ const combat = inject<Ref<CombatState>>('aidmCombat');
 const equipment = inject<Ref<EquipmentSlot>>('aidmEquipment');
 const activeStatuses = inject<Ref<StatusEffect[]>>('aidmStatuses');
 const currentCharacter = inject<any>('aidmCurrentCharacter');
-
-function getSPV(level: string): number {
-  const map: Record<string, number> = { 'F级': 5, 'E级': 10, 'D级': 15, 'C级': 20, 'B级': 25, 'A级': 35, 'S级': 50, 'SS级': 70, 'SSS级': 95 };
-  return map[level] || 5;
-}
-
-function deriveCombatStats(attrs: Record<string, number>, level: string) {
-  const str = attrs['力量'] || attrs['STR'] || 0;
-  const agi = attrs['敏捷'] || attrs['AGI'] || 0;
-  const end = attrs['耐力'] || attrs['END'] || 0;
-  const intVal = attrs['智力'] || attrs['INT'] || 0;
-  const per = attrs['感知'] || attrs['PER'] || 0;
-  const cha = attrs['魅力'] || attrs['CHA'] || 0;
-  const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 };
-  return {
-    physAtk: str + eq.physDmg,
-    magicAtk: intVal + eq.magicDmg,
-    physDef: end + eq.physDef,
-    magicDef: per + eq.magicDef,
-    hp: Math.max(1, end * 5 + 3 * getSPV(level) + eq.hpBonus),
-    ddc: 10,
-    critRate: Math.min(50, 10 + per),
-  };
-}
 
 const saveSlots = ref<SaveSlot[]>([]);
 const exportText = ref('');
@@ -151,12 +129,12 @@ function loadGame(slotId: number): boolean {
 }
 
 function exportSave(): void {
-  const spv = getSPV(worldLevel?.value || 'F级');
+  const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 };
   const stats = currentCharacter?.value
-    ? deriveCombatStats(currentCharacter.value.attributes, worldLevel?.value || 'F级')
-    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 10 };
+    ? CombatCalculationService.deriveCombatStats(currentCharacter.value.attributes, worldLevel?.value || 'F级', eq)
+    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 0 };
 
-  const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0 };
+  const spv = WorldConfigService.getSPV(worldLevel?.value || 'F级');
   const cb = combat?.value || { playerCurrentHP: 0, playerMaxHP: 0, playerShield: 0, active: false, round: 0, enemyName: '', enemyCurrentHP: 0, enemyMaxHP: 0 };
   const st = activeStatuses?.value || [];
 
@@ -171,8 +149,8 @@ function exportSave(): void {
 【战斗属性】
 HP：${cb.playerCurrentHP}/${cb.playerMaxHP}
 护盾：${cb.playerShield}
-物攻：${stats.physAtk + eq.physDmg} | 法攻：${stats.magicAtk + eq.magicDmg}
-物防：${stats.physDef + eq.physDef} | 法防：${stats.magicDef + eq.magicDef}
+物攻：${stats.physAtk} | 法攻：${stats.magicAtk}
+物防：${stats.physDef} | 法防：${stats.magicDef}
 DDC：${stats.ddc} | 暴击率：${stats.critRate}%
 
 ${st.length > 0 ? `【状态效果】\n${st.map(s => `・${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}

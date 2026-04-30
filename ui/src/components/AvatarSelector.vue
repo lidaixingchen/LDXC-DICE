@@ -11,6 +11,7 @@ const showImportModal = ref(false);
 const importUrl = ref('');
 const importName = ref('');
 const importType = ref<Avatar['type']>('custom');
+const importTab = ref<'file' | 'url'>('file');
 
 const filteredAvatars = computed(() => {
   let items = avatars.value;
@@ -264,21 +265,21 @@ onMounted(() => {
           <div class="acu-tabs">
             <button
               class="acu-tab"
-              :class="{ active: !importUrl }"
-              @click="importUrl = ''"
+              :class="{ active: importTab === 'file' }"
+              @click="importTab = 'file'; importUrl = ''"
             >
               本地文件
             </button>
             <button
               class="acu-tab"
-              :class="{ active: !!importUrl }"
-              @click="importUrl = ' '"
+              :class="{ active: importTab === 'url' }"
+              @click="importTab = 'url'"
             >
               URL导入
             </button>
           </div>
 
-          <div v-if="!importUrl" class="acu-import-file">
+          <div v-if="importTab === 'file'" class="acu-import-file">
             <label class="acu-file-drop">
               <i class="fa-solid fa-cloud-upload-alt"></i>
               <span>点击或拖拽图片到此处</span>
