@@ -214,19 +214,5 @@ export class PresetFileLoader {
 export const presetFileLoader = new PresetFileLoader();
 
 export async function initializePresetFiles(): Promise<void> {
-  const defaultPresets: Array<{ content: string; filename: string }> = [];
-
-  for (const { content, filename } of defaultPresets) {
-    try {
-      const result = loadPresetFromJson(content);
-      if (result.success && result.preset) {
-        const existingPreset = presetManager.getPreset(result.preset.id);
-        if (!existingPreset) {
-          presetManager.registerPreset(result.preset);
-        }
-      }
-    } catch (e) {
-      console.warn(`[PresetFileLoader] 加载默认预设 ${filename} 失败:`, e);
-    }
-  }
-}
+  // 目前无内置预设文件需要加载，保留函数以备将来扩展
+  // 加载流程：从 defaultPresets 数组读取 JSON 内容并注册到 presetManager

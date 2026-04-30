@@ -136,8 +136,6 @@ function renderInterface(): void {
       mainApp = createApp(MainLayout);
       mainApp.mount(mainContainer);
       console.log('[AcuDice] Vue 应用已挂载');
-    } else if (isEmbedded && mainContainer.parentElement !== mountParent) {
-      mountParent.appendChild(mainContainer);
     }
   } catch (e) {
     console.error('[AcuDice] 渲染界面失败:', e);
@@ -158,6 +156,7 @@ function setupMutationObserver(): void {
     }
 
     let lastMutationTime = 0;
+    let pendingRenderTimer: ReturnType<typeof setTimeout> | null = null;
     const MUTATION_THROTTLE = 500;
 
     mutationObserver = new MutationObserver(mutations => {
@@ -187,7 +186,13 @@ function setupMutationObserver(): void {
 
       if (hasRelevantChange) {
         lastMutationTime = now;
-        setTimeout(() => {
+        if (pendingRenderTimer) {
+          clearTimeout(pendingRenderTimer);
+        }
+        pendingRenderTimer = setTimeout(() => {
+          pendingRenderTimer = null;
+          const latestConfig = settingsManager.getLegacySettings();
+          if (latestConfig.positionMode !== 'embedded') return;
           if (!isRendering) {
             renderInterface();
           }

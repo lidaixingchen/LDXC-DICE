@@ -317,13 +317,17 @@ export class TableInjector {
       case 'ne':
         return value !== filter.value;
       case 'gt':
-        return (value as number) > (filter.value as number);
+        if (typeof value !== 'number' || typeof filter.value !== 'number') return false;
+        return value > filter.value;
       case 'lt':
-        return (value as number) < (filter.value as number);
+        if (typeof value !== 'number' || typeof filter.value !== 'number') return false;
+        return value < filter.value;
       case 'gte':
-        return (value as number) >= (filter.value as number);
+        if (typeof value !== 'number' || typeof filter.value !== 'number') return false;
+        return value >= filter.value;
       case 'lte':
-        return (value as number) <= (filter.value as number);
+        if (typeof value !== 'number' || typeof filter.value !== 'number') return false;
+        return value <= filter.value;
       case 'contains':
         return String(value).includes(String(filter.value));
       case 'matches':

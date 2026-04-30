@@ -505,8 +505,9 @@ export function evaluateFormula(formula: string, context: Record<string, number>
   });
 
   try {
-    const safeExpr = expr.replace(/[^0-9+\-*/().]/g, '');
-    if (safeExpr !== expr.replace(/\s/g, '')) {
+    const exprLower = expr.toLowerCase().replace(/\s/g, '');
+    const safeExpr = exprLower.replace(/[^0-9+\-*/().a-z]/g, '');
+    if (safeExpr !== exprLower) {
       const rollResult = rollComplexDiceExpression(expr);
       return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
     }

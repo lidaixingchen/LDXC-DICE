@@ -152,8 +152,14 @@ export function useCharacterData() {
         }
       }
 
-      characters.value = chars;
-      console.log('[useCharacterData] 加载角色:', chars.length, '个');
+      // 去重：同名角色只保留第一个（玩家角色优先）
+      const seen = new Set<string>();
+      characters.value = chars.filter(c => {
+        if (seen.has(c.name)) return false;
+        seen.add(c.name);
+        return true;
+      });
+      console.log('[useCharacterData] 加载角色:', characters.value.length, '个');
 
       if (chars.length > 0) {
         selectCharacter(chars[0].name);

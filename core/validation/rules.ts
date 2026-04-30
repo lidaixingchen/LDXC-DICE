@@ -40,9 +40,10 @@ export const presetValidationRules: ValidationRule<AdvancedDicePreset>[] = [
     severity: 'error',
     validate: (value: AdvancedDicePreset) => {
       if (!value.diceExpression) return false;
-      return DICE_EXPRESSION_REGEX.test(value.diceExpression) ||
-             value.diceExpression.includes('$') ||
-             value.diceExpression.includes('{');
+      if (DICE_EXPRESSION_REGEX.test(value.diceExpression)) return true;
+      if (value.diceExpression.includes('$') && VARIABLE_REGEX.test(value.diceExpression)) return true;
+      if (value.diceExpression.includes('{') && /\{[^}]+\}/.test(value.diceExpression)) return true;
+      return false;
     },
     getMessage: (value: AdvancedDicePreset) => `无效的骰子表达式: "${value.diceExpression}"`,
     getSuggestion: (value: AdvancedDicePreset) => {
@@ -306,7 +307,7 @@ export function validatePreset(preset: AdvancedDicePreset): ValidationResult {
     const context: ValidationContext = {
       path: 'preset',
       root: preset,
-      options: validator['options'],
+      options: validator.getOptions(),
     };
 
     if (!rule.validate(preset, context)) {
@@ -327,7 +328,7 @@ export function validatePreset(preset: AdvancedDicePreset): ValidationResult {
           path: `outcomes[${i}]`,
           parent: preset,
           root: preset,
-          options: validator['options'],
+          options: validator.getOptions(),
         };
 
         if (!rule.validate(outcome, context)) {
@@ -348,7 +349,7 @@ export function validatePreset(preset: AdvancedDicePreset): ValidationResult {
               path: `outcomes[${i}].effects[${j}]`,
               parent: outcome,
               root: preset,
-              options: validator['options'],
+              options: validator.getOptions(),
             };
 
             if (!rule.validate(effect, context)) {
@@ -373,7 +374,7 @@ export function validatePreset(preset: AdvancedDicePreset): ValidationResult {
           path: `customFields[${i}]`,
           parent: preset,
           root: preset,
-          options: validator['options'],
+          options: validator.getOptions(),
         };
 
         if (!rule.validate(field, context)) {

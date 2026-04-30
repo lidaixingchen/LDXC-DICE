@@ -75,7 +75,14 @@ export class AttributeManager {
         if (rowName !== characterName) continue;
 
         for (const searchName of searchNames) {
-          const colIndex = headers.findIndex(h => h === searchName || h?.includes(searchName));
+          let colIndex = headers.indexOf(searchName);
+          if (colIndex < 0) {
+            const partialMatches = headers.reduce<number[]>((acc, h, idx) => {
+              if (h?.includes(searchName)) acc.push(idx);
+              return acc;
+            }, []);
+            colIndex = partialMatches.length === 1 ? partialMatches[0] : -1;
+          }
           if (colIndex >= 0 && colIndex < row.length) {
             const rawValue = row[colIndex];
             const value = typeof rawValue === 'number' ? rawValue : parseFloat(String(rawValue || '0'));

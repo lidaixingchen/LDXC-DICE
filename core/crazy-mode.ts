@@ -158,7 +158,6 @@ function computeAttrMod(attrValue: number): number {
 }
 
 function getMasteryBonus(level: string | undefined): number {
-  if (!level) return 0;
   const levelMap: Record<string, number> = {
     F级: 0,
     E级: 1,
@@ -170,7 +169,8 @@ function getMasteryBonus(level: string | undefined): number {
     SS级: 7,
     SSS级: 8,
   };
-  return levelMap[level] ?? 0;
+  if (!level) return 0;
+  return level in levelMap ? levelMap[level] : 0;
 }
 
 function judgeResult(roll: number, target: number, isD20: boolean): string {

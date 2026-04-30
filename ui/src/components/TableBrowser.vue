@@ -52,7 +52,9 @@ const allTables = computed(() => {
     }));
 });
 
+const refreshKey = ref(0);
 const tableData = computed(() => {
+  void refreshKey.value;
   const data = getTableData();
   return data ? data[currentTableKey.value] : null;
 });
@@ -147,8 +149,7 @@ function confirmEdit(): void {
   const contentRow = rowIdx + 1;
   if (contentRow < tableData.value.content.length) {
     tableData.value.content[contentRow][colIdx] = editingValue.value;
-    // 触发响应式更新
-    tableData.value.content = [...tableData.value.content];
+    refreshKey.value++;
   }
   editingCell.value = null;
 }

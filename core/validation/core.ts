@@ -78,6 +78,10 @@ export class Validator {
     this.options = { ...DEFAULT_OPTIONS, ...options };
   }
 
+  getOptions(): ValidationOptions {
+    return this.options;
+  }
+
   validate(value: unknown, schema: SchemaField, path: string = ''): ValidationResult {
     this.errors = [];
     this.warnings = [];

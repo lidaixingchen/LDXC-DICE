@@ -122,11 +122,7 @@ export const BUILTIN_ATTRIBUTE_PRESETS: StoredAttributePreset[] = [
       formula: attr.formula,
       range: attr.range,
     })),
-    specialAttributes: AIDM_ATTRIBUTE_PRESET.specialAttributes.map(name => ({
-      name,
-      formula: '0',
-      range: [0, 9999] as [number, number],
-    })),
+    specialAttributes: [],
     levelPresets: AIDM_ATTRIBUTE_PRESET.levelPresets,
   },
 ];

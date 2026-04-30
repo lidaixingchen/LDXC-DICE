@@ -2,6 +2,8 @@ import { ref, watch } from 'vue';
 
 const STORAGE_KEY_PREFIX = 'acu_bookmarks_v1_';
 const MAX_CONTEXTS = 20;
+let lastCleanupTime = 0;
+const CLEANUP_INTERVAL = 60000; // 每分钟最多清理一次
 
 function getContextId(): string {
   try {
@@ -33,7 +35,11 @@ function saveBookmarks(data: Record<string, Record<string, boolean>>) {
   try {
     const dataToSave = { ...data, _lastAccess: Date.now() };
     localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave));
-    cleanupOldContexts();
+    const now = Date.now();
+    if (now - lastCleanupTime > CLEANUP_INTERVAL) {
+      lastCleanupTime = now;
+      cleanupOldContexts();
+    }
   } catch (e) {
     console.warn('[BookmarkManager] 保存失败', e);
   }

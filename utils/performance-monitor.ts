@@ -113,8 +113,11 @@ export class PerformanceMonitor {
     const totalDuration = metrics.reduce((sum, m) => sum + m.duration, 0);
     const averageDuration = metrics.length > 0 ? totalDuration / metrics.length : 0;
 
-    const slowThreshold = this.thresholds.get('default')!;
-    const slowOperations = metrics.filter(m => m.duration > slowThreshold);
+    const slowOperations = metrics.filter(m => {
+      const category = m.metadata?.category as string | undefined;
+      const threshold = category ? this.getThreshold(category) : this.thresholds.get('default')!;
+      return m.duration > threshold;
+    });
 
     return {
       metrics,
