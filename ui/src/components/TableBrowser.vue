@@ -29,6 +29,21 @@ const newRowData = ref<string[]>([]);
 const legacySettings = computed(() => settingsManager.getLegacySettings());
 const itemsPerPage = computed(() => legacySettings.value.itemsPerPage || 50);
 const highlightNew = computed(() => legacySettings.value.highlightNew);
+const showHorizontalScrollbar = computed(() => legacySettings.value.showHorizontalScrollbar !== false);
+const tableReverseKeys = computed(() => legacySettings.value.tableReverseKeys || []);
+
+const isReversed = computed(() => tableReverseKeys.value.includes(currentTableKey.value));
+
+function toggleReverse() {
+  const keys = [...tableReverseKeys.value];
+  const idx = keys.indexOf(currentTableKey.value);
+  if (idx >= 0) {
+    keys.splice(idx, 1);
+  } else {
+    keys.push(currentTableKey.value);
+  }
+  settingsManager.updateLegacySettings({ tableReverseKeys: keys });
+}
 
 watch(
   () => props.initialTable,
@@ -83,6 +98,10 @@ const processedRows = computed(() => {
   if (searchTerm.value.trim()) {
     const s = searchTerm.value.toLowerCase();
     result = result.filter((r: any) => r.data.some((cell: any) => String(cell).toLowerCase().includes(s)));
+  }
+
+  if (isReversed.value) {
+    result = [...result].reverse();
   }
 
   return result;
@@ -240,7 +259,7 @@ function exportTableJson(): void {
       </div>
     </div>
 
-    <div class="acu-panel-content acu-scroll-y">
+    <div class="acu-panel-content acu-scroll-y" :class="{ 'acu-show-horizontal-scrollbar': showHorizontalScrollbar }">
       <!-- 表格列表模式 -->
       <div v-if="showTableList" class="acu-table-list">
         <div v-for="table in allTables" :key="table.key" class="acu-table-item" @click="currentTableKey = table.key">
@@ -259,6 +278,9 @@ function exportTableJson(): void {
         <div class="acu-table-toolbar">
           <button class="acu-toolbar-btn" title="添加行" @click="addRow">
             <i class="fa-solid fa-plus"></i> 添加行
+          </button>
+          <button class="acu-toolbar-btn" :class="{ active: isReversed }" title="切换倒序显示" @click="toggleReverse">
+            <i class="fa-solid fa-arrow-down-wide-short"></i> {{ isReversed ? '正序' : '倒序' }}
           </button>
           <button class="acu-toolbar-btn" title="导出JSON" @click="exportTableJson">
             <i class="fa-solid fa-file-export"></i> 导出
@@ -472,6 +494,11 @@ function exportTableJson(): void {
   height: 100%;
 }
 
+.acu-show-horizontal-scrollbar .acu-horizontal-grid::-webkit-scrollbar:horizontal {
+  height: 8px !important;
+  display: block !important;
+}
+
 .acu-horizontal-card {
   flex: 0 0 auto;
   min-width: 120px;
@@ -515,6 +542,12 @@ function exportTableJson(): void {
 
   &:hover {
     background: var(--acu-accent-light, #45475a);
+    border-color: var(--acu-accent, #89b4fa);
+  }
+
+  &.active {
+    background: var(--acu-accent, #89b4fa);
+    color: #1e1e2e;
     border-color: var(--acu-accent, #89b4fa);
   }
 }

@@ -69,6 +69,27 @@ const showBlacklistManager = ref(false);
 const showBookmarkManager = ref(false);
 const showDebugConsole = ref(false);
 
+const allTableNames = computed(() => tables.value.map(t => t.name));
+
+const areAllTablesReversed = computed(() => {
+  const names = allTableNames.value;
+  if (names.length === 0) return false;
+  const reverseSet = new Set(settings.value.tableReverseKeys || []);
+  return names.every(name => reverseSet.has(name));
+});
+
+function toggleAllTablesReverse(enabled: boolean) {
+  const targetNames = allTableNames.value;
+  if (targetNames.length === 0) return;
+  const currentSet = new Set(settings.value.tableReverseKeys || []);
+  if (enabled) {
+    targetNames.forEach(name => currentSet.add(name));
+  } else {
+    targetNames.forEach(name => currentSet.delete(name));
+  }
+  updateLegacy({ tableReverseKeys: Array.from(currentSet) });
+}
+
 function syncAll() {
   settings.value = { ...settingsManager.getLegacySettings() };
   general.value = { ...settingsManager.getGroup('general') };
@@ -533,6 +554,28 @@ onMounted(() => {
               <option value="horizontal">横向滚动</option>
               <option value="vertical">竖向滚动</option>
             </select>
+          </div>
+          <div class="acu-setting-row acu-setting-row-toggle">
+            <label>显示横向滚动条</label>
+            <label class="acu-toggle">
+              <input
+                type="checkbox"
+                :checked="settings.showHorizontalScrollbar"
+                @change="updateLegacy({ showHorizontalScrollbar: ($event.target as any).checked })"
+              />
+              <span class="acu-toggle-slider"></span>
+            </label>
+          </div>
+          <div class="acu-setting-row acu-setting-row-toggle">
+            <label>倒序显示</label>
+            <label class="acu-toggle">
+              <input
+                type="checkbox"
+                :checked="areAllTablesReversed"
+                @change="toggleAllTablesReverse(($event.target as any).checked)"
+              />
+              <span class="acu-toggle-slider"></span>
+            </label>
           </div>
           <div class="acu-setting-row">
             <label>每页显示条数</label>

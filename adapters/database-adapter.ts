@@ -395,9 +395,41 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
     };
   }
 
+  createSheetDataFingerprint(raw: unknown): string {
+    if (!raw || typeof raw !== 'object') return '';
+    const tableRecord = raw as Record<string, unknown>;
+    const sheetEntries = Object.entries(tableRecord)
+      .filter(([key, value]) => key.startsWith('sheet_') && value && typeof value === 'object')
+      .map(([key, value]) => {
+        const sheet = value as Record<string, unknown>;
+        return [key, sheet.name, sheet.content];
+      })
+      .sort((left, right) => String(left[0]).localeCompare(String(right[0])));
+    return JSON.stringify(sheetEntries);
+  }
+
+  isSameSheetData(leftData: unknown, rightData: unknown): boolean {
+    const left = this.createSheetDataFingerprint(leftData);
+    const right = this.createSheetDataFingerprint(rightData);
+    return Boolean(left && right && left === right);
+  }
+
+  private cloneData<T>(value: T): T {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(value);
+    }
+    return JSON.parse(JSON.stringify(value)) as T;
+  }
+
+  private normalizeSheetKeys(sheetKeys?: string[]): string[] | null {
+    if (!Array.isArray(sheetKeys)) return null;
+    const keys = Array.from(new Set(sheetKeys.map(k => String(k || '').trim()).filter(k => k.startsWith('sheet_'))));
+    return keys.length > 0 ? keys : [];
+  }
+
   async saveData(
     data: Record<string, { name: string; content: (string | number | null)[][] }>,
-    _sheetKeys?: string[],
+    sheetKeys?: string[],
   ): Promise<boolean> {
     if (!this.isAvailable()) {
       console.error('[DatabaseAdapter] API 不可用，无法保存数据');
@@ -405,6 +437,54 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
     }
 
     try {
+      const explicitSheetKeys = this.normalizeSheetKeys(sheetKeys);
+
+      if (explicitSheetKeys && explicitSheetKeys.length === 0) {
+        console.info('[DatabaseAdapter] 跳过保存：没有有效修改表');
+        return true;
+      }
+
+      if (explicitSheetKeys) {
+        const latestRaw = this.api.exportTableAsJson() as Record<string, unknown> | null;
+        if (!latestRaw) {
+          throw new Error('无法读取最新数据库基底，已取消保存以避免覆盖未保存表格');
+        }
+
+        const merged: Record<string, unknown> = {};
+        const baseMate = latestRaw.mate;
+        merged.mate = baseMate && typeof baseMate === 'object'
+          ? this.cloneData(baseMate)
+          : { type: 'chatSheets', version: 1 };
+
+        for (const key in latestRaw) {
+          if (key.startsWith('sheet_')) {
+            const sheetData = latestRaw[key];
+            if (sheetData && typeof sheetData === 'object') {
+              merged[key] = this.cloneData(sheetData);
+            }
+          }
+        }
+
+        let mergedCount = 0;
+        for (const key of explicitSheetKeys) {
+          const sheetData = data[key];
+          if (sheetData && typeof sheetData === 'object') {
+            merged[key] = this.cloneData(sheetData);
+            mergedCount++;
+          }
+        }
+
+        if (mergedCount === 0) {
+          throw new Error(`修改表不存在：${explicitSheetKeys.join(', ')}`);
+        }
+
+        const result = await this.api.importTableAsJson(merged);
+        if (result) {
+          this.cachedData = data;
+        }
+        return result;
+      }
+
       const cleanData = JSON.parse(JSON.stringify(data));
       const result = await this.api.importTableAsJson(cleanData);
       if (result) {

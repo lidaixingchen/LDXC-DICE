@@ -41,6 +41,8 @@ export interface LegacySettings {
   tableOrderKeys: string[];
   tableFontSize: number;
   chartCardSize: number;
+  showHorizontalScrollbar: boolean;
+  tableReverseKeys: string[];
 }
 
 export interface GeneralSettings {
@@ -204,6 +206,8 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     tableOrderKeys: [],
     tableFontSize: 13,
     chartCardSize: 200,
+    showHorizontalScrollbar: true,
+    tableReverseKeys: [],
   },
   general: {
     defaultPresetId: 'aidm_standard_check',
@@ -372,6 +376,10 @@ export class SettingsManager {
     }
     if (Array.isArray(raw.tableOrderKeys)) {
       normalized.tableOrderKeys = raw.tableOrderKeys.filter(v => typeof v === 'string') as string[];
+    }
+    if (typeof raw.showHorizontalScrollbar === 'boolean') normalized.showHorizontalScrollbar = raw.showHorizontalScrollbar;
+    if (Array.isArray(raw.tableReverseKeys)) {
+      normalized.tableReverseKeys = raw.tableReverseKeys.filter(v => typeof v === 'string') as string[];
     }
 
     return normalized;

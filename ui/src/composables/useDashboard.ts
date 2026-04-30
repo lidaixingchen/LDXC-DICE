@@ -111,7 +111,7 @@ function getDbAPI(): any {
   return (topWindow as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
 }
 
-function getTableData(): Record<string, any> | null {
+function getTableData(options?: { silent?: boolean }): Record<string, any> | null {
   const api = getDbAPI();
   if (!api) {
     console.warn('[Dashboard] API 不可用');
@@ -131,7 +131,9 @@ function getTableData(): Record<string, any> | null {
         }
       }
       allTables.value = tables;
-      console.log('[Dashboard] 获取到表格:', tables.map(t => t.name).join(', '));
+      if (!options?.silent) {
+        console.log('[Dashboard] 获取到表格:', tables.map(t => t.name).join(', '));
+      }
     }
     return data;
   } catch (e) {
