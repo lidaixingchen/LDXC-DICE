@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 import { useMvu } from '../composables/useMvu';
+import VariableCard from './VariableCard.vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -21,6 +22,24 @@ const {
 function handleClose(): void {
   hide();
   emit('close');
+}
+
+function toggleVariableExpand(path: string): void {
+  const varObj = findVariable(variables.value, path);
+  if (varObj) {
+    varObj.isExpanded = !varObj.isExpanded;
+  }
+}
+
+function findVariable(list: typeof variables.value, path: string): any {
+  for (const v of list) {
+    if (v.path === path) return v;
+    if (v.children) {
+      const found = findVariable(v.children, path);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 onMounted(() => {
@@ -45,7 +64,7 @@ onMounted(() => {
     </div>
 
     <div class="acu-panel-content acu-scroll-y">
-      <!-- 数值对比模式 (原版逻辑) -->
+      <!-- 数值对比模式 -->
       <div v-if="panelState.numericMode" class="acu-numeric-grid">
         <div v-for="nv in filteredNumericVariables" :key="nv.path" class="acu-num-card">
           <div class="path">{{ nv.path.split('.').pop() }}</div>
@@ -60,12 +79,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 树形模式 -->
+      <!-- 树形模式（递归使用 VariableCard） -->
       <div v-else class="acu-tree-list">
-        <div v-for="v in variables" :key="v.path" class="tree-item">
-          <i class="fa-solid fa-caret-right"></i>
-          <span class="name">{{ v.name }}</span>
-          <span class="val">{{ v.value }}</span>
+        <VariableCard
+          v-for="v in variables"
+          :key="v.path"
+          :variable="v"
+          @toggle="toggleVariableExpand"
+        />
+        <div v-if="variables.length === 0 && !loading" class="acu-empty-hint">
+          <i class="fa-solid fa-info-circle"></i> 未获取到变量数据，请确认 MVU 脚本已加载
         </div>
       </div>
     </div>
@@ -175,31 +198,14 @@ onMounted(() => {
 }
 
 .acu-tree-list {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  padding: 8px 0;
 }
 
-.tree-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.acu-empty-hint {
+  padding: 24px;
+  text-align: center;
+  color: var(--acu-text-sub);
   font-size: 12px;
-  padding: 4px 8px;
-  background: var(--acu-bg-header);
-  border-radius: 4px;
-
-  .name {
-    font-weight: 700;
-    color: var(--acu-text-main);
-  }
-
-  .val {
-    color: var(--acu-accent);
-    font-family: monospace;
-    margin-left: auto;
-  }
 }
 
 .acu-view-btn,

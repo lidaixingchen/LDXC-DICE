@@ -5,6 +5,7 @@ export interface MvuVariable {
   depth: number;
   children?: MvuVariable[];
   isExpanded?: boolean;
+  isSystemKey?: boolean;
   delta?: {
     old: unknown;
     new: unknown;

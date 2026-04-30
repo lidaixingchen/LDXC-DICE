@@ -87,13 +87,14 @@ function getMvuDataFromWindow(): MvuData | null {
   if (api) {
     if (typeof api.getMvuData === 'function') {
       try {
-        const data = api.getMvuData();
-        if (data) {
+        const raw = api.getMvuData();
+        if (raw) {
           console.log('[MVU] 从 API.getMvuData 获取成功');
+          const hasStatData = raw.stat_data !== undefined;
           return {
             _source: 'mvu',
-            stat_data: data.stat_data || data,
-            delta_data: data.delta_data,
+            stat_data: hasStatData ? raw.stat_data : { ...raw },
+            delta_data: hasStatData ? raw.delta_data : undefined,
           };
         }
       } catch (e) {
@@ -103,13 +104,14 @@ function getMvuDataFromWindow(): MvuData | null {
 
     if (typeof api.getVariables === 'function') {
       try {
-        const data = api.getVariables();
-        if (data) {
+        const raw = api.getVariables();
+        if (raw) {
           console.log('[MVU] 从 API.getVariables 获取成功');
+          const hasStatData = raw.stat_data !== undefined;
           return {
             _source: 'mvu',
-            stat_data: data.stat_data || data,
-            delta_data: data.delta_data,
+            stat_data: hasStatData ? raw.stat_data : { ...raw },
+            delta_data: hasStatData ? raw.delta_data : undefined,
           };
         }
       } catch (e) {
@@ -133,13 +135,14 @@ function getMvuDataFromWindow(): MvuData | null {
               )) {
                 console.log('[MVU] 从表格获取变量数据:', sheet.name);
                 const vars: Record<string, any> = {};
-                const headers = sheet.content?.[0] || [];
                 const rows = sheet.content?.slice(1) || [];
                 rows.forEach((row: any[]) => {
                   if (row && row[0]) {
                     const varName = String(row[0]);
-                    const varValue = row[1] !== undefined ? row[1] : row[2];
-                    vars[varName] = varValue;
+                    const varValue = row[1];
+                    if (varValue !== null && varValue !== undefined) {
+                      vars[varName] = varValue;
+                    }
                   }
                 });
                 if (Object.keys(vars).length > 0) {
@@ -209,7 +212,8 @@ function parseVariables(
   const result: MvuVariable[] = [];
 
   for (const [key, value] of Object.entries(data)) {
-    if (key.startsWith('$') || key.startsWith('_')) continue;
+    const isSystemKey = key.startsWith('$') || key.startsWith('_');
+    if (isSystemKey) continue;
 
     const path = parentPath ? `${parentPath}.${key}` : key;
     const delta = deltaData?.[path];
@@ -220,6 +224,7 @@ function parseVariables(
       path,
       depth,
       isExpanded: depth === 0,
+      isSystemKey: false,
       delta: delta ? { old: delta.old, new: delta.new } : undefined,
     };
 

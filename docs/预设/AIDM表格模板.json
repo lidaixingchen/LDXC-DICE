@@ -7,10 +7,11 @@
       "initNode": "插入一条记录，设定初始时间、位置和世界等级。",
       "deleteNode": "禁止。",
       "updateNode": "- 每轮必须更新: 上轮场景时间,经过的时间,当前时间。\n- 位置变化时更新对应字段。\n- 世界等级变化时更新等级字段。",
-      "insertNode": "禁止。"
+      "insertNode": "禁止。",
+      "ddl": "CREATE TABLE global_state ( -- 全局数据表\n  row_id INTEGER PRIMARY KEY CHECK(row_id = 1), -- 行号\n  world_level TEXT NOT NULL CHECK(world_level IN ('F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级')), -- 当前世界等级\n  world_name TEXT NOT NULL, -- 世界名称\n  world_type TEXT NOT NULL CHECK(world_type IN ('恐怖', '科幻', '奇幻', '武侠', '仙侠', '末世', '其他')), -- 世界类型\n  major_region TEXT NOT NULL, -- 当前主要地区\n  minor_region TEXT NOT NULL, -- 当前次要地区\n  current_location TEXT NOT NULL, -- 当前详细地点\n  prev_scene_time TEXT, -- 上轮场景时间\n  elapsed_time TEXT NOT NULL, -- 经过的时间\n  cur_time TEXT NOT NULL CHECK(cur_time GLOB '????-??-?? ??:??') -- 当前时间\n);"
     },
     "content": [
-      [null, "当前世界等级", "当前主要地区", "当前次要地区", "当前详细地点", "上轮场景时间", "经过的时间", "当前时间"]
+      [null, "当前世界等级", "世界名称", "世界类型", "当前主要地区", "当前次要地区", "当前详细地点", "上轮场景时间", "经过的时间", "当前时间"]
     ],
     "updateConfig": {
       "uiSentinel": -1,
@@ -59,13 +60,14 @@
     "uid": "sheet_world_map",
     "name": "世界地图点",
     "sourceData": {
-      "note": "记录当前主要地区内的次要地区及详细地点。\n\n【详细地点格式】\n仅填写地点名称本身，不包含层级结构\n正确: \"{{user}}公寓\" | \"御苑\" | \"学校\"\n错误: \"东京-{{user}}公寓-卫生间\" | \"新宿区-御苑\" | \"{{user}}公寓-客厅\"\n\n【约束】\n- 主要地区引用自全局数据表.当前主要地区\n- 主要地区切换时清空本表并重新填充\n- 详细地点总数≤20条，详细地点要满足MECE\n- 详细地点值必须唯一，作为其他表\"所在地点\"的匹配依据\n- 必须保证重要角色表中所有角色的\"所在地点\"都在本表中存在（精准匹配）\n- 必须保证主角信息表中的\"所在地点\"在本表中存在（精准匹配）\n- 必须保证地图元素表中所有元素的\"所在地点\"都在本表中存在（精准匹配）\n\n【字段说明】\n地点类型: [住宅,学校,遗迹,地牢,交通,特殊]\n重要度: [核心,重要,普通]\n探索状态: [未探索,部分探索,已探索]\n环境描述: ≤30字",
-      "initNode": "为当前主要地区插入至少3个详细地点条目。必须包含：①主角信息表中的\"所在地点\" ②重要角色表中所有角色的\"所在地点\"（如果这些地点属于当前主要地区） ③地图元素表中所有元素的\"所在地点\"（如果这些元素属于当前主要地区）。",
-      "deleteNode": "触发条件: ①主要地区切换时清空本表 ②条数超过20条时删除重要度最低的（但必须保留重要角色表、主角信息表、地图元素表中正在使用的地点）",
-      "updateNode": "触发条件: ①探索状态变化 ②重要度变化 ③环境变化 ④发现现有条目存在空白字段时",
-      "insertNode": "触发条件: ①主角到达新地点 ②NPC提及新地点 ③剧情揭示新区域 ④地图或文献发现 ⑤重要角色表新增角色且其\"所在地点\"不在本表中 ⑥地图元素表新增元素且其\"所在地点\"不在本表中"
+      "note": "记录当前主要地区内的所有次要地区和详细地点。\n\n【列定义】\n列1=row_id\n列2=详细地点 location_name（全表唯一，作为其他表引用地点的基准）\n列3=次要地区 minor_region\n列4=主要地区 major_region\n列5=地点类型 location_type\n列6=环境描述 environment_desc（≤60 字）\n列7=重要度 importance\n列8=探索状态 exploration_status\n\n【地点填写规则】\n每个字段只写该层级名称，不带前缀。\n对：详细地点填 \"御苑\"，次要地区填 \"新宿区\"，主要地区填 \"东京都\"\n错：详细地点填 \"东京-新宿区-御苑\" 或 \"新宿区-御苑\"\n\n【主键判定（判断 insert 还是 update）】\n收到一个地点时，先在本表查同名的 \"详细地点\"：\n- 查不到 → insert 新行\n- 查到了 → update 该行对应字段\n\n【约束】\n- 禁止删除任何已存在的地点，主要地区切换时只更新字段，不 DELETE\n- 主要地区应与全局数据表.当前主要地区一致\n- 详细地点名全表唯一，作为其他表引用地点的基准\n- 建议总条数 ≤20；其他表提到的地点尽量先在本表存在\n\n【字段取值】\n地点类型：[住宅,学校,遗迹,地牢,交通,特殊]\n重要度：[核心,重要,普通]\n探索状态：[未探索,部分探索,已探索]\n环境描述：一句话描述，建议 ≤60 字",
+      "initNode": "为当前主要地区至少插入 3 条详细地点。\nSQL示例: INSERT INTO world_map_points (row_id, location_name, minor_region, major_region, location_type, environment_desc, importance, exploration_status) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM world_map_points), '御苑', '新宿区', '东京都', '野外', '城市中心的大型公园', '重要', '部分探索');",
+      "deleteNode": "允许。",
+      "updateNode": "已存在的行，字段值变化时更新：探索状态、重要度、环境描述、类型。\nSQL示例(探索推进): UPDATE world_map_points SET exploration_status = '已探索', environment_desc = '树木繁茂，发现隐藏神社' WHERE location_name = '御苑';",
+      "insertNode": "表中没有同名详细地点时新增一行。常见触发：主角到达新地点、NPC 提到新地点、其他表需要引用新地点。\nSQL示例: INSERT INTO world_map_points (row_id, location_name, minor_region, major_region, location_type, environment_desc, importance, exploration_status) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM world_map_points), '新宿车站', '新宿区', '东京都', '交通', '繁忙的地下换乘枢纽', '普通', '已探索');",
+      "ddl": "CREATE TABLE world_map_points ( -- 世界地图点\n  row_id INTEGER PRIMARY KEY, -- 行号\n  location_name TEXT NOT NULL UNIQUE, -- 详细地点\n  minor_region TEXT NOT NULL, -- 次要地区\n  major_region TEXT NOT NULL, -- 主要地区\n  location_type TEXT NOT NULL CHECK(location_type IN ('住宅', '学校', '遗迹', '地牢', '交通', '特殊', '商业', '医疗', '行政', '野外')), -- 地点类型\n  environment_desc TEXT NOT NULL CHECK(LENGTH(environment_desc) <= 60), -- 环境描述\n  importance TEXT NOT NULL CHECK(importance IN ('核心', '重要', '普通')), -- 重要度\n  exploration_status TEXT NOT NULL CHECK(exploration_status IN ('未探索', '部分探索', '已探索')) -- 探索状态\n);"
     },
-    "content": [[null, "详细地点", "次要地区", "地点类型", "环境描述", "重要度", "探索状态"]],
+    "content": [[null, "详细地点", "次要地区", "主要地区", "地点类型", "环境描述", "重要度", "探索状态"]],
     "updateConfig": {
       "uiSentinel": -1,
       "contextDepth": 4,
@@ -113,11 +115,12 @@
     "uid": "sheet_map_elements",
     "name": "地图元素表",
     "sourceData": {
-      "note": "记录当前次要地区内可交互的非重要角色的实体。\n\n【核心原则】仅录入[剧情物品, 威胁, 龙套, 地标]四类。除此之外一律不录入。\n\n【类型定义】\n1) [剧情物品]: 必须是直接推动剧情的关键信物、线索、文件或钥匙。能回答\"这东西对谁重要？\"\n2) [威胁]: 必须是阻碍行动的敌对生物、陷阱或危险地形。能造成伤害或阻碍。进入战斗时DM必须为其生成完整属性（等级、基础属性、战斗属性）。\n3) [龙套]: 必须是有交互功能的一次性无名NPC（如警卫/店员）。若在后续剧情中多次出现，获取名字，变得重要则移入重要角色表。涉及战斗时需生成必要属性。\n4) [地标]: 必须是该地点独一无二的视觉锚点或核心机制（如巨大的雕像、控制台）。每地点限1个。\n\n【硬性上限】每个详细地点最多5条；全表最多30条。新增前若会超限，必须先删除再新增。\n\n【两问筛选】录入前必须确认：\n1) 离开此地后，这东西是否仍有剧情价值？\n2) 现在是否必须通过它进行交互？\n(若两问皆否，禁止录入)\n\n【所在地点规则】所在地点必须等于世界地图点表中某个\"详细地点\"的值。\n\n【字段说明】\n元素描述: ≤20字\n状态: 当前状态描述\n交互选项格式: 英文逗号分隔，每选项≤4字，选项数≤3个",
-      "initNode": "按四类定义生成地图元素：每个地点0-5条，全表≤30。严格过滤[剧情物品, 威胁, 龙套, 地标]以外的杂物。",
-      "deleteNode": "触发条件: ①实体被销毁/拾取/无效化 ②离开当前次要地区 ③龙套升格为重要角色 ④单个地点超过5条或全表超过30条时：先删不满足四类定义的，再删重复/可替代的",
-      "updateNode": "触发条件: 状态改变或发现新细节（如果元素位置变化且新地点不在世界地图点表中，需先在世界地图点表中添加该地点）",
-      "insertNode": "触发条件: 发现新实体、线索或环境特色元素（如果新实体的所在地点不在世界地图点表中，需先在世界地图点表中添加该地点）"
+      "note": "记录当前次要地区里可以交互的非重要角色实体。\n\n【列定义】\n列1=row_id\n列2=元素名称 element_name（全表唯一）\n列3=元素类型 element_type\n列4=所在地点 location_name（对应世界地图点表.详细地点）\n列5=元素描述 element_desc（≤40 字）\n列6=状态 status_text\n列7=交互选项 interaction_options（英文逗号分隔，不能为空）\n\n【只录入这四类，其他一律不录】\n1) 剧情物品：直接推动剧情的信物、线索、文件、钥匙。\n2) 威胁：会造成伤害或阻碍的敌对生物、陷阱、危险地形。\n3) 龙套：有交互功能的一次性无名 NPC（如警卫、店员）。若多次出场并拿到名字，移到重要角色表。\n4) 地标：地点独有的视觉锚点或核心机制（如巨大雕像、控制台）。每个详细地点最多 1 个。\n\n【两问筛选（新增前自问）】\n1) 离开此地后，这东西还有剧情价值吗？\n2) 现在是否必须通过它交互？\n两问都是 \"否\" → 不要录入。\n\n【主键判定（判断 insert 还是 update）】\n收到一个元素时，先按 \"元素名称\" 查本表：\n- 查不到 → insert 新行\n- 查到了 → update 该行字段（例如状态、位置）\n\n【条数建议】\n每个详细地点建议 ≤5 条，全表建议 ≤30 条。\n\n【所在地点规则】\n优先填写世界地图点表已有的 \"详细地点\"；若还没补进世界地图点表，至少保持地点名一致。\n\n【字段取值】\n元素类型：[剧情物品,威胁,龙套,地标]\n元素描述：一句话，建议 ≤40 字\n状态：当前状态的简短描述\n交互选项：用英文逗号分隔，建议每项 ≤8 字、总数 ≤3 个，不能为空",
+      "initNode": "按四类定义生成元素，每个地点 0-5 条，全表建议 ≤30 条。四类之外的杂物不录。\nSQL示例: INSERT INTO map_elements (row_id, element_name, element_type, location_name, element_desc, status_text, interaction_options) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM map_elements), '破损钥匙卡', '剧情物品', '旧校舍', '能开门的旧卡', '边角烧焦', '检查,拾取');",
+      "deleteNode": "允许删除：实体被销毁/拾取/失效、离开当前次要地区、龙套升格为重要角色、或需要腾出条数时（优先删不符合四类或可替代的）。\nSQL示例: DELETE FROM map_elements WHERE element_name = '破损钥匙卡';",
+      "updateNode": "已存在的元素，状态或描述发生变化时更新。interaction_options 不能更新为空串。\nSQL示例: UPDATE map_elements SET status_text = '已被拾取', interaction_options = '检查' WHERE element_name = '破损钥匙卡';",
+      "insertNode": "元素名称不在表里时，新增一行。若涉及新地点名，建议同步补进世界地图点表。\nSQL示例: INSERT INTO map_elements (row_id, element_name, element_type, location_name, element_desc, status_text, interaction_options) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM map_elements), '巡逻警卫', '龙套', '校门口', '临时封锁入口', '来回巡视', '询问,观察');",
+      "ddl": "CREATE TABLE map_elements ( -- 地图元素表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  element_name TEXT NOT NULL UNIQUE, -- 元素名称\n  element_type TEXT NOT NULL CHECK(element_type IN ('剧情物品', '威胁', '龙套', '地标')), -- 元素类型\n  location_name TEXT NOT NULL, -- 所在地点\n  element_desc TEXT NOT NULL CHECK(LENGTH(element_desc) <= 40), -- 元素描述\n  status_text TEXT NOT NULL, -- 状态\n  interaction_options TEXT NOT NULL CHECK(TRIM(interaction_options) <> '') -- 交互选项\n);"
     },
     "content": [[null, "元素名称", "元素类型", "所在地点", "元素描述", "状态", "交互选项"]],
     "updateConfig": {
@@ -167,11 +170,12 @@
     "uid": "sheet_factions",
     "name": "势力",
     "sourceData": {
-      "note": "记录对剧情有实质影响的势力/组织/阵营。\n\n【准入规则】\n录入条件(OR): [与主线相关,与主角互动,拥有多成员或控制区域,会多次出现]\n禁入: [一次性提及的背景组织,无影响力的小团体]\n\n【约束】\n- 势力总数≤8条\n\n【字段说明】\n描述: ≤30字\n关系格式: \"{势力名称或角色名}:{关系词}\"\n- 同一对象的多个关系词用逗号分隔\n- 不同对象之间用分号分隔\n关系词: [同盟,敌对,中立,竞争,合作]\n示例: \"主角:敌对; 商会:同盟\" | \"主角:敌对,竞争; 商会:同盟\"\n据点: 势力总部或主要驻地",
-      "initNode": "为已登场的重要势力插入条目。",
-      "deleteNode": "触发条件: ①势力覆灭/解散/彻底退出剧情 ②超过8条时删除最不相关的",
-      "updateNode": "触发条件: 描述/领袖/关系/据点发生变化",
-      "insertNode": "触发条件: 剧情中出现新的重要势力"
+      "note": "记录对剧情有实质影响的势力、组织、阵营。\n\n【列定义】\n列1=row_id\n列2=名称 faction_name（全表唯一）\n列3=描述 description（≤60 字）\n列4=领袖 leader（可 NULL）\n列5=关系 relations_text（可 NULL，格式 \"对象:关系词; 对象:关系词\"）\n列6=据点 headquarters（可 NULL）\n\n【准入（满足任一即可）】\n- 和主线相关\n- 和主角有互动\n- 有多名成员或控制区域\n- 会多次出现\n一次性提到的背景组织、没影响力的小团体不录。\n\n【主键判定（判断 insert 还是 update）】\n按 \"名称\" 查本表：\n- 查不到 → insert 新行\n- 查到了 → update 该行\n\n【条数建议】\n建议总数 ≤8 条。\n\n【字段格式】\n描述：一句话说清楚势力性质，建议 ≤60 字。\n据点：势力总部或主要驻地。\n关系：用 \"{对象}:{关系词}\" 表达。\n- 对象可以是另一个势力名，也可以是重要角色名\n- 同一对象多个关系词用逗号分隔\n- 不同对象之间用分号分隔\n- 关系词从 [同盟,敌对,中立,竞争,合作] 里挑\n示例：\"主角:敌对; 商会:同盟\" | \"主角:敌对,竞争; 商会:同盟\"",
+      "initNode": "为已登场的重要势力各插入一条。\nSQL示例: INSERT INTO factions (row_id, faction_name, description, leader, relations_text, headquarters) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM factions), '夜鸦会', '控制黑市情报网的地下组织', '鸦首', '主角:中立', '旧港仓区');",
+      "deleteNode": "当势力不再重要、不再满足准入条件或已长期不再相关时，可删除对应记录。\nSQL示例: DELETE FROM factions WHERE faction_name = '夜鸦会';",
+      "updateNode": "已存在的势力，描述、领袖、关系、据点发生变化时更新。\nSQL示例: UPDATE factions SET relations_text = '主角:敌对; 商会:同盟', leader = '新鸦首' WHERE faction_name = '夜鸦会';",
+      "insertNode": "名称不在表里的新重要势力，新增一条。\nSQL示例: INSERT INTO factions (row_id, faction_name, description, leader, relations_text, headquarters) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM factions), '圣钟学院', '管理超常研究的学术机构', '理事长', '主角:合作', '中央校区');",
+      "ddl": "CREATE TABLE factions ( -- 势力\n  row_id INTEGER PRIMARY KEY, -- 行号\n  faction_name TEXT NOT NULL UNIQUE, -- 名称\n  description TEXT NOT NULL CHECK(LENGTH(description) <= 60), -- 描述\n  leader TEXT, -- 领袖\n  relations_text TEXT, -- 关系\n  headquarters TEXT -- 据点\n);"
     },
     "content": [[null, "名称", "描述", "领袖", "关系", "据点"]],
     "updateConfig": {
@@ -225,7 +229,8 @@
       "initNode": "插入主角唯一条目，根据全局数据表的当前世界等级设定等级和属性。初始总属性点=60，单项属性5-15，等级为F级，沉淀点=0。",
       "deleteNode": "禁止",
       "updateNode": "触发条件: 年龄、外貌、身份、状态、位置、属性、资源、沉淀点变化时（位置变化时，如果新地点不在世界地图点表中，需先在世界地图点表中添加该地点）\n等级提升: 当总基础属性点达到下一等级阈值时，自动更新等级字段\n沉淀点更新: 属性达上限后继续获得该属性奖励时，3属性点溢出 → 1点沉淀点",
-      "insertNode": "禁止"
+      "insertNode": "禁止",
+      "ddl": "CREATE TABLE protagonist_info ( -- 主角信息\n  row_id INTEGER PRIMARY KEY CHECK(row_id = 1), -- 行号\n  name TEXT NOT NULL, -- 姓名\n  level TEXT NOT NULL CHECK(level IN ('F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级')), -- 等级\n  gender TEXT NOT NULL, -- 性别\n  age INTEGER NOT NULL CHECK(age >= 0), -- 年龄\n  race TEXT NOT NULL DEFAULT '人类', -- 种族\n  bloodline TEXT NOT NULL DEFAULT '无', -- 血脉\n  appearance TEXT NOT NULL CHECK(LENGTH(appearance) <= 60), -- 外貌特征\n  identity_text TEXT NOT NULL CHECK(LENGTH(identity_text) <= 40), -- 身份\n  self_status TEXT NOT NULL DEFAULT '正常', -- 自身状态\n  status_effects TEXT, -- 状态效果\n  personality_traits TEXT, -- 性格特征\n  location_name TEXT NOT NULL, -- 所在地点\n  base_attributes TEXT NOT NULL, -- 基础属性\n  special_attributes TEXT, -- 特有属性\n  combat_attributes TEXT, -- 战斗属性\n  resources_text TEXT, -- 资源数据\n  exchange_points INTEGER NOT NULL DEFAULT 100 CHECK(exchange_points >= 0), -- 兑换点\n  precipitating_points INTEGER NOT NULL DEFAULT 0 CHECK(precipitating_points >= 0) -- 沉淀点\n);"
     },
     "content": [
       [
@@ -234,14 +239,19 @@
         "等级",
         "性别",
         "年龄",
+        "种族",
+        "血脉",
         "外貌特征",
         "身份",
         "自身状态",
+        "状态效果",
+        "性格特征",
         "所在地点",
         "基础属性",
         "特有属性",
         "战斗属性",
         "资源数据",
+        "兑换点",
         "沉淀点"
       ]
     ],
@@ -296,7 +306,8 @@
       "initNode": "为符合准入条件的重要角色插入条目。\n\n【等级设定规则】\n1. 读取全局数据表.当前世界等级作为NPC等级上限\n2. NPC等级 = 世界等级 或 世界等级-1（随机决定）\n3. 根据等级确定总属性范围和单项上限（见等级对照表）\n\n【属性生成规则】\nF级: 总属性30-119, 单项5-30, 平均单项10\nE级: 总属性120-209, 单项5-45, 平均单项28\nD级: 总属性210-329, 单项5-60, 平均单项45\nC级: 总属性330-479, 单项5-80, 平均单项68\nB级: 总属性480-659, 单项5-100, 平均单项95\nA级: 总属性660-869, 单项5-125, 平均单项128\nS级: 总属性870-1109, 单项5-150, 平均单项165\nSS级: 总属性1110-1379, 单项5-180, 平均单项208\nSSS级: 总属性1380+, 单项无上限\n\n【生成流程】\n1. 确定NPC等级（≤世界等级）\n2. 根据等级随机分配总属性点到六维\n3. 确保单项属性在范围内\n4. 计算战斗属性（HP=体质×5+等级HP基础值）\n5. 填写其他字段",
       "deleteNode": "触发条件: ①超过20条时删除最久未互动且非核心的NPC ②NPC死亡且无后续剧情影响",
       "updateNode": "触发条件: ①外貌/身份/势力变化 ②属性变化 ③位置变化（位置变化时，如果新地点不在世界地图点表中，需先在世界地图点表中添加该地点） ④次要地区切换时更新在场状态 ⑤人际关系变化⑥角色经历重大事件时⑦过往经历列的字数将要超过300字时触发压缩\n等级提升: 当总基础属性点达到下一等级阈值时，自动更新等级字段",
-      "insertNode": "触发条件: 新重要角色登场"
+      "insertNode": "触发条件: 新重要角色登场",
+      "ddl": "CREATE TABLE important_npc ( -- 重要角色表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  name TEXT NOT NULL UNIQUE, -- 姓名\n  level TEXT NOT NULL CHECK(level IN ('F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级')), -- 等级\n  gender TEXT NOT NULL, -- 性别\n  age INTEGER NOT NULL CHECK(age >= 0), -- 年龄\n  brief_intro TEXT NOT NULL CHECK(LENGTH(brief_intro) <= 30), -- 一句话介绍\n  appearance TEXT NOT NULL CHECK(LENGTH(appearance) <= 60), -- 外貌特征\n  identity_text TEXT NOT NULL CHECK(LENGTH(identity_text) <= 40), -- 身份\n  base_attributes TEXT NOT NULL, -- 基础属性\n  special_attributes TEXT, -- 特有属性\n  combat_attributes TEXT, -- 战斗属性\n  location_name TEXT NOT NULL, -- 所在地点\n  presence_status TEXT NOT NULL CHECK(presence_status IN ('在场', '离场')), -- 在场状态\n  relations_text TEXT, -- 人际关系\n  interaction_options TEXT, -- 交互选项\n  past_experience TEXT NOT NULL CHECK(LENGTH(past_experience) <= 600) -- 过往经历\n);"
     },
     "content": [
       [
@@ -327,36 +338,42 @@
     },
     "exportConfig": {
       "enabled": true,
-      "splitByRow": false,
+      "splitByRow": true,
       "entryName": "重要角色表",
-      "entryType": "constant",
-      "keywords": "",
+      "entryType": "keyword",
+      "keywords": "姓名",
       "preventRecursion": true,
       "injectionTemplate": "",
-      "extraIndexEnabled": false,
+      "extraIndexEnabled": true,
       "extraIndexEntryName": "重要角色表-索引",
-      "extraIndexColumns": [],
-      "extraIndexColumnModes": {},
-      "extraIndexInjectionTemplate": "",
+      "extraIndexColumns": [
+        "姓名",
+        "一句话介绍"
+      ],
+      "extraIndexColumnModes": {
+        "姓名": "both",
+        "一句话介绍": "index_only"
+      },
+      "extraIndexInjectionTemplate": "以下为已经登场过的角色：\n<已登场角色>\n$1\n</已登场角色>",
       "entryPlacement": {
         "position": "at_depth_as_system",
-        "depth": 2,
+        "depth": 10000,
         "order": 10000
       },
       "extraIndexPlacement": {
         "position": "at_depth_as_system",
-        "depth": 2,
-        "order": 10010
+        "depth": 10000,
+        "order": 8000
       },
       "fixedEntryPlacement": {
         "position": "at_depth_as_system",
-        "depth": 2,
-        "order": 99990
+        "depth": 10000,
+        "order": 99983
       },
       "fixedIndexPlacement": {
         "position": "at_depth_as_system",
-        "depth": 2,
-        "order": 99991
+        "depth": 10000,
+        "order": 99984
       }
     },
     "orderNo": 5
@@ -369,7 +386,8 @@
       "initNode": "根据主角等级插入对应数量的技能。F级初始: 主动1项+被动1项。",
       "deleteNode": "触发条件: 技能被遗忘或替换",
       "updateNode": "触发条件: 技能效果变化或冷却状态变化",
-      "insertNode": "触发条件: 获得新技能或等级提升解锁新技能槽"
+      "insertNode": "触发条件: 获得新技能或等级提升解锁新技能槽",
+      "ddl": "CREATE TABLE skills ( -- 技能表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  skill_name TEXT NOT NULL UNIQUE, -- 技能名称\n  skill_type TEXT NOT NULL CHECK(skill_type IN ('主动', '被动')), -- 技能类型\n  effect_desc TEXT NOT NULL, -- 效果描述\n  value_bonus TEXT, -- 数值加成\n  cooldown TEXT -- 冷却回合\n);"
     },
     "content": [[null, "技能名称", "技能类型", "效果描述", "数值加成", "冷却回合"]],
     "updateConfig": {
@@ -423,7 +441,8 @@
       "initNode": "插入主角初始持有的物品。",
       "deleteNode": "触发条件: ①物品用尽/丢失/损坏 ②超过30条时删除品级最低且最不重要的",
       "updateNode": "触发条件: 数量变化或效果变化",
-      "insertNode": "触发条件: 获得新物品"
+      "insertNode": "触发条件: 获得新物品",
+      "ddl": "CREATE TABLE inventory ( -- 物品栏\n  row_id INTEGER PRIMARY KEY, -- 行号\n  item_name TEXT NOT NULL UNIQUE, -- 物品名称\n  item_type TEXT NOT NULL, -- 类型\n  quality TEXT NOT NULL CHECK(quality IN ('F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级')), -- 品级\n  effect TEXT NOT NULL, -- 效果\n  quantity INTEGER NOT NULL DEFAULT 1 CHECK(quantity >= 0) -- 数量\n);"
     },
     "content": [[null, "物品名称", "类型", "品级", "效果", "数量"]],
     "updateConfig": {
@@ -473,19 +492,21 @@
     "uid": "sheet_equipment",
     "name": "装备表",
     "sourceData": {
-      "note": "记录主角已装备的物品。\n\n【装备槽位】\n主手: 武器（物理攻击/法术攻击）\n副手: 盾牌/副武器/法器\n头部: 头盔/帽子\n身体: 铠甲/法袍\n手部: 手套/护腕\n脚部: 靴子/护腿\n饰品1: 戒指/项链/耳环\n饰品2: 戒指/项链/耳环\n\n【约束】\n- 每个装备槽位只能有一件装备\n- 装备必须来自物品栏\n\n【装备词条数量】\nF级: 1项词条\nE级: 2项词条\nD级: 3项词条\nC级: 4项词条\nB级及以上: 5项词条\n\n【装备数值体系】\n攻击装备: 数值 = 0.6 × SPV\n防御装备: 数值 = 0.6 × SPV\n\n【字段说明】\n槽位: [主手,副手,头部,身体,手部,脚部,饰品1,饰品2]\n效果: 装备提供的属性加成和词条效果",
-      "initNode": "插入主角初始装备。",
-      "deleteNode": "触发条件: 装备卸下",
-      "updateNode": "触发条件: 装备更换",
-      "insertNode": "触发条件: 装备新物品"
+      "note": "记录主角拥有的所有装备。\n\n【列定义】\n列1=row_id\n列2=装备名称 equipment_name（全表唯一，≤12 字）\n列3=类型 equipment_type\n列4=品质 quality\n列5=状态 status_text（已装备/闲置）\n列6=描述 description（≤40 字）\n\n【本表只收这四类】\n[武器,护具,衣物,饰品]。工具类归物品表 \"道具\"；消耗品、材料也进物品表。\n\n【拆分规则】\n每件装备单独一行，不合并。\n错：\"狐裘大衣与长裙\" → 对：拆成 \"狐裘大衣\"、\"长裙\" 两行。\n\n【状态处理】\n- 已装备：主角当前穿戴中\n- 闲置：卸下但仍拥有\n卸下 → 状态改为 \"闲置\"，保留在表。\n丢弃 → 从表里删除这行。\n\n【主键判定（判断 insert 还是 update）】\n按 \"装备名称\" 查本表：\n- 查不到 → insert 新行\n- 查到了 → update（常见是状态、描述变化）\n\n【条数和命名】\n建议 ≤15 条。装备名称简短好读，建议 ≤12 字。\n\n【字段取值】\n类型：[武器,护具,衣物,饰品]\n品质：[普通,优秀,稀有,史诗,传说,神话]\n状态：[已装备,闲置]\n描述：一句话含外观、效果，建议 ≤40 字",
+      "initNode": "按设定添加主角的初始装备。\nSQL示例: INSERT INTO equipment (row_id, equipment_name, equipment_type, quality, status_text, description) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM equipment), '校服', '衣物', '普通', '已装备', '标准款深蓝色校服，穿在身上');",
+      "deleteNode": "允许删除：装备丢弃、损毁、转移所有权、或需要清理无效装备时。\nSQL示例: DELETE FROM equipment WHERE equipment_name = '破损短剑';",
+      "updateNode": "已存在的装备，状态或描述变化时更新。\nSQL示例(卸下): UPDATE equipment SET status_text = '闲置' WHERE equipment_name = '校服';\nSQL示例(装备): UPDATE equipment SET status_text = '已装备' WHERE equipment_name = '魔法长袍';",
+      "insertNode": "装备名称不在表里时，新增一条。\nSQL示例: INSERT INTO equipment (row_id, equipment_name, equipment_type, quality, status_text, description) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM equipment), '魔法长袍', '衣物', '稀有', '闲置', '附魔银丝刺绣，提升魔力亲和');",
+      "ddl": "CREATE TABLE equipment ( -- 装备表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  equipment_name TEXT NOT NULL UNIQUE, -- 装备名称\n  equipment_type TEXT NOT NULL CHECK(equipment_type IN ('武器', '护具', '衣物', '饰品')), -- 类型\n  quality TEXT NOT NULL CHECK(quality IN ('普通', '优秀', '稀有', '史诗', '传说', '神话')), -- 品质\n  status_text TEXT NOT NULL CHECK(status_text IN ('已装备', '闲置')), -- 状态\n  description TEXT NOT NULL CHECK(LENGTH(description) <= 40) -- 描述\n);"
     },
-    "content": [[null, "槽位", "装备名称", "效果"]],
+    "content": [[null, "装备名称", "类型", "品质", "状态", "描述"]],
     "updateConfig": {
       "uiSentinel": -1,
       "contextDepth": -1,
       "updateFrequency": -1,
       "batchSize": -1,
-      "skipFloors": -1
+      "skipFloors": -1,
+      "groupId": 2
     },
     "exportConfig": {
       "enabled": false,
@@ -527,19 +548,21 @@
     "uid": "sheet_summary",
     "name": "纪要表",
     "sourceData": {
-      "note": "轮次日志，每轮交互后必须立即插入一条新记录。\n\n【编码索引】\n- 格式为 AMXXXX，XX从0001递增\n- 编码索引必须从AM0001开始严格递增，不可跳号或重复\n\n【时间跨度】\n- 本轮事件发生的精确时间范围。格式: \"{起始时间} ~ {结束时间}\"。示例: YYYY-MM-DD HH:MM。\n\n【概览】\n- 30字以内，一句话概括纪要内容，不加入主观判断或推测，不能包含纪要中没有的信息。\n\n【纪要】\n- 以第三方视角客观记录本轮事件，不得加入推测、情绪化语言、负面解读或主观判断。内容必须基于正文明确发生的事实，不得补充未出现的情节，不少于300字，结尾部分禁止进行总结或者升华。\n- 行文生活化，用词直白露骨，文字基调积极向上。避免使用'A与B就某某话题达成协议''A确立了某某计划'一类的正式措辞或官样文章。\n- 保留角色情感细节并摒弃其中的任何支配欲、占有欲描写。\n- 如果上下文包含多轮交互，将其总结为一条记录。\n- 允许内容:[主要事件,涉及角色,角色动作,物品交互,物品全名,物品得失,位置变化,地点全名,状态变化,新发现,伏笔,暗号,重要情报,任务目标]\n- 禁止内容:[极端情绪,夸张,比喻,升华,支配欲,掌控欲]",
-      "initNode": "插入AM0001记录，记录初始场景和角色状态。",
+      "note": "轮次日志。每轮交互结束后立刻插入一条新记录。\n\n【列定义】\n列1=row_id\n列2=编码索引 code_index（AM0001 起递增，全表唯一）\n列3=时间跨度 time_span（'YYYY-MM-DD HH:MM ~ YYYY-MM-DD HH:MM'）\n列4=概览 summary（≤50 字）\n列5=纪要 chronicle_text（200-600 字）\n列6=重要对话 key_dialogue（可 NULL）\n\n【编码索引】\n格式 AMXXXX，XXXX 从 0001 开始递增。\n\n【时间跨度】\n本轮事件的时间范围，格式 \"{起始时间} ~ {结束时间}\"，时间格式 YYYY-MM-DD HH:MM。\n\n【概览】\n一句话概括本轮纪要内容，客观陈述，不加主观判断或推测，不包含纪要里没写的信息。建议 ≤50 字。\n\n【纪要】\n第三方视角客观记录本轮事件，只写正文明确发生的事实，不补充没出现的情节。\n建议 200-600 字，结尾不总结、不升华。\n行文生活化、直白，基调积极向上。避免公文式措辞。\n保留角色情感细节，去掉支配欲、占有欲的描写。\n如果上下文包含多轮交互，合并成一条记录。\n允许写：主要事件、涉及角色、角色动作、物品交互、物品全名、物品得失、位置变化、地点全名、状态变化、新发现、伏笔、暗号、重要情报、任务目标。\n禁止写：极端情绪、夸张、比喻、升华、支配欲、掌控欲。\n\n【重要对话】\n只摘录直接推动剧情转折、揭示关键信息、改变人物关系或决策、构成承诺/誓约/约定的原文台词，并标明说话人。\n排除寒暄、重复、情绪感叹等无信息量的对白。\n最多 3 句。",
+      "initNode": "插入 AM0001 记录，记录初始场景和角色状态。\nSQL示例: INSERT INTO chronicle (row_id, code_index, time_span, summary, chronicle_text, key_dialogue) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM chronicle), 'AM0001', '2024-04-01 09:00 ~ 2024-04-01 09:30', '主角在御苑与艾莉丝相遇并讨论近期异常。', '清晨的御苑笼罩在薄雾中...', '艾莉丝:\"这些失踪不是偶然。\"');",
       "deleteNode": "禁止。",
       "updateNode": "禁止。",
-      "insertNode": "每轮交互结束后插入新记录，编码索引递增。"
+      "insertNode": "每轮交互结束后插入一条新记录，编码索引递增（AM0001→AM0002→…）。chronicle_text 长度必须 ≥200 且 ≤600 字符。\nSQL示例: INSERT INTO chronicle (row_id, code_index, time_span, summary, chronicle_text, key_dialogue) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM chronicle), 'AM0002', '2024-04-01 12:20 ~ 2024-04-01 13:20', '主角与艾莉丝前往学院地下室调查。', '中午下课后主角直奔学院旧楼...', '艾莉丝:\"这不是巧合，是家族链。\"');",
+      "ddl": "CREATE TABLE chronicle ( -- 纪要表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  code_index TEXT NOT NULL UNIQUE CHECK(code_index GLOB 'AM[0-9][0-9][0-9][0-9]'), -- 编码索引\n  time_span TEXT NOT NULL CHECK(time_span GLOB '????-??-?? ??:?? ~ ????-??-?? ??:??'), -- 时间跨度\n  summary TEXT NOT NULL CHECK(LENGTH(summary) <= 90), -- 概览\n  chronicle_text TEXT NOT NULL CHECK(LENGTH(chronicle_text) >= 120 AND LENGTH(chronicle_text) <= 900), -- 纪要\n  key_dialogue TEXT -- 重要对话\n);"
     },
-    "content": [[null, "编码索引", "时间跨度", "概览", "纪要"]],
+    "content": [[null, "编码索引", "时间跨度", "概览", "纪要", "重要对话"]],
     "updateConfig": {
       "uiSentinel": -1,
       "contextDepth": -1,
       "updateFrequency": -1,
       "batchSize": -1,
-      "skipFloors": -1
+      "skipFloors": -1,
+      "groupId": 2
     },
     "exportConfig": {
       "enabled": true,
@@ -550,7 +573,7 @@
       "preventRecursion": true,
       "injectionTemplate": "<记忆回溯>\n$1\n</记忆回溯>",
       "extraIndexEnabled": true,
-      "extraIndexEntryName": "纪要-索引",
+      "extraIndexEntryName": "纪要索引",
       "extraIndexColumns": ["概览", "编码索引"],
       "extraIndexColumnModes": {
         "概览": "index_only",
@@ -588,7 +611,8 @@
       "initNode": "根据初始剧情生成四个初始选项。",
       "deleteNode": "禁止。",
       "updateNode": "每轮交互后必须重新生成新的选项，完全覆盖原有内容。",
-      "insertNode": "禁止。"
+      "insertNode": "禁止。",
+      "ddl": "CREATE TABLE options ( -- 选项表\n  row_id INTEGER PRIMARY KEY CHECK(row_id = 1), -- 行号\n  option_1 TEXT NOT NULL CHECK(TRIM(option_1) <> ''), -- 选项一\n  option_2 TEXT NOT NULL CHECK(TRIM(option_2) <> ''), -- 选项二\n  option_3 TEXT NOT NULL CHECK(TRIM(option_3) <> ''), -- 选项三\n  option_4 TEXT NOT NULL CHECK(TRIM(option_4) <> '') -- 选项四\n);"
     },
     "content": [[null, "选项一", "选项二", "选项三", "选项四"]],
     "updateConfig": {
@@ -642,7 +666,8 @@
       "initNode": "插入已获取的重要情报。",
       "deleteNode": "触发条件: ①情报过时或被证伪 ②超过15条时删除重要度最低的",
       "updateNode": "触发条件: 情报内容有新发现或重要度变化",
-      "insertNode": "触发条件: 发现新的重要情报"
+      "insertNode": "触发条件: 发现新的重要情报",
+      "ddl": "CREATE TABLE intel ( -- 重要情报\n  row_id INTEGER PRIMARY KEY, -- 行号\n  intel_content TEXT NOT NULL CHECK(LENGTH(intel_content) <= 100), -- 情报内容\n  source TEXT, -- 来源\n  importance TEXT NOT NULL CHECK(importance IN ('核心', '重要', '普通')), -- 重要度\n  related_quest TEXT -- 相关任务\n);"
     },
     "content": [[null, "情报内容", "来源", "重要度", "相关任务"]],
     "updateConfig": {
@@ -692,13 +717,14 @@
     "uid": "sheet_quests",
     "name": "任务表",
     "sourceData": {
-      "note": "记录主角当前承接的所有任务。\n\n【任务类型】\n主线任务: 推进核心剧情\n支线任务: 世界探索与角色发展\n隐藏任务: 通过线索发现，不直接展示\n\n【任务评价体系】\n完美评价: 无伤完成/特殊战术/超额目标/零失误 → 追加一件同阶位物品\n优秀评价: 轻伤完成(HP损失≤20%)/高效完成/关键贡献 → 追加50%兑换点\n基础评价: 正常完成 → 仅获得基础奖励\n\n【约束】\n- 任务总数≤10条\n- 终态任务(已完成/已失败/已放弃)仅保留最近2条\n\n【字段说明】\n类型: [主线,支线,隐藏]\n目标: 一句话描述完成条件，≤50字\n进度(%): 必须是百分比数值格式，范围[0%,100%]\n状态: [进行中,已完成,已失败,已放弃]\n奖励: 完成任务可获得的奖励",
-      "initNode": "添加初始任务（如有）。世界生成时由【任务数量随机抽取】随机决定任务。",
-      "deleteNode": "触发条件: 每轮必须检查并执行以下清理流程。\n流程1(归档清理): 检查所有[已完成/已失败/已放弃]的终态任务，仅保留最近结束的2条作为记录，其余终态任务必须全部删除。\n流程2(容量控制): 完成流程1后，如果任务总数仍超过10条，则在[进行中]的任务中，删除最旧的低优先级任务，直到总数≤10。",
-      "updateNode": "触发条件: ①进度变化 ②状态变化",
-      "insertNode": "触发条件: 接受新任务"
+      "note": "记录主角当前承接的所有任务。\n\n【列定义】\n列1=row_id\n列2=名称 quest_name（全表唯一）\n列3=类型 quest_type\n列4=优先级 priority_level\n列5=目标 target_desc（≤100 字）\n列6=进度(%) progress_text（'0%'~'100%' 格式，带百分号）\n列7=状态标签 status_tag（[进行中,已完成,已失败,已放弃] 之一，禁止带百分号）\n列8=来源 source_text（可 NULL）\n列9=奖励 reward_text（可 NULL）\n\n【准入】\n收录：主线任务、支线任务、悬赏通缉、委托请求。\n不收：单轮就能完成的小动作、世界观设定信息、没明确目标的事项。\n判断标准：有明确完成目标 且 需要跨越 2 轮以上交互。\n\n【主键判定（判断 insert 还是 update）】\n按 \"名称\" 查本表：\n- 查不到 → insert 新行\n- 查到了 → update（常见是进度、状态变化）\n\n【字段取值】\n类型：[主线,支线,日常]\n优先级：[紧急,重要,普通]\n目标：一句话写完成条件，建议 ≤100 字。\n\n进度(%)：必须是 \"{数字}%\" 格式，数字 0-100 的整数。\n对：\"0%\" | \"50%\" | \"100%\"\n错：\"已完成一半\" | \"接近完成\" | \"50\"（缺百分号）\n\n状态标签：必须从 [进行中,已完成,已失败,已放弃] 选一个。\n对：\"进行中\" | \"已完成\" | \"已失败\" | \"已放弃\"\n错：任何带百分号或带数字的写法。\n\n重要：进度(%) 和 状态标签 是两列，百分号只能出现在进度列，状态列绝不能有百分号。",
+      "initNode": "如有初始任务则插入。\nSQL示例: INSERT INTO quests (row_id, quest_name, quest_type, priority_level, target_desc, progress_text, status_tag, source_text, reward_text) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM quests), '调查失踪事件', '主线', '重要', '找到失踪同学的下落并查清原因', '0%', '进行中', '班主任', '真相与 500 金币');",
+      "deleteNode": "仅可删除已进入终态且无需继续保留的任务，用于自动清理表内已完成/已失败任务；进行中的任务禁止删除。\nSQL示例(完成后清理): DELETE FROM quests WHERE quest_name = '调查失踪事件' AND status_tag = '已完成';\nSQL示例(失败后清理): DELETE FROM quests WHERE quest_name = '护送商队' AND status_tag = '已失败';",
+      "updateNode": "已存在的任务，进度或状态变化时更新。progress_text 永远是 '{数字}%' 格式，status_tag 永远是 [进行中,已完成,已失败,已放弃] 之一，两列绝不混用百分号。\nSQL示例(推进): UPDATE quests SET progress_text = '50%', status_tag = '进行中' WHERE quest_name = '调查失踪事件';\nSQL示例(完成): UPDATE quests SET progress_text = '100%', status_tag = '已完成' WHERE quest_name = '调查失踪事件';",
+      "insertNode": "名称不在表里的新任务，新增一条。\nSQL示例: INSERT INTO quests (row_id, quest_name, quest_type, priority_level, target_desc, progress_text, status_tag, source_text, reward_text) VALUES ((SELECT COALESCE(MAX(row_id), 0) + 1 FROM quests), '采购药材', '支线', '普通', '从市集买齐治疗药草三份', '0%', '进行中', '诊所老板', '100 金币');",
+      "ddl": "CREATE TABLE quests ( -- 任务表\n  row_id INTEGER PRIMARY KEY, -- 行号\n  quest_name TEXT NOT NULL UNIQUE, -- 名称\n  quest_type TEXT NOT NULL CHECK(quest_type IN ('主线', '支线', '日常')), -- 类型\n  priority_level TEXT NOT NULL CHECK(priority_level IN ('紧急', '重要', '普通')), -- 优先级\n  target_desc TEXT NOT NULL CHECK(LENGTH(target_desc) <= 100), -- 目标\n  progress_text TEXT NOT NULL, -- 进度(%)\n  status_tag TEXT NOT NULL CHECK(status_tag IN ('进行中', '已完成', '已失败', '已放弃')), -- 状态标签\n  source_text TEXT, -- 来源\n  reward_text TEXT -- 奖励\n);"
     },
-    "content": [[null, "任务名称", "类型", "目标", "进度(%)", "状态", "奖励"]],
+    "content": [[null, "名称", "类型", "优先级", "目标", "进度(%)", "状态标签", "来源", "奖励"]],
     "updateConfig": {
       "uiSentinel": -1,
       "contextDepth": -1,
@@ -744,18 +770,18 @@
   },
   "mate": {
     "type": "chatSheets",
-    "version": 1,
+    "version": 2,
     "updateConfigUiSentinel": -1,
     "globalInjectionConfig": {
       "readableEntryPlacement": {
-        "position": "before_char",
+        "position": "before_character_definition",
         "depth": 2,
         "order": 99981
       },
       "wrapperPlacement": {
-        "position": "before_char",
+        "position": "before_character_definition",
         "depth": 2,
-        "order": 99982
+        "order": 99980
       }
     }
   }
