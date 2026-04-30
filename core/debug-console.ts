@@ -373,10 +373,13 @@ export class DebugConsole {
 
     this.registerCommand({
       name: 'eval',
-      description: '执行JavaScript代码',
+      description: '执行JavaScript代码（警告：危险操作）',
       usage: 'eval <code>',
       handler: (args: string[], context: DebugContext) => {
         const code = args.join(' ');
+        if (code.length > 500) {
+          return '执行错误: 代码长度超过 500 字符限制';
+        }
         try {
           const result = eval(code);
           return `结果: ${JSON.stringify(result, null, 2)}`;

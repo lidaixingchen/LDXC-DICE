@@ -275,6 +275,11 @@ export class InteractionEngine {
   private evaluateCondition(condition: string | undefined, context: InteractionContext): boolean {
     if (!condition) return true;
 
+    if (condition.length > 1000 || /[;{}[\]'"`\\]/.test(condition)) {
+      console.warn('[InteractionEngine] 条件表达式包含不安全字符', condition);
+      return false;
+    }
+
     try {
       const contextVars = Object.entries(context).map(([key, val]) => {
         const safeVal = typeof val === 'function' ? 'undefined' : JSON.stringify(val);

@@ -141,8 +141,14 @@ export function useDiceSystem(): {
       .replace(/\babs\s*\(/g, 'Math.abs(')
       .replace(/\bpow\s*\(/g, 'Math.pow(');
 
-    // 安全检测：禁止函数体闭合、对象访问和语句分隔
-    if (/[;{}[\]']/.test(normalized)) {
+    // 安全检测：仅允许数字、算术运算、括号、逗号以及白名单中的 Math 函数
+    const unsafeCharsPattern = /[;{}[\]'"`\\]/;
+    const remainingTokens = normalized.replace(/\bMath\.(max|min|floor|ceil|round|abs|pow)\b/g, '');
+    if (
+      unsafeCharsPattern.test(normalized) ||
+      /[A-Za-z_$]/.test(remainingTokens) ||
+      /[^0-9+\-*/%().,\s]/.test(remainingTokens)
+    ) {
       return diceSystemInstance!.evaluateFormula(formula, context);
     }
 

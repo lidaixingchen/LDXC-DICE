@@ -20,7 +20,7 @@ export class PresetManager {
 
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem('dice_presets');
+      const stored = localStorage.getItem(PRESETS_STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
         for (const preset of data) {
@@ -43,7 +43,7 @@ export class PresetManager {
   private saveToStorage(): void {
     try {
       const data = Array.from(this.presets.values());
-      localStorage.setItem('dice_presets', JSON.stringify(data));
+      localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('[PresetManager] 保存预设失败:', e);
     }

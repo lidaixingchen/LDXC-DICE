@@ -52,7 +52,10 @@ function saveState(): void {
   }
 }
 
+let cachedTopWindow: Window | null = null;
+
 function getTopWindow(): Window {
+  if (cachedTopWindow) return cachedTopWindow;
   let topWindow: Window = window;
   try {
     let current: Window = window;
@@ -63,6 +66,7 @@ function getTopWindow(): Window {
   } catch {
     // 跨域拦截
   }
+  cachedTopWindow = topWindow;
   return topWindow;
 }
 
@@ -380,17 +384,24 @@ function setPosition(x: number, y: number): void {
   saveState();
 }
 
-loadSavedState();
+let mvuInitialized = false;
 
-if (typeof window !== 'undefined') {
-  window.addEventListener('acu-data-updated', () => {
-    refresh();
-  });
+function initMvu(): void {
+  if (mvuInitialized) return;
+  mvuInitialized = true;
+
+  loadSavedState();
+  refresh();
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('acu-data-updated', () => {
+      refresh();
+    });
+  }
 }
 
-refresh();
-
 export function useMvu() {
+  initMvu();
   return {
     mvuData,
     variables,
