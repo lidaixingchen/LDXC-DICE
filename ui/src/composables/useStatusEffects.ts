@@ -2,9 +2,9 @@ import { ref, type Ref } from 'vue';
 import type { StatusEffect } from '../services';
 
 let statusIdCounter = 0;
+const activeStatuses = ref<StatusEffect[]>([]);
 
 export function useStatusEffects() {
-  const activeStatuses = ref<StatusEffect[]>([]);
 
   function addStatus(
     name: string,

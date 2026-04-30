@@ -2,20 +2,30 @@ import { ref, type Ref } from 'vue';
 import { CombatCalculationService, WorldConfigService, CharacterDataService } from '../services';
 import type { CombatState, EquipmentSlot, SkillData, ItemData } from '../services';
 
-export function useCombatState() {
-  const combat = ref<CombatState>({
-    active: false,
-    round: 1,
-    enemyName: '',
-    enemyMaxHP: 0,
-    enemyCurrentHP: 0,
-    playerMaxHP: 0,
-    playerCurrentHP: 0,
-    playerShield: 0,
-  });
+// Singleton Refs for combat state to share across components properly
+const combat = ref<CombatState>({
+  active: false,
+  round: 1,
+  enemyName: '',
+  enemyMaxHP: 0,
+  enemyCurrentHP: 0,
+  playerMaxHP: 0,
+  playerCurrentHP: 0,
+  playerShield: 0,
+});
+const activeSkills = ref<SkillData[]>([]);
+const usableItems = ref<ItemData[]>([]);
+const initiatorName = ref<string>('');
+const worldLevel = ref<string>('F级');
+const equipment = ref<EquipmentSlot>({
+  name: '空装备',
+  attackBonus: 0,
+  defenseBonus: 0,
+  hpBonus: 0,
+});
 
-  const activeSkills = ref<SkillData[]>([]);
-  const usableItems = ref<ItemData[]>([]);
+export function useCombatState() {
+
 
   function startCombat(
     worldLevel: string,
@@ -167,6 +177,9 @@ ${combat.value.round >= 6 ? '⚠️ 环境侵蚀生效！每回合承受 ' + Com
     combat,
     activeSkills,
     usableItems,
+    initiatorName,
+    worldLevel,
+    equipment,
     startCombat,
     endCombat,
     nextRound,

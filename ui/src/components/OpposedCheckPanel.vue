@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { useCharacterData, useDiceSystem, usePresets } from '../composables';
+import { useCharacterData, useDiceSystem, usePresets, useCombatState } from '../composables';
 import type { CheckResult } from '../types';
 
 const emit = defineEmits<{
@@ -16,7 +16,7 @@ const isRolling = ref(false);
 const lastResult = ref<{ initiator: CheckResult; opponent: CheckResult; winner: string } | null>(null);
 const showResult = ref(false);
 
-const initiatorName = ref('');
+const { initiatorName } = useCombatState();
 const initiatorAttr = ref('');
 const initiatorValue = ref<number | string>('');
 const initiatorMod = ref<number | string>('');

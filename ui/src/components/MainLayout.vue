@@ -5,7 +5,7 @@ import { setTableDataProvider, type AttributeData } from '@core/crazy-mode';
 import { initCrazyModeTrigger } from '@core/crazy-mode-trigger';
 import { setDatabaseToastMute, injectToastStyles } from '../utils/toast-manager';
 import { computed, onMounted, onUnmounted, ref, provide, watch } from 'vue';
-import { useDiceSystem, usePresets } from '../composables';
+import { useDiceSystem, usePresets, useCombatState, useStatusEffects } from '../composables';
 import { useDashboard } from '../composables/useDashboard';
 import ChangesPanel from './ChangesPanel.vue';
 import DashboardPanel from './DashboardPanel.vue';
@@ -46,17 +46,8 @@ interface CombatState {
   playerShield: number;
 }
 
-const activeStatuses = ref<StatusEffect[]>([]);
-const combat = ref<CombatState>({
-  active: false,
-  round: 1,
-  enemyName: '',
-  enemyMaxHP: 100,
-  enemyCurrentHP: 100,
-  playerMaxHP: 100,
-  playerCurrentHP: 100,
-  playerShield: 0,
-});
+const { activeStatuses } = useStatusEffects();
+const { combat } = useCombatState();
 
 provide('aidmStatuses', activeStatuses);
 provide('aidmCombat', combat);
@@ -78,7 +69,7 @@ const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
 const legacySettings = computed<LegacySettings>(() => settingsManager.getLegacySettings());
-let tableRefreshTimer: ReturnType<typeof setInterval> | null = null;
+let tableRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
 
 const SPECIAL_NAV_ITEMS = [
@@ -235,88 +226,16 @@ function handleActionClick(id: string) {
     activeTab.value = '';
     showSettings.value = !wasOpen;
   } else if (id === 'acu-btn-open-editor') {
-    (window.parent as any).AutoCardUpdaterAPI?.openSettings?.();
+    import('../adapters/tavern-adapter').then(m => m.getDatabaseApi()?.openSettings?.());
   } else if (id === 'acu-btn-open-visualizer') {
-    (window.parent as any).AutoCardUpdaterAPI?.openVisualizer?.();
+    import('../adapters/tavern-adapter').then(m => m.getDatabaseApi()?.openVisualizer?.());
   }
 }
 
 async function handleOptionClick(optionValue: string) {
   const config = legacySettings.value;
-
-  if (!config.clickOptionToAutoSend) {
-    try {
-      let win: Window = window;
-      try {
-        while (win.parent && win.parent !== win) {
-          win = win.parent;
-        }
-      } catch {}
-
-      const $ = (win as any).jQuery;
-      if (!$) return;
-
-      const textarea = $('#send_textarea');
-      if (textarea.length === 0) return;
-
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-
-      if (nativeInputValueSetter) {
-        const currentText = textarea.val() || '';
-        const newText = currentText ? `${currentText} ${optionValue}` : optionValue;
-        nativeInputValueSetter.call(textarea[0], newText);
-        textarea[0].dispatchEvent(new Event('input', { bubbles: true }));
-        textarea[0].dispatchEvent(new Event('change', { bubbles: true }));
-      } else {
-        const currentText = textarea.val() || '';
-        const newText = currentText ? `${currentText} ${optionValue}` : optionValue;
-        textarea.val(newText);
-        textarea.trigger('input');
-        textarea.trigger('change');
-      }
-
-      textarea.focus();
-    } catch (err) {
-      console.error('[DICE]ACU 填充选项失败', err);
-    }
-    return;
-  }
-
-  try {
-    const TavernHelper = (window as any).TavernHelper;
-    if (TavernHelper?.createChatMessages) {
-      await TavernHelper.createChatMessages(
-        [{ role: 'user', message: optionValue }],
-        { refresh: 'affected' },
-      );
-      if (TavernHelper.triggerSlash) {
-        await TavernHelper.triggerSlash('/trigger');
-      }
-      return;
-    }
-  } catch (err) {
-    console.warn('[DICE]ACU TavernHelper 发送失败，尝试备用方案', err);
-  }
-
-  try {
-    const sendButton = document.querySelector('#send_but') as HTMLElement | null;
-    const textarea = document.querySelector('#send_textarea') as HTMLTextAreaElement | null;
-    if (textarea && sendButton) {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-      if (nativeInputValueSetter) {
-        nativeInputValueSetter.call(textarea, optionValue);
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-      } else {
-        textarea.value = optionValue;
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      sendButton.click();
-    }
-  } catch (fallbackErr) {
-    console.error('[DICE]ACU 备用发送方案也失败', fallbackErr);
-  }
+  const { sendOrInsertMessage } = await import('../adapters/tavern-adapter');
+  await sendOrInsertMessage(optionValue, config.clickOptionToAutoSend);
 }
 
 const options = computed(() => {
@@ -423,7 +342,8 @@ onMounted(() => {
   injectToastStyles();
   setDatabaseToastMute(legacySettings.value.muteDatabaseToasts);
   setupCrazyModeProvider();
-  tableRefreshTimer = setInterval(loadTables, 3000);
+  tableRefreshTimer = window.setTimeout(loadTables, 500); // Trigger a single delayed load just in case
+  window.addEventListener('acu-data-updated', loadTables);
 
   window.addEventListener('acu-show-changes-panel', onShowChangesPanel);
   window.addEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
@@ -441,7 +361,8 @@ watch(
 );
 
 onUnmounted(() => {
-  if (tableRefreshTimer) clearInterval(tableRefreshTimer);
+  if (tableRefreshTimer) clearTimeout(tableRefreshTimer);
+  window.removeEventListener('acu-data-updated', loadTables);
   window.removeEventListener('acu-show-changes-panel', onShowChangesPanel);
   window.removeEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
   window.removeEventListener('acu-show-dice-history', onShowDiceHistory);
@@ -466,39 +387,41 @@ onUnmounted(() => {
   >
     <!-- 1. 数据展示区 (基于绝对定位弹出) -->
     <div id="acu-data-area" class="acu-data-display" :class="{ visible: showDataDisplay && !isCollapsed }">
-      <DashboardPanel v-if="showDashboard" @close="showDashboard = false" />
-      <DicePanel
-        v-else-if="showDice"
-        @close="showDice = false"
-        @switch-to-opposed="
-          showDice = false;
-          showOpposedCheck = true;
-        "
-      />
-      <OpposedCheckPanel
-        v-else-if="showOpposedCheck"
-        @close="showOpposedCheck = false"
-        @switchToNormal="
-          showOpposedCheck = false;
-          showDice = true;
-        "
-      />
-      <ChangesPanel v-else-if="showChanges" @close="showChanges = false" />
-      <MvuPanel v-else-if="showMvu" @close="showMvu = false" />
-      <FavoritesPanel v-else-if="showFavorites" @close="showFavorites = false" />
-      <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
-      <SavePanel v-else-if="showSave" @close="showSave = false" />
-      <GeneratePanel v-else-if="showGenerate" @close="showGenerate = false" />
-      <DiceHistoryPanel v-else-if="showDiceHistory" @close="showDiceHistory = false" />
-      <PresetManager v-else-if="showPresetManager" @close="showPresetManager = false" />
-      <TableBrowser
-        v-else-if="activeTab"
-        :key="activeTab"
-        :initial-table="activeTab"
-        :embedded="true"
-        :show-table-list="shouldShowTableList"
-        @close="activeTab = ''"
-      />
+      <KeepAlive>
+        <DashboardPanel v-if="showDashboard" @close="showDashboard = false" />
+        <DicePanel
+          v-else-if="showDice"
+          @close="showDice = false"
+          @switch-to-opposed="
+            showDice = false;
+            showOpposedCheck = true;
+          "
+        />
+        <OpposedCheckPanel
+          v-else-if="showOpposedCheck"
+          @close="showOpposedCheck = false"
+          @switchToNormal="
+            showOpposedCheck = false;
+            showDice = true;
+          "
+        />
+        <ChangesPanel v-else-if="showChanges" @close="showChanges = false" />
+        <MvuPanel v-else-if="showMvu" @close="showMvu = false" />
+        <FavoritesPanel v-else-if="showFavorites" @close="showFavorites = false" />
+        <SettingsPanel v-else-if="showSettings" @close="showSettings = false" />
+        <SavePanel v-else-if="showSave" @close="showSave = false" />
+        <GeneratePanel v-else-if="showGenerate" @close="showGenerate = false" />
+        <DiceHistoryPanel v-else-if="showDiceHistory" @close="showDiceHistory = false" />
+        <PresetManager v-else-if="showPresetManager" @close="showPresetManager = false" />
+        <TableBrowser
+          v-else-if="activeTab"
+          :key="activeTab"
+          :initial-table="activeTab"
+          :embedded="true"
+          :show-table-list="shouldShowTableList"
+          @close="activeTab = ''"
+        />
+      </KeepAlive>
     </div>
 
     <!-- 2. 行动选项区 -->
@@ -885,3 +808,4 @@ onUnmounted(() => {
   }
 }
 </style>
+

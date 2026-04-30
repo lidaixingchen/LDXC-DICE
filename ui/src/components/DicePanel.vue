@@ -74,7 +74,7 @@ const showResult = ref(false);
 
 const checkMode = ref<CheckMode>('standard');
 const showMoreModes = ref(false);
-const initiatorName = ref('');
+const { initiatorName, worldLevel } = useCombatState();
 const attrName = ref('');
 const attrValue = ref<number | string>('');
 const targetValue = ref<number | string>('');
@@ -84,7 +84,6 @@ const customDiceExpr = ref('1d20');
 const customJudgeMode = ref('>=');
 const customTargetValue = ref<number | string>('');
 const isCustomMode = ref(false);
-const worldLevel = ref('F级');
 
 const oppAttrName = ref('');
 const oppAttr = ref<number | string>('');
@@ -139,11 +138,6 @@ const critRate = computed(() => {
   const cha = charisma.value !== '' ? Number(charisma.value) : 10;
   return CombatCalculationService.computeCritRate(cha);
 });
-
-provide('aidmInitiatorName', initiatorName);
-provide('aidmWorldLevel', worldLevel);
-provide('aidmEquipment', equipment);
-provide('aidmCurrentCharacter', currentCharacter);
 
 function fillPlayerAttributes(): void {
   const filled = CharacterDataService.fillPlayerAttributes(

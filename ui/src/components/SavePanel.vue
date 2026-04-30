@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, inject, ref, type Ref } from 'vue';
+import { computed, ref, type Ref } from 'vue';
 import { CombatCalculationService } from '../services/CombatCalculationService';
 import { WorldConfigService } from '../services/WorldConfigService';
+import { useCombatState, useEquipment, useCharacterData, useStatusEffects } from '../composables';
 
 const SAVE_KEY = 'aidm_save_slots';
 
@@ -40,12 +41,10 @@ interface SaveData {
   location: string;
 }
 
-const initiatorName = inject<Ref<string>>('aidmInitiatorName') || ref('');
-const worldLevel = inject<Ref<string>>('aidmWorldLevel') || ref('F级');
-const combat = inject<Ref<CombatState>>('aidmCombat');
-const equipment = inject<Ref<EquipmentSlot>>('aidmEquipment');
-const activeStatuses = inject<Ref<StatusEffect[]>>('aidmStatuses');
-const currentCharacter = inject<any>('aidmCurrentCharacter');
+const { initiatorName, worldLevel, combat } = useCombatState();
+const { equipment } = useEquipment();
+const { activeStatuses } = useStatusEffects();
+const { currentCharacter } = useCharacterData();
 
 const saveSlots = ref<SaveSlot[]>([]);
 const exportText = ref('');

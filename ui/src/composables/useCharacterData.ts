@@ -1,4 +1,5 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { getDatabaseApi } from '../adapters/tavern-adapter';
 
 export interface Character {
   name: string;
@@ -8,25 +9,6 @@ export interface Character {
 export interface AttributeButton {
   name: string;
   value: number;
-}
-
-function getTopWindow(): Window {
-  let topWindow: Window = window;
-  try {
-    let current: Window = window;
-    while (current.parent && current.parent !== current) {
-      current = current.parent;
-      topWindow = current;
-    }
-  } catch {
-    // cross-origin
-  }
-  return topWindow;
-}
-
-function getDbAPI(): any {
-  const topWin = getTopWindow();
-  return (topWin as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
 }
 
 function isNpcTableName(name: string): boolean {
@@ -55,14 +37,15 @@ function parseAttributeString(str: string): Array<{ name: string; value: number 
   return result;
 }
 
+const characters = ref<Character[]>([]);
+const currentCharacter = ref<string>('');
+const attributeButtons = ref<AttributeButton[]>([]);
+
 export function useCharacterData() {
-  const characters = ref<Character[]>([]);
-  const currentCharacter = ref<string>('');
-  const attributeButtons = ref<AttributeButton[]>([]);
 
   function loadCharacters(): void {
     try {
-      const api = getDbAPI();
+      const api = getDatabaseApi();
       if (!api || typeof api.exportTableAsJson !== 'function') {
         console.warn('[useCharacterData] API 不可用');
         return;

@@ -11,8 +11,12 @@ const DEFAULT_EQUIPMENT: EquipmentSlot = {
   dodgeBonus: 0,
 };
 
+const equipment = ref<EquipmentSlot>({ ...DEFAULT_EQUIPMENT }) as Ref<EquipmentSlot>;
+
 export function useEquipment(initialValue?: EquipmentSlot) {
-  const equipment = ref<EquipmentSlot>({ ...(initialValue || DEFAULT_EQUIPMENT) }) as Ref<EquipmentSlot>;
+  if (initialValue && equipment.value.name === '') {
+    equipment.value = { ...initialValue };
+  }
 
   function updateEquipment(patch: Partial<EquipmentSlot>): void {
     equipment.value = { ...equipment.value, ...patch };
