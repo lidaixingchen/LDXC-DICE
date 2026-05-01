@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue';
+import { getSillyTavern } from '../services/host-bridge';
 
 const STORAGE_KEY_PREFIX = 'acu_bookmarks_v1_';
 const MAX_CONTEXTS = 20;
@@ -7,7 +8,7 @@ const CLEANUP_INTERVAL = 60000; // 每分钟最多清理一次
 
 function getContextId(): string {
   try {
-    const chatId = (window as any).SillyTavern?.getContext()?.chatId;
+    const chatId = getSillyTavern()?.getContext()?.chatId;
     if (chatId) return chatId;
   } catch {}
   return 'default';

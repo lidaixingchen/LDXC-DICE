@@ -1,4 +1,5 @@
 import { ref, computed, readonly } from 'vue';
+import { getDatabaseApi } from '../services/host-bridge';
 import type {
   DashboardData,
   DashboardPlayer,
@@ -99,20 +100,8 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const allTables = ref<{ key: string; name: string }[]>([]);
 
-function getDbAPI(): any {
-  let topWindow: Window = window;
-  try {
-    while (topWindow.parent && topWindow.parent !== topWindow) {
-      topWindow = topWindow.parent;
-    }
-  } catch {
-    // cross-origin
-  }
-  return (topWindow as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
-}
-
 function getTableData(options?: { silent?: boolean }): Record<string, any> | null {
-  const api = getDbAPI();
+  const api = getDatabaseApi();
   if (!api) {
     console.warn('[Dashboard] API 不可用');
     return null;

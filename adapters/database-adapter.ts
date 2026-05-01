@@ -1,4 +1,5 @@
 import type { DatabaseLockState } from '../core/types';
+import { getDatabaseApi } from '../utils/host-environment';
 
 const PRIMARY_KEYS: Record<string, string | null> = {
   全局数据表: null,
@@ -70,16 +71,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
   }
 
   private initAPI(): void {
-    let topWindow: Window = window;
-    try {
-      while (topWindow.parent && topWindow.parent !== topWindow) {
-        topWindow = topWindow.parent;
-      }
-    } catch {
-      // 跨域情况下无法访问parent，使用当前window
-    }
-
-    this.api = (topWindow as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
+    this.api = getDatabaseApi();
   }
 
   isAvailable(): boolean {

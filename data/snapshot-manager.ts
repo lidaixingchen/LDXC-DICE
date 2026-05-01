@@ -1,3 +1,5 @@
+import { getTopWindow, getSillyTavern } from '../utils/host-environment';
+
 const SNAPSHOT_KEY = 'acu_data_snapshot_v1';
 const CONTEXT_KEY = 'acu_snapshot_context_v1';
 
@@ -45,20 +47,10 @@ class SillyTavernContextProvider implements ContextProvider {
 
   private initializeContextWindow(): void {
     try {
-      let win: Window = window;
-      try {
-        while (win.parent && win.parent !== win) {
-          win = win.parent;
-        }
-      } catch {
-        this.contextWin = null;
-        this.available = false;
-        return;
-      }
-
-      const st = (win as Window & { SillyTavern?: SillyTavernGlobal }).SillyTavern;
+      const topWin = getTopWindow();
+      const st = getSillyTavern();
       if (st && typeof st.getContext === 'function') {
-        this.contextWin = win;
+        this.contextWin = topWin;
         this.available = true;
       }
     } catch {

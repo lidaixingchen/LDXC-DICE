@@ -5,6 +5,8 @@ import { loadPresetFromJson, type ImportResult } from '../presets/advanced-prese
 
 export type { ImportResult };
 
+const PRESETS_STORAGE_KEY = 'acu_dice_presets';
+
 export class PresetManager {
   private presets: Map<string, AdvancedDicePreset> = new Map();
   private currentPresetId: string | null = null;

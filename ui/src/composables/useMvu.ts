@@ -1,4 +1,6 @@
 import { ref, computed } from 'vue';
+import { getTopWindow } from '@utils/host-environment';
+import { getDatabaseApi } from '../services/host-bridge';
 import type { MvuData, MvuPanelState, MvuVariable, NumericVariable } from '../types/mvu';
 
 const MVU_NUMERIC_MODE_KEY = 'acu_mvu_numeric_mode';
@@ -52,33 +54,10 @@ function saveState(): void {
   }
 }
 
-let cachedTopWindow: Window | null = null;
-
-function getTopWindow(): Window {
-  if (cachedTopWindow) return cachedTopWindow;
-  let topWindow: Window = window;
-  try {
-    let current: Window = window;
-    while (current.parent && current.parent !== current) {
-      current = current.parent;
-      topWindow = current;
-    }
-  } catch {
-    // 跨域拦截
-  }
-  cachedTopWindow = topWindow;
-  return topWindow;
-}
-
-function getDbAPI(): any {
-  const topWin = getTopWindow();
-  return (topWin as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
-}
-
 function getMvuDataFromWindow(): MvuData | null {
   const win = window as any;
   const topWin = getTopWindow() as any;
-  const api = getDbAPI();
+  const api = getDatabaseApi();
 
   console.log('[MVU] 尝试获取变量数据...');
   console.log('[MVU] API 可用:', !!api);

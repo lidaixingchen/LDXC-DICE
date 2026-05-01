@@ -284,15 +284,9 @@ const DATABASE_THEME_MAP: DatabaseThemeMap = {
   },
 };
 
-const DB_TOAST_MUTE_STYLE_ID = 'dice-db-toast-mute';
+import { getTopWindow } from '../utils/host-environment';
 
-function getJQuery(w: Window | null | undefined): any {
-  try {
-    return (w as any)?.jQuery as any;
-  } catch {
-    return null;
-  }
-}
+const DB_TOAST_MUTE_STYLE_ID = 'dice-db-toast-mute';
 
 function collectDatabaseDocuments(): Document[] {
   const docs: Document[] = [];
@@ -306,17 +300,18 @@ function collectDatabaseDocuments(): Document[] {
   };
 
   tryAddDoc(window);
-  tryAddDoc(window.parent);
-  tryAddDoc(window.top);
+  try {
+    tryAddDoc(getTopWindow());
+  } catch {
+    // 跨域
+  }
   return docs;
 }
 
 export function injectDatabaseStyles(themeId: string, fontFamily?: string): void {
   try {
-    const targets = [getJQuery(window), getJQuery(window.parent), getJQuery(window.top)].filter(
-      (v, idx, arr) => !!v && arr.indexOf(v) === idx,
-    );
-    if (!targets.length) return;
+    const docs = collectDatabaseDocuments();
+    if (!docs.length) return;
 
     const t = DATABASE_THEME_MAP[themeId] || DATABASE_THEME_MAP.aurora;
     const darkThemeIds = new Set(['cyber', 'terminal', 'aurora', 'chouten', 'classicpackaging']);
@@ -580,9 +575,14 @@ export function injectDatabaseStyles(themeId: string, fontFamily?: string): void
       </style>
     `;
 
-    for (const $ of targets) {
-      $('#dice-db-theme-sync').remove();
-      $('head').append(css);
+    for (const doc of docs) {
+      doc.getElementById('dice-db-theme-sync')?.remove();
+      const wrapper = doc.createElement('div');
+      wrapper.innerHTML = css;
+      const styleEl = wrapper.firstElementChild;
+      if (styleEl) {
+        (doc.head || doc.documentElement).appendChild(styleEl);
+      }
     }
   } catch (e) {
     console.warn('[DatabaseUIOverride] injectDatabaseStyles failed:', e);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useCharacterData, useDiceSystem, usePresets, useCombatState } from '../composables';
+import { appendToSendTextarea, clickSendButton } from '../services/host-bridge';
 import type { CheckResult } from '../types';
 
 const emit = defineEmits<{
@@ -160,28 +161,8 @@ async function handleRoll(): Promise<void> {
 
 async function sendToTextarea(content: string) {
   try {
-    let win: Window = window;
-    try {
-      while (win.parent && win.parent !== win) {
-        win = win.parent;
-      }
-    } catch {}
-    
-    const $ = (win as any).jQuery;
-    if (!$) return;
-    
-    const textarea = $('#send_textarea');
-    if (textarea.length === 0) return;
-    
-    const currentText = textarea.val() || '';
-    const newText = currentText ? `${currentText}\n${content}` : content;
-    textarea.val(newText);
-    textarea.trigger('input');
-    
-    const sendBtn = $('#send_but');
-    if (sendBtn.length > 0) {
-      sendBtn.trigger('click');
-    }
+    appendToSendTextarea(content);
+    clickSendButton();
   } catch (e) {
     console.warn('[OpposedCheckPanel] 发送到输入框失败:', e);
   }

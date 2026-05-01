@@ -2,6 +2,8 @@ import { settingsManager } from '@data/settings-manager';
 import { createApp, type App as VueApp } from 'vue';
 import { initAcuDice } from './api';
 import { interceptTextareaValue, installSendRestoreHook } from './utils/input-injector';
+import { getTopWindow } from '@utils/host-environment';
+import { findLatestMessageContainer, injectStyles } from './services/host-bridge';
 import MainLayout from './components/MainLayout.vue';
 import './styles/themes.scss';
 import './styles/global.scss';
@@ -12,31 +14,11 @@ let isInitialized = false;
 let isRendering = false;
 let mutationObserver: MutationObserver | null = null;
 
-function getTargetWindow(): Window {
-  let current: Window = window;
-  try {
-    while (current.parent && current.parent !== current) {
-      current = current.parent;
-    }
-  } catch (e) {
-    // 跨域限制，使用当前窗口
-  }
-  return current;
-}
-
 function getTargetDocument(): Document {
   try {
-    return getTargetWindow().document;
+    return getTopWindow().document;
   } catch {
     return document;
-  }
-}
-
-function getTargetjQuery(): any | null {
-  try {
-    return (getTargetWindow() as any).jQuery || null;
-  } catch {
-    return null;
   }
 }
 
@@ -58,34 +40,6 @@ function ensureStylesInTargetDocument(targetDoc: Document): void {
     }
   } catch (e) {
     console.warn('[AcuDice] 无法复制样式到目标文档:', e);
-  }
-}
-
-function findLatestMessageContainer(): HTMLElement | null {
-  try {
-    const $ = getTargetjQuery();
-    if (!$) return null;
-
-    const $allMes = $('#chat .mes');
-    const $aiMes = $allMes.filter(function (this: HTMLElement) {
-      const $this = $(this);
-      if ($this.attr('is_user') === 'true' || $this.attr('is_system') === 'true' || $this.hasClass('sys_mes'))
-        return false;
-      const name = $this.find('.name_text').text().trim();
-      if (name === 'System' || $this.attr('data-is-system') === 'true') return false;
-      if ($this.css('display') === 'none') return false;
-      if ($this.find('.mes_text').length === 0) return false;
-      return true;
-    });
-
-    if ($aiMes.length === 0) return document.getElementById('chat');
-
-    const $targetMes = $aiMes.last();
-    const $targetBlock = $targetMes.find('.mes_block');
-    return ($targetBlock.length ? $targetBlock[0] : $targetMes[0]) as HTMLElement;
-  } catch (e) {
-    console.warn('[AcuDice] 查找消息容器失败:', e);
-    return null;
   }
 }
 

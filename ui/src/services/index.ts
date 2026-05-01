@@ -17,3 +17,20 @@ export type {
 export type { SkillData, ItemData } from './CharacterDataService';
 export type { StatusEffect, CombatState, EquipmentSlot, SaveData, SaveSlot } from './SaveService';
 export type { GeneratedWorld, GeneratedSkill } from './WorldGenerationService';
+
+export {
+  queryHost,
+  queryHostAll,
+  getSendTextarea,
+  setSendTextareaValue,
+  appendToSendTextarea,
+  focusSendTextarea,
+  clickSendButton,
+  findLatestMessageContainer,
+  injectStyles,
+  sendOrInsertMessage,
+  getDatabaseApi,
+  getTavernHelper,
+  getHostjQuery,
+  getSillyTavern,
+} from './host-bridge';

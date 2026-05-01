@@ -1,4 +1,5 @@
 import { CombatCalculationService } from './CombatCalculationService';
+import { getDatabaseApi } from './host-bridge';
 
 export interface SkillData {
   name: string;
@@ -181,8 +182,7 @@ export class CharacterDataService {
 
   static loadCombatData(): { skills: SkillData[]; items: ItemData[] } {
     try {
-      const topWin = window.parent || window;
-      const api = (topWin as any).AutoCardUpdaterAPI || (window as any).AutoCardUpdaterAPI;
+      const api = getDatabaseApi();
       if (!api || typeof api.exportTableAsJson !== 'function') return { skills: [], items: [] };
 
       const tableData = api.exportTableAsJson();
