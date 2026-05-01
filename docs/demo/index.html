@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcuDice - 骰子检定系统演示</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --acu-bg-deep: #0f1117;
+            --acu-bg-panel: #1a1d27;
+            --acu-bg-card: #222632;
+            --acu-bg-header: #2a2e3e;
+            --acu-accent: #6366f1;
+            --acu-accent-light: #818cf8;
+            --acu-accent-glow: rgba(99, 102, 241, 0.3);
+            --acu-text-main: #e2e8f0;
+            --acu-text-sub: #94a3b8;
+            --acu-text-dim: #64748b;
+            --acu-border: #2d3348;
+            --acu-success: #22c55e;
+            --acu-danger: #ef4444;
+            --acu-warning: #f59e0b;
+            --font-sans: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--acu-bg-deep);
+            color: var(--acu-text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 40%, var(--acu-accent-glow) 0%, transparent 70%),
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--acu-accent-light);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .hero-badge i { font-size: 0.9rem; }
+
+        .hero-title {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease-out 0.1s backwards;
+        }
+
+        .hero-title .accent {
+            background: linear-gradient(135deg, var(--acu-accent-light) 0%, #a78bfa 50%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--acu-text-sub);
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            font-weight: 400;
+            animation: fadeInUp 0.6s ease-out 0.2s backwards;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease-out 0.3s backwards;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--acu-accent);
+            color: white;
+            box-shadow: 0 4px 20px var(--acu-accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: var(--acu-accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--acu-accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--acu-bg-card);
+            color: var(--acu-text-main);
+            border: 1px solid var(--acu-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--acu-bg-header);
+            border-color: var(--acu-accent);
+            transform: translateY(-2px);
+        }
+
+        /* Floating Dice Animation */
+        .floating-dice {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.12;
+            animation: float 20s infinite ease-in-out;
+            pointer-events: none;
+            color: var(--acu-accent-light);
+        }
+
+        .floating-dice:nth-child(1) { top: 15%; left: 10%; animation-delay: 0s; animation-duration: 18s; }
+        .floating-dice:nth-child(2) { top: 25%; right: 15%; animation-delay: -3s; animation-duration: 22s; }
+        .floating-dice:nth-child(3) { bottom: 20%; left: 20%; animation-delay: -7s; animation-duration: 16s; }
+        .floating-dice:nth-child(4) { bottom: 30%; right: 10%; animation-delay: -11s; animation-duration: 20s; }
+        .floating-dice:nth-child(5) { top: 50%; left: 5%; animation-delay: -5s; animation-duration: 24s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -30px) rotate(90deg); }
+            50% { transform: translate(-15px, 20px) rotate(180deg); }
+            75% { transform: translate(25px, -10px) rotate(270deg); }
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--acu-text-dim);
+            font-size: 0.8rem;
+            animation: fadeInUp 0.6s ease-out 0.5s backwards;
+        }
+
+        .scroll-indicator .mouse {
+            width: 24px;
+            height: 36px;
+            border: 2px solid var(--acu-text-dim);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .scroll-indicator .mouse::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 8px;
+            background: var(--acu-accent-light);
+            border-radius: 2px;
+            animation: scrollWheel 1.5s infinite;
+        }
+
+        @keyframes scrollWheel {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(12px); }
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--acu-accent-light);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            color: var(--acu-text-sub);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Check Modes Grid */
+        .modes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mode-card {
+            position: relative;
+            background: var(--acu-bg-card);
+            border: 1px solid var(--acu-border);
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--card-accent, var(--acu-accent)), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-accent, var(--acu-accent));
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-card:hover::before { opacity: 1; }
+
+        .mode-icon {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 14px;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .mode-card:hover .mode-icon {
+            background: var(--card-accent, var(--acu-accent));
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .mode-card[data-accent="indigo"] { --card-accent: #6366f1; }
+        .mode-card[data-accent="cyan"] { --card-accent: #06b6d4; }
+        .mode-card[data-accent="rose"] { --card-accent: #f43f5e; }
+        .mode-card[data-accent="amber"] { --card-accent: #f59e0b; }
+        .mode-card[data-accent="emerald"] { --card-accent: #10b981; }
+        .mode-card[data-accent="violet"] { --card-accent: #8b5cf6; }
+
+        .mode-card[data-accent="indigo"] .mode-icon { background: rgba(99, 102, 241, 0.1); }
+        .mode-card[data-accent="cyan"] .mode-icon { background: rgba(6, 182, 212, 0.1); }
+        .mode-card[data-accent="rose"] .mode-icon { background: rgba(244, 63, 94, 0.1); }
+        .mode-card[data-accent="amber"] .mode-icon { background: rgba(245, 158, 11, 0.1); }
+        .mode-card[data-accent="emerald"] .mode-icon { background: rgba(16, 185, 129, 0.1); }
+        .mode-card[data-accent="violet"] .mode-icon { background: rgba(139, 92, 246, 0.1); }
+
+        .mode-card[data-accent="indigo"]:hover .mode-icon { background: #6366f1; }
+        .mode-card[data-accent="cyan"]:hover .mode-icon { background: #06b6d4; }
+        .mode-card[data-accent="rose"]:hover .mode-icon { background: #f43f5e; }
+        .mode-card[data-accent="amber"]:hover .mode-icon { background: #f59e0b; }
+        .mode-card[data-accent="emerald"]:hover .mode-icon { background: #10b981; }
+        .mode-card[data-accent="violet"]:hover .mode-icon { background: #8b5cf6; }
+
+        .mode-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-desc {
+            color: var(--acu-text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .mode-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1.25rem;
+        }
+
+        .mode-feature {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--acu-accent-light);
+            border-radius: 100px;
+        }
+
+        /* Interactive Demo Section */
+        .demo-section {
+            background: var(--acu-bg-panel);
+            border-radius: 24px;
+            border: 1px solid var(--acu-border);
+            padding: 3rem;
+            margin: 0 auto;
+            max-width: 800px;
+        }
+
+        .demo-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--acu-bg-card);
+            border: 1px solid var(--acu-border);
+            border-radius: 12px;
+            color: var(--acu-text-main);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .demo-btn i { font-size: 1.25rem; color: var(--acu-text-sub); }
+        .demo-btn:hover { border-color: var(--acu-accent); background: var(--acu-bg-header); }
+        .demo-btn:hover i { color: var(--acu-accent-light); }
+        .demo-btn.active { background: var(--acu-accent); border-color: var(--acu-accent); color: white; }
+        .demo-btn.active i { color: white; }
+
+        .demo-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .demo-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .demo-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--acu-text-sub);
+        }
+
+        .demo-input {
+            padding: 0.75rem 1rem;
+            background: var(--acu-bg-card);
+            border: 1px solid var(--acu-border);
+            border-radius: 10px;
+            color: var(--acu-text-main);
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .demo-input:focus {
+            outline: none;
+            border-color: var(--acu-accent);
+            box-shadow: 0 0 0 3px var(--acu-accent-glow);
+        }
+
+        .demo-roll-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--acu-accent) 0%, #818cf8 100%);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-family: var(--font-sans);
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px var(--acu-accent-glow);
+        }
+
+        .demo-roll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--acu-accent-glow);
+        }
+
+        .demo-roll-btn:active { transform: translateY(0); }
+
+        .demo-roll-btn i { font-size: 1.25rem; }
+
+        /* Result Display */
+        .result-display {
+            background: var(--acu-bg-deep);
+            border-radius: 16px;
+            padding: 2rem;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--acu-border);
+            transition: all 0.3s;
+        }
+
+        .result-display.has-result {
+            border-style: solid;
+            border-color: var(--result-color, var(--acu-accent));
+        }
+
+        .result-placeholder {
+            text-align: center;
+            color: var(--acu-text-dim);
+        }
+
+        .result-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .result-placeholder p { font-size: 0.95rem; }
+
+        .result-content {
+            width: 100%;
+            text-align: center;
+            animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .result-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-detail {
+            font-size: 0.95rem;
+            color: var(--acu-text-sub);
+            margin-bottom: 1.5rem;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .result-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .result-stat .label {
+            font-size: 0.75rem;
+            color: var(--acu-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .result-stat .value {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .result-success { --result-color: var(--acu-success); }
+        .result-failure { --result-color: var(--acu-danger); }
+        .result-crit-success { --result-color: #fbbf24; }
+        .result-crit-failure { --result-color: #dc2626; }
+        .result-draw { --result-color: var(--acu-accent-light); }
+
+        .result-success .result-icon { color: var(--acu-success); }
+        .result-failure .result-icon { color: var(--acu-danger); }
+        .result-crit-success .result-icon { color: #fbbf24; }
+        .result-crit-failure .result-icon { color: #dc2626; }
+        .result-draw .result-icon { color: var(--acu-accent-light); }
+
+        .result-success .result-text { color: var(--acu-success); }
+        .result-failure .result-text { color: var(--acu-danger); }
+        .result-crit-success .result-text { color: #fbbf24; }
+        .result-crit-failure .result-text { color: #dc2626; }
+        .result-draw .result-text { color: var(--acu-accent-light); }
+
+        /* Dice Animation */
+        .dice-rolling {
+            font-size: 4rem;
+            animation: diceRoll 0.6s ease-out;
+        }
+
+        @keyframes diceRoll {
+            0% { transform: scale(0.5) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--acu-bg-card);
+            border: 1px solid var(--acu-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--acu-accent), #818cf8);
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            color: var(--acu-text-sub);
+            line-height: 1.6;
+        }
+
+        /* Tech Stack */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: var(--acu-bg-card);
+            border: 1px solid var(--acu-border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .tech-item:hover {
+            border-color: var(--acu-accent);
+            transform: translateY(-2px);
+        }
+
+        .tech-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 1.25rem;
+        }
+
+        .tech-icon.ts { background: rgba(49, 120, 198, 0.2); color: #3178c6; }
+        .tech-icon.vue { background: rgba(66, 184, 131, 0.2); color: #42b883; }
+        .tech-icon.vite { background: rgba(189, 52, 254, 0.2); color: #bd34fe; }
+        .tech-icon.vitest { background: rgba(252, 211, 77, 0.2); color: #fcd34d; }
+
+        .tech-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .tech-desc {
+            font-size: 0.75rem;
+            color: var(--acu-text-dim);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--acu-border);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .footer-logo .accent { color: var(--acu-accent-light); }
+
+        .footer-text {
+            font-size: 0.9rem;
+            color: var(--acu-text-sub);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--acu-text-sub);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer-link:hover { color: var(--acu-accent-light); }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .section { padding: 4rem 1.25rem; }
+            .demo-section { padding: 2rem 1.5rem; }
+            .modes-grid { grid-template-columns: 1fr; }
+            .result-stats { gap: 1.5rem; }
+        }
+
+        /* History Log */
+        .history-log {
+            margin-top: 1.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: var(--acu-bg-deep);
+            border-radius: 12px;
+            border: 1px solid var(--acu-border);
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--acu-border);
+            font-size: 0.85rem;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+
+        .history-item .roll { font-family: var(--font-mono); font-weight: 600; }
+        .history-item .result { font-weight: 600; }
+        .history-item .result.success { color: var(--acu-success); }
+        .history-item .result.failure { color: var(--acu-danger); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--acu-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--acu-text-dim); }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="floating-dice"><i class="fa-solid fa-dice-d20"></i></div>
+        <div class="floating-dice"><i class="fa-solid fa-dice-five"></i></div>
+        <div class="floating-dice"><i class="fa-solid fa-dice-six"></i></div>
+        <div class="floating-dice"><i class="fa-solid fa-dice-four"></i></div>
+        <div class="floating-dice"><i class="fa-solid fa-dice-three"></i></div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fa-solid fa-puzzle-piece"></i>
+                SillyTavern 酒馆助手插件
+            </div>
+            <h1 class="hero-title">
+                <span class="accent">AcuDice</span>
+            </h1>
+            <p class="hero-subtitle">
+                为 SillyTavern 酒馆助手设计的骰子检定系统，支持六种检定模式，让跑团更精彩
+            </p>
+            <div class="hero-actions">
+                <a href="#demo" class="btn btn-primary">
+                    <i class="fa-solid fa-play"></i>
+                    体验演示
+                </a>
+                <a href="#plugin-demo" class="btn btn-secondary">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                    在线插件
+                </a>
+                <a href="#modes" class="btn btn-secondary">
+                    <i class="fa-solid fa-book"></i>
+                    了解更多
+                </a>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">
+            <div class="mouse"></div>
+            <span>向下滚动</span>
+        </div>
+    </section>
+
+    <!-- Check Modes Section -->
+    <section id="modes" class="section">
+        <div class="section-header animate-on-scroll">
+            <span class="section-label">核心功能</span>
+            <h2 class="section-title">六种检定模式</h2>
+            <p class="section-desc">覆盖所有跑团场景，从技能检定到战斗结算，一应俱全</p>
+        </div>
+
+        <div class="modes-grid">
+            <div class="mode-card animate-on-scroll" data-accent="indigo">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-dice-d20"></i>
+                </div>
+                <div class="mode-name">标准检定</div>
+                <div class="mode-desc">适用于非战斗场景的技能检定，支持自定义属性、难度等级和修正值</div>
+                <div class="mode-features">
+                    <span class="mode-feature">属性检定</span>
+                    <span class="mode-feature">难度调整</span>
+                    <span class="mode-feature">优势/劣势</span>
+                </div>
+            </div>
+
+            <div class="mode-card animate-on-scroll" data-accent="cyan">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-people-arrows"></i>
+                </div>
+                <div class="mode-name">对抗检定</div>
+                <div class="mode-desc">双方直接对抗比较，适用于角力、辩论、竞速等双方竞争场景</div>
+                <div class="mode-features">
+                    <span class="mode-feature">双人对抗</span>
+                    <span class="mode-feature">实时比较</span>
+                    <span class="mode-feature">平局处理</span>
+                </div>
+            </div>
+
+            <div class="mode-card animate-on-scroll" data-accent="rose">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-hand-fist"></i>
+                </div>
+                <div class="mode-name">战斗检定</div>
+                <div class="mode-desc">攻击检定与伤害计算，支持武器伤害、暴击判定和战斗日志</div>
+                <div class="mode-features">
+                    <span class="mode-feature">攻击骰</span>
+                    <span class="mode-feature">伤害计算</span>
+                    <span class="mode-feature">暴击系统</span>
+                </div>
+            </div>
+
+            <div class="mode-card animate-on-scroll" data-accent="amber">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-shield"></i>
+                </div>
+                <div class="mode-name">防守检定</div>
+                <div class="mode-desc">闪避与防御判定，计算格挡值和实际受到的伤害</div>
+                <div class="mode-features">
+                    <span class="mode-feature">闪避判定</span>
+                    <span class="mode-feature">格挡计算</span>
+                    <span class="mode-feature">伤害减免</span>
+                </div>
+            </div>
+
+            <div class="mode-card animate-on-scroll" data-accent="emerald">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div class="mode-name">先攻检定</div>
+                <div class="mode-desc">敏捷对抗决定行动顺序，快速确定战斗回合顺序</div>
+                <div class="mode-features">
+                    <span class="mode-feature">先攻排序</span>
+                    <span class="mode-feature">多人竞速</span>
+                    <span class="mode-feature">回合管理</span>
+                </div>
+            </div>
+
+            <div class="mode-card animate-on-scroll" data-accent="violet">
+                <div class="mode-icon">
+                    <i class="fa-solid fa-person-running"></i>
+                </div>
+                <div class="mode-name">逃跑检定</div>
+                <div class="mode-desc">脱离战斗的检定，支持多种逃跑方式和追击判定</div>
+                <div class="mode-features">
+                    <span class="mode-feature">逃跑判定</span>
+                    <span class="mode-feature">追击机制</span>
+                    <span class="mode-feature">环境影响</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Section -->
+    <section id="demo" class="section">
+        <div class="section-header animate-on-scroll">
+            <span class="section-label">互动体验</span>
+            <h2 class="section-title">在线掷骰演示</h2>
+            <p class="section-desc">体验骰子检定的核心机制，感受随机性的魅力</p>
+        </div>
+
+        <div class="demo-section animate-on-scroll">
+            <div class="demo-panel">
+                <!-- Mode Selection -->
+                <div class="demo-controls">
+                    <button class="demo-btn active" data-mode="standard" onclick="setMode('standard', this)">
+                        <i class="fa-solid fa-dice-d20"></i>
+                        标准检定
+                    </button>
+                    <button class="demo-btn" data-mode="contest" onclick="setMode('contest', this)">
+                        <i class="fa-solid fa-people-arrows"></i>
+                        对抗检定
+                    </button>
+                    <button class="demo-btn" data-mode="combat" onclick="setMode('combat', this)">
+                        <i class="fa-solid fa-hand-fist"></i>
+                        战斗检定
+                    </button>
+                </div>
+
+                <!-- Input Fields -->
+                <div class="demo-input-group">
+                    <div class="demo-field">
+                        <label class="demo-label">属性值 <span style="font-size:0.7rem;color:var(--acu-text-dim)">(1-380+)</span></label>
+                        <input type="number" class="demo-input" id="attrValue" value="30" min="1" max="500">
+                    </div>
+                    <div class="demo-field">
+                        <label class="demo-label">掌握等级 <span style="font-size:0.7rem;color:var(--acu-text-dim)">(标准检定)</span></label>
+                        <select class="demo-input" id="masteryLevel">
+                            <option value="F">F级 (+0)</option>
+                            <option value="E">E级 (+1)</option>
+                            <option value="D" selected>D级 (+2)</option>
+                            <option value="C">C级 (+3)</option>
+                            <option value="B">B级 (+4)</option>
+                            <option value="A">A级 (+5)</option>
+                            <option value="S">S级 (+6)</option>
+                            <option value="SS">SS级 (+7)</option>
+                            <option value="SSS">SSS级 (+8)</option>
+                        </select>
+                    </div>
+                    <div class="demo-field">
+                        <label class="demo-label">DC / 目标值</label>
+                        <input type="number" class="demo-input" id="targetValue" value="15" min="1" max="50">
+                    </div>
+                    <div class="demo-field">
+                        <label class="demo-label">额外修正</label>
+                        <input type="number" class="demo-input" id="modifier" value="0" min="-10" max="10">
+                    </div>
+                </div>
+                <div style="font-size:0.8rem;color:var(--acu-text-dim);padding:0.5rem 0;">
+                    <i class="fa-solid fa-info-circle"></i>
+                    属性加成映射：1-15→+0, 16-25→+1, 26-35→+2, 36-45→+3, 46-55→+4 ... (非线性成长)
+                </div>
+
+                <!-- Roll Button -->
+                <button class="demo-roll-btn" onclick="rollDice()">
+                    <i class="fa-solid fa-dice"></i>
+                    掷骰检定
+                </button>
+
+                <!-- Result Display -->
+                <div class="result-display" id="resultDisplay">
+                    <div class="result-placeholder">
+                        <i class="fa-solid fa-dice-d20"></i>
+                        <p>点击上方按钮进行掷骰检定</p>
+                    </div>
+                </div>
+
+                <!-- History Log -->
+                <div class="history-log" id="historyLog" style="display: none;">
+                    <div style="font-size: 0.8rem; color: var(--acu-text-dim); margin-bottom: 0.5rem;">历史记录</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section">
+        <div class="section-header animate-on-scroll">
+            <span class="section-label">系统特性</span>
+            <h2 class="section-title">为什么选择 AcuDice</h2>
+            <p class="section-desc">精心设计的功能，让跑团体验更加流畅</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div class="feature-title">预设系统</div>
+                <div class="feature-desc">支持创建和管理多套检定预设，一键切换不同规则体系，方便在不同世界观间切换</div>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div class="feature-title">效果引擎</div>
+                <div class="feature-desc">根据检定结果自动触发效果，支持 Buff/Debuff、持续伤害、控制效果等多种类型</div>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div class="feature-title">数据持久化</div>
+                <div class="feature-desc">角色数据、检定历史、预设配置本地存储，支持导入导出，数据不丢失</div>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-plug"></i>
+                </div>
+                <div class="feature-title">无缝集成</div>
+                <div class="feature-desc">通过 iframe 嵌入 SillyTavern，与酒馆助手深度集成，消息自动发送到聊天</div>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-palette"></i>
+                </div>
+                <div class="feature-title">主题定制</div>
+                <div class="feature-desc">支持自定义主题颜色，自动适配宿主环境的深色/浅色模式，视觉风格统一</div>
+            </div>
+
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-keyboard"></i>
+                </div>
+                <div class="feature-title">快捷操作</div>
+                <div class="feature-desc">支持快捷键、快速掷骰、收藏夹等功能，提升操作效率，让检定更流畅</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Plugin Demo Section -->
+    <section id="plugin-demo" class="section">
+        <div class="section-header animate-on-scroll">
+            <span class="section-label">实时演示</span>
+            <h2 class="section-title">在线体验插件</h2>
+            <p class="section-desc">直接在浏览器中运行 AcuDice 插件，体验完整功能</p>
+        </div>
+
+        <div class="plugin-demo-container animate-on-scroll">
+            <div class="plugin-demo-header">
+                <div class="plugin-demo-controls">
+                    <button class="plugin-load-btn" id="pluginLoadBtn" onclick="loadPlugin()">
+                        <i class="fa-solid fa-play"></i>
+                        <span>加载插件</span>
+                    </button>
+                    <button class="plugin-unload-btn" id="pluginUnloadBtn" onclick="unloadPlugin()" style="display:none;">
+                        <i class="fa-solid fa-stop"></i>
+                        <span>卸载插件</span>
+                    </button>
+                    <div class="plugin-status" id="pluginStatus">
+                        <i class="fa-solid fa-circle" style="font-size:0.6rem;"></i>
+                        <span>未加载</span>
+                    </div>
+                </div>
+                <div class="plugin-demo-info">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <span>此演示模拟了 SillyTavern 宿主环境，插件功能可能受限</span>
+                </div>
+            </div>
+
+            <div class="plugin-demo-viewport">
+                <div class="plugin-demo-placeholder" id="pluginPlaceholder">
+                    <div class="placeholder-content">
+                        <i class="fa-solid fa-puzzle-piece"></i>
+                        <h3>AcuDice 插件演示区</h3>
+                        <p>点击上方"加载插件"按钮启动骰子检定系统</p>
+                        <div class="placeholder-features">
+                            <span><i class="fa-solid fa-check"></i> 完整的 UI 界面</span>
+                            <span><i class="fa-solid fa-check"></i> 六种检定模式</span>
+                            <span><i class="fa-solid fa-check"></i> 模拟掷骰功能</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="chat" style="display:none;">
+                    <div class="chat-message">
+                        <div class="chat-avatar">DM</div>
+                        <div class="chat-content">
+                            <div class="chat-name">地下城主</div>
+                            <div class="chat-text">你来到了一座古老的地下城入口，阴冷的气息从黑暗的通道中传来。前方有两条路：左边是一条狭窄的石阶，向下延伸；右边是一条宽阔的走廊，尽头似乎有微弱的光芒。</div>
+                        </div>
+                    </div>
+                    <div class="chat-message">
+                        <div class="chat-avatar">你</div>
+                        <div class="chat-content">
+                            <div class="chat-name">冒险者</div>
+                            <div class="chat-text">我想仔细观察走廊尽头的光芒，看看是什么。</div>
+                        </div>
+                    </div>
+                    <div class="chat-message">
+                        <div class="chat-avatar">DM</div>
+                        <div class="chat-content">
+                            <div class="chat-name">地下城主</div>
+                            <div class="chat-text">请进行一次感知检定，看看你能否发现更多细节。</div>
+                        </div>
+                    </div>
+                    <!-- 插件将挂载到这里 -->
+                </div>
+                <div class="chat-input-area" id="chatInputArea" style="display:none;">
+                    <input type="text" class="chat-input" placeholder="输入消息..." value="我进行感知检定，观察走廊尽头的光芒。">
+                    <button class="chat-send-btn">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .plugin-demo-container {
+                background: var(--acu-bg-panel);
+                border-radius: 20px;
+                border: 1px solid var(--acu-border);
+                overflow: hidden;
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .plugin-demo-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1.25rem 1.5rem;
+                background: var(--acu-bg-header);
+                border-bottom: 1px solid var(--acu-border);
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .plugin-demo-controls {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .plugin-load-btn,
+            .plugin-unload-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.625rem 1.25rem;
+                border-radius: 10px;
+                font-family: var(--font-sans);
+                font-size: 0.875rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+                border: none;
+            }
+
+            .plugin-load-btn {
+                background: var(--acu-accent);
+                color: white;
+                box-shadow: 0 4px 15px var(--acu-accent-glow);
+            }
+
+            .plugin-load-btn:hover {
+                background: var(--acu-accent-light);
+                transform: translateY(-1px);
+            }
+
+            .plugin-unload-btn {
+                background: var(--acu-bg-card);
+                color: var(--acu-text-main);
+                border: 1px solid var(--acu-border);
+            }
+
+            .plugin-unload-btn:hover {
+                border-color: var(--acu-danger);
+                color: var(--acu-danger);
+            }
+
+            .plugin-status {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.8rem;
+                color: var(--acu-text-dim);
+            }
+
+            .plugin-status.loaded {
+                color: var(--acu-success);
+            }
+
+            .plugin-status.loading {
+                color: var(--acu-warning);
+            }
+
+            .plugin-demo-info {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.75rem;
+                color: var(--acu-text-dim);
+            }
+
+            .plugin-demo-viewport {
+                min-height: 600px;
+                background: var(--acu-bg-deep);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .plugin-demo-placeholder {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 600px;
+                padding: 3rem;
+            }
+
+            .placeholder-content {
+                text-align: center;
+                max-width: 400px;
+            }
+
+            .placeholder-content i {
+                font-size: 4rem;
+                color: var(--acu-accent);
+                opacity: 0.5;
+                margin-bottom: 1.5rem;
+            }
+
+            .placeholder-content h3 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                margin-bottom: 0.75rem;
+                color: var(--acu-text-main);
+            }
+
+            .placeholder-content p {
+                font-size: 0.95rem;
+                color: var(--acu-text-sub);
+                margin-bottom: 2rem;
+            }
+
+            .placeholder-features {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                text-align: left;
+            }
+
+            .placeholder-features span {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 0.9rem;
+                color: var(--acu-text-sub);
+            }
+
+            .placeholder-features i {
+                font-size: 1rem;
+                color: var(--acu-success);
+                opacity: 1;
+                margin: 0;
+            }
+
+            /* SillyTavern 聊天界面模拟 */
+            #chat {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                background: #1a1d23;
+                overflow-y: auto;
+                padding: 1rem;
+            }
+
+            .chat-message {
+                display: flex;
+                gap: 0.75rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                background: #22262e;
+                border-radius: 12px;
+                border: 1px solid #2d3139;
+            }
+
+            .chat-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #6366f1, #818cf8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 1rem;
+                color: white;
+                flex-shrink: 0;
+            }
+
+            .chat-content {
+                flex: 1;
+            }
+
+            .chat-name {
+                font-weight: 600;
+                font-size: 0.85rem;
+                color: #818cf8;
+                margin-bottom: 0.25rem;
+            }
+
+            .chat-text {
+                font-size: 0.9rem;
+                color: #e2e8f0;
+                line-height: 1.5;
+            }
+
+            .chat-input-area {
+                display: flex;
+                gap: 0.75rem;
+                padding: 1rem;
+                background: #22262e;
+                border-top: 1px solid #2d3139;
+            }
+
+            .chat-input {
+                flex: 1;
+                padding: 0.75rem 1rem;
+                background: #1a1d23;
+                border: 1px solid #2d3139;
+                border-radius: 8px;
+                color: #e2e8f0;
+                font-size: 0.9rem;
+                outline: none;
+            }
+
+            .chat-input:focus {
+                border-color: #6366f1;
+            }
+
+            .chat-send-btn {
+                padding: 0.75rem 1.25rem;
+                background: #6366f1;
+                border: none;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .chat-send-btn:hover {
+                background: #818cf8;
+            }
+
+            @media (max-width: 768px) {
+                .plugin-demo-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+            }
+        </style>
+
+        <script>
+            // Mock 宿主环境
+            function setupMockEnvironment() {
+                // Mock jQuery
+                window.jQuery = window.$ = function(selector) {
+                    const el = document.querySelector(selector);
+                    return {
+                        length: el ? 1 : 0,
+                        0: el,
+                        find: function(s) { return jQuery(s); },
+                        closest: function() { return jQuery(null); },
+                        parent: function() { return jQuery(el?.parentElement); },
+                        append: function(html) {
+                            if (el) el.insertAdjacentHTML('beforeend', html);
+                            return this;
+                        },
+                        remove: function() {
+                            if (el) el.remove();
+                            return this;
+                        },
+                        on: function(event, handler) {
+                            if (el) el.addEventListener(event, handler);
+                            return this;
+                        },
+                        val: function(v) {
+                            if (el) {
+                                if (v !== undefined) el.value = v;
+                                return el.value;
+                            }
+                            return '';
+                        },
+                        text: function(t) {
+                            if (el) {
+                                if (t !== undefined) el.textContent = t;
+                                return el.textContent;
+                            }
+                            return '';
+                        },
+                        html: function(h) {
+                            if (el) {
+                                if (h !== undefined) el.innerHTML = h;
+                                return el.innerHTML;
+                            }
+                            return '';
+                        },
+                        addClass: function(c) { if (el) el.classList.add(c); return this; },
+                        removeClass: function(c) { if (el) el.classList.remove(c); return this; },
+                        toggleClass: function(c) { if (el) el.classList.toggle(c); return this; },
+                        attr: function(k, v) {
+                            if (el) {
+                                if (v !== undefined) el.setAttribute(k, v);
+                                return el.getAttribute(k);
+                            }
+                            return null;
+                        },
+                        css: function(p, v) {
+                            if (el) {
+                                if (typeof p === 'object') {
+                                    Object.entries(p).forEach(([k, val]) => el.style[k] = val);
+                                } else if (v !== undefined) {
+                                    el.style[p] = v;
+                                }
+                            }
+                            return this;
+                        },
+                        show: function() { if (el) el.style.display = ''; return this; },
+                        hide: function() { if (el) el.style.display = 'none'; return this; },
+                        each: function(fn) { if (el) fn.call(el, 0, el); return this; }
+                    };
+                };
+
+                // Mock toastr
+                window.toastr = {
+                    success: function(msg) { console.log('[Toast] Success:', msg); },
+                    error: function(msg) { console.error('[Toast] Error:', msg); },
+                    warning: function(msg) { console.warn('[Toast] Warning:', msg); },
+                    info: function(msg) { console.info('[Toast] Info:', msg); },
+                    options: {}
+                };
+
+                // Mock lodash
+                window._ = {
+                    debounce: function(fn, delay) {
+                        let timer;
+                        return function(...args) {
+                            clearTimeout(timer);
+                            timer = setTimeout(() => fn.apply(this, args), delay);
+                        };
+                    },
+                    throttle: function(fn, limit) {
+                        let inThrottle;
+                        return function(...args) {
+                            if (!inThrottle) {
+                                fn.apply(this, args);
+                                inThrottle = true;
+                                setTimeout(() => inThrottle = false, limit);
+                            }
+                        };
+                    },
+                    cloneDeep: function(obj) { return JSON.parse(JSON.stringify(obj)); },
+                    merge: function(target, ...sources) { return Object.assign(target, ...sources); },
+                    get: function(obj, path, defaultValue) {
+                        const keys = path.split('.');
+                        let result = obj;
+                        for (const key of keys) {
+                            result = result?.[key];
+                            if (result === undefined) return defaultValue;
+                        }
+                        return result;
+                    }
+                };
+
+                // Mock SillyTavern 全局对象
+                window.SillyTavern = {
+                    name: 'SillyTavern Demo',
+                    version: '1.0.0'
+                };
+
+                // Mock TavernHelper
+                window.TavernHelper = {
+                    sendMessage: function(msg) {
+                        console.log('[TavernHelper] 发送消息:', msg);
+                    },
+                    getContext: function() {
+                        return { chat: [], characters: {} };
+                    }
+                };
+
+                console.log('[Demo] 宿主环境已设置');
+            }
+
+            let pluginLoaded = false;
+
+            function loadPlugin() {
+                if (pluginLoaded) return;
+
+                const statusEl = document.getElementById('pluginStatus');
+                const loadBtn = document.getElementById('pluginLoadBtn');
+                const unloadBtn = document.getElementById('pluginUnloadBtn');
+                const placeholder = document.getElementById('pluginPlaceholder');
+                const chat = document.getElementById('chat');
+                const chatInput = document.getElementById('chatInputArea');
+
+                // 更新状态为加载中
+                statusEl.className = 'plugin-status loading';
+                statusEl.querySelector('span').textContent = '加载中...';
+                loadBtn.style.display = 'none';
+
+                // 设置模拟环境
+                setupMockEnvironment();
+
+                // 显示聊天界面，隐藏占位符
+                placeholder.style.display = 'none';
+                chat.style.display = 'flex';
+                chatInput.style.display = 'flex';
+
+                // 加载插件脚本
+                const script = document.createElement('script');
+                script.src = '../../dist/stable.js';
+                script.onload = function() {
+                    console.log('[Demo] 插件脚本已加载');
+
+                    // 插件会自动初始化，找到 #chat 元素并挂载到其父元素中
+                    setTimeout(() => {
+                        const pluginEl = document.getElementById('acu-main-layout');
+                        if (pluginEl) {
+                            pluginLoaded = true;
+                            statusEl.className = 'plugin-status loaded';
+                            statusEl.querySelector('span').textContent = '已加载';
+                            unloadBtn.style.display = 'inline-flex';
+                        } else {
+                            // 手动初始化
+                            if (window.AcuDice && window.AcuDice.init) {
+                                window.AcuDice.init();
+                            }
+
+                            setTimeout(() => {
+                                const pluginEl2 = document.getElementById('acu-main-layout');
+                                if (pluginEl2) {
+                                    pluginLoaded = true;
+                                    statusEl.className = 'plugin-status loaded';
+                                    statusEl.querySelector('span').textContent = '已加载';
+                                    unloadBtn.style.display = 'inline-flex';
+                                } else {
+                                    statusEl.className = 'plugin-status';
+                                    statusEl.querySelector('span').textContent = '加载失败';
+                                    loadBtn.style.display = 'inline-flex';
+                                    chat.style.display = 'none';
+                                    chatInput.style.display = 'none';
+                                    placeholder.style.display = 'flex';
+                                }
+                            }, 500);
+                        }
+                    }, 300);
+                };
+
+                script.onerror = function() {
+                    console.error('[Demo] 插件加载失败');
+                    statusEl.className = 'plugin-status';
+                    statusEl.querySelector('span').textContent = '加载失败';
+                    loadBtn.style.display = 'inline-flex';
+                    chat.style.display = 'none';
+                    chatInput.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                };
+
+                document.head.appendChild(script);
+            }
+
+            function unloadPlugin() {
+                const statusEl = document.getElementById('pluginStatus');
+                const loadBtn = document.getElementById('pluginLoadBtn');
+                const unloadBtn = document.getElementById('pluginUnloadBtn');
+                const placeholder = document.getElementById('pluginPlaceholder');
+                const chat = document.getElementById('chat');
+                const chatInput = document.getElementById('chatInputArea');
+
+                // 移除插件元素
+                const pluginEl = document.getElementById('acu-main-layout');
+                if (pluginEl) {
+                    pluginEl.remove();
+                }
+
+                // 隐藏聊天界面，显示占位符
+                chat.style.display = 'none';
+                chatInput.style.display = 'none';
+                placeholder.style.display = 'flex';
+
+                pluginLoaded = false;
+                statusEl.className = 'plugin-status';
+                statusEl.querySelector('span').textContent = '未加载';
+                loadBtn.style.display = 'inline-flex';
+                unloadBtn.style.display = 'none';
+
+                // 清理全局变量
+                if (window.AcuDice) {
+                    delete window.AcuDice;
+                }
+
+                // 移除插件添加的样式
+                const pluginStyle = document.getElementById('acu-dice-styles');
+                if (pluginStyle) {
+                    pluginStyle.remove();
+                }
+
+                console.log('[Demo] 插件已卸载');
+            }
+        </script>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section id="tech" class="section">
+        <div class="section-header animate-on-scroll">
+            <span class="section-label">技术栈</span>
+            <h2 class="section-title">现代化技术架构</h2>
+            <p class="section-desc">采用业界主流技术，确保性能与可维护性</p>
+        </div>
+
+        <div class="tech-stack animate-on-scroll">
+            <div class="tech-item">
+                <div class="tech-icon ts">
+                    <i class="fa-brands fa-js"></i>
+                </div>
+                <div>
+                    <div class="tech-name">TypeScript</div>
+                    <div class="tech-desc">严格类型检查，代码更可靠</div>
+                </div>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon vue">
+                    <i class="fa-brands fa-vuejs"></i>
+                </div>
+                <div>
+                    <div class="tech-name">Vue 3</div>
+                    <div class="tech-desc">Composition API，逻辑复用更灵活</div>
+                </div>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon vite">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <div class="tech-name">Vite 5</div>
+                    <div class="tech-desc">极速构建，开发体验流畅</div>
+                </div>
+            </div>
+
+            <div class="tech-item">
+                <div class="tech-icon vitest">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <div>
+                    <div class="tech-name">Vitest</div>
+                    <div class="tech-desc">单元测试，保障代码质量</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span class="accent">AcuDice</span> 骰子检定系统
+            </div>
+            <p class="footer-text">
+                为 SillyTavern 酒馆助手设计的骰子检定系统，让跑团更简单、更有趣
+            </p>
+            <div class="footer-links">
+                <a href="https://github.com" class="footer-link" target="_blank">
+                    <i class="fa-brands fa-github"></i> GitHub
+                </a>
+                <a href="#" class="footer-link">
+                    <i class="fa-solid fa-book"></i> 文档
+                </a>
+                <a href="#" class="footer-link">
+                    <i class="fa-solid fa-download"></i> 下载
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mode management
+        let currentMode = 'standard';
+        const history = [];
+
+        // 属性加成映射表 (非线性成长，用于对抗检定)
+        function getAttrBonus(attrValue) {
+            if (attrValue <= 15) return 0;
+            if (attrValue <= 25) return 1;
+            if (attrValue <= 35) return 2;
+            if (attrValue <= 45) return 3;
+            if (attrValue <= 55) return 4;
+            if (attrValue <= 65) return 5;
+            if (attrValue <= 75) return 6;
+            if (attrValue <= 85) return 7;
+            if (attrValue <= 95) return 8;
+            if (attrValue <= 105) return 9;
+            if (attrValue <= 120) return 10;
+            if (attrValue <= 140) return 11;
+            if (attrValue <= 160) return 12;
+            if (attrValue <= 185) return 13;
+            if (attrValue <= 210) return 14;
+            if (attrValue <= 240) return 15;
+            if (attrValue <= 270) return 16;
+            if (attrValue <= 305) return 17;
+            if (attrValue <= 340) return 18;
+            if (attrValue <= 380) return 19;
+            // 381+: 每+40点，加成+1
+            return 19 + Math.floor((attrValue - 380) / 40);
+        }
+
+        // 掌握加成映射表 (线性成长，用于标准检定)
+        function getMasteryBonus(level) {
+            const table = { 'F': 0, 'E': 1, 'D': 2, 'C': 3, 'B': 4, 'A': 5, 'S': 6, 'SS': 7, 'SSS': 8 };
+            return table[level] || 0;
+        }
+
+        // 获取属性加成区间的描述
+        function getAttrRangeDesc(attrValue) {
+            if (attrValue <= 15) return '1-15';
+            if (attrValue <= 25) return '16-25';
+            if (attrValue <= 35) return '26-35';
+            if (attrValue <= 45) return '36-45';
+            if (attrValue <= 55) return '46-55';
+            if (attrValue <= 65) return '56-65';
+            if (attrValue <= 75) return '66-75';
+            if (attrValue <= 85) return '76-85';
+            if (attrValue <= 95) return '86-95';
+            if (attrValue <= 105) return '96-105';
+            if (attrValue <= 120) return '106-120';
+            if (attrValue <= 140) return '121-140';
+            if (attrValue <= 160) return '141-160';
+            if (attrValue <= 185) return '161-185';
+            if (attrValue <= 210) return '186-210';
+            if (attrValue <= 240) return '211-240';
+            if (attrValue <= 270) return '241-270';
+            if (attrValue <= 305) return '271-305';
+            if (attrValue <= 340) return '306-340';
+            if (attrValue <= 380) return '341-380';
+            return '381+';
+        }
+
+        function setMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            resetResult();
+        }
+
+        function resetResult() {
+            const display = document.getElementById('resultDisplay');
+            display.className = 'result-display';
+            display.innerHTML = `
+                <div class="result-placeholder">
+                    <i class="fa-solid fa-dice-d20"></i>
+                    <p>点击上方按钮进行掷骰检定</p>
+                </div>
+            `;
+        }
+
+        function rollDice() {
+            const attrValue = parseInt(document.getElementById('attrValue').value) || 30;
+            const masteryLevel = document.getElementById('masteryLevel').value;
+            const targetValue = parseInt(document.getElementById('targetValue').value) || 15;
+            const modifier = parseInt(document.getElementById('modifier').value) || 0;
+
+            // Dice rolling animation
+            const display = document.getElementById('resultDisplay');
+            display.className = 'result-display';
+            display.innerHTML = `<div class="dice-rolling"><i class="fa-solid fa-dice-d20"></i></div>`;
+
+            setTimeout(() => {
+                let result;
+                if (currentMode === 'contest') {
+                    result = calculateContestRoll(attrValue);
+                } else {
+                    result = calculateStandardRoll(attrValue, masteryLevel, targetValue, modifier);
+                }
+                showResult(result);
+                addHistory(result);
+            }, 600);
+        }
+
+        // 标准检定: D20 + 属性加成 + 掌握加成 + 额外修正值 >= DC
+        function calculateStandardRoll(attrValue, masteryLevel, dc, mod) {
+            const roll = Math.floor(Math.random() * 20) + 1;
+            const attrBonus = getAttrBonus(attrValue);
+            const masteryBonus = getMasteryBonus(masteryLevel);
+            const total = roll + attrBonus + masteryBonus + mod;
+            const margin = total - dc;
+
+            let isCriticalSuccess = roll === 20;
+            let isCriticalFailure = roll === 1;
+            let success = margin >= 0 || isCriticalSuccess;
+            if (isCriticalFailure) success = false;
+
+            let outcome, message, icon, cssClass;
+
+            if (isCriticalSuccess) {
+                outcome = '大成功！';
+                message = '命运之神眷顾着你';
+                icon = '🌟';
+                cssClass = 'result-crit-success';
+            } else if (isCriticalFailure) {
+                outcome = '大失败...';
+                message = '骰子女神的嘲笑';
+                icon = '💀';
+                cssClass = 'result-crit-failure';
+            } else if (success) {
+                outcome = '检定成功';
+                message = margin >= 5 ? '漂亮的成功！' : '勉强通过';
+                icon = '✓';
+                cssClass = 'result-success';
+            } else {
+                outcome = '检定失败';
+                message = margin <= -5 ? '惨痛的失败' : '差一点点...';
+                icon = '✗';
+                cssClass = 'result-failure';
+            }
+
+            return {
+                roll,
+                total,
+                target: dc,
+                margin,
+                success,
+                isCriticalSuccess,
+                isCriticalFailure,
+                outcome,
+                message,
+                icon,
+                cssClass,
+                mode: 'standard',
+                details: {
+                    attrValue,
+                    attrBonus,
+                    attrRange: getAttrRangeDesc(attrValue),
+                    masteryLevel,
+                    masteryBonus,
+                    modifier: mod
+                }
+            };
+        }
+
+        // 对抗检定: 双方投D20 + 属性加成，比较结果
+        function calculateContestRoll(playerAttr) {
+            const playerRoll = Math.floor(Math.random() * 20) + 1;
+            const enemyRoll = Math.floor(Math.random() * 20) + 1;
+            const playerBonus = getAttrBonus(playerAttr);
+            // 敌方属性随机生成 (1-100范围)
+            const enemyAttr = Math.floor(Math.random() * 100) + 1;
+            const enemyBonus = getAttrBonus(enemyAttr);
+
+            const playerTotal = playerRoll + playerBonus;
+            const enemyTotal = enemyRoll + enemyBonus;
+            const margin = playerTotal - enemyTotal;
+
+            const success = margin > 0;
+            const isDraw = margin === 0;
+
+            let outcome, message, icon, cssClass;
+
+            if (isDraw) {
+                outcome = '平局';
+                message = '势均力敌，不分胜负';
+                icon = '⚖️';
+                cssClass = 'result-draw';
+            } else if (success) {
+                outcome = '对抗成功！';
+                message = margin >= 5 ? '压倒性胜利' : '险胜对手';
+                icon = '✓';
+                cssClass = 'result-success';
+            } else {
+                outcome = '对抗失败';
+                message = margin <= -5 ? '惨败' : '惜败...';
+                icon = '✗';
+                cssClass = 'result-failure';
+            }
+
+            return {
+                roll: playerRoll,
+                total: playerTotal,
+                target: enemyTotal,
+                margin,
+                success,
+                isDraw,
+                isCriticalSuccess: false,
+                isCriticalFailure: false,
+                outcome,
+                message,
+                icon,
+                cssClass,
+                mode: 'contest',
+                details: {
+                    playerAttr,
+                    playerBonus,
+                    playerRange: getAttrRangeDesc(playerAttr),
+                    playerRoll,
+                    enemyAttr,
+                    enemyBonus,
+                    enemyRange: getAttrRangeDesc(enemyAttr),
+                    enemyRoll,
+                    enemyTotal
+                }
+            };
+        }
+
+        function showResult(result) {
+            const display = document.getElementById('resultDisplay');
+            display.className = `result-display has-result ${result.cssClass}`;
+
+            const modeNames = {
+                standard: '标准检定',
+                contest: '对抗检定',
+                combat: '战斗检定'
+            };
+
+            let detailsHtml = '';
+            if (result.mode === 'standard' && result.details) {
+                const d = result.details;
+                detailsHtml = `
+                    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--acu-border);text-align:left;font-size:0.85rem;">
+                        <div style="color:var(--acu-text-dim);margin-bottom:0.5rem;">计算过程</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                            <span class="mode-feature">D20=${result.roll}</span>
+                            <span class="mode-feature">属性${d.attrValue}(${d.attrRange})→+${d.attrBonus}</span>
+                            <span class="mode-feature">${d.masteryLevel}级掌握→+${d.masteryBonus}</span>
+                            ${d.modifier !== 0 ? `<span class="mode-feature">修正${d.modifier > 0 ? '+' : ''}${d.modifier}</span>` : ''}
+                        </div>
+                        <div style="margin-top:0.5rem;color:var(--acu-text-sub);">
+                            公式: ${result.roll} + ${d.attrBonus} + ${d.masteryBonus}${d.modifier !== 0 ? ` + ${d.modifier}` : ''} = ${result.total} ${result.success ? '≥' : '<'} DC ${result.target}
+                        </div>
+                    </div>
+                `;
+            } else if (result.mode === 'contest' && result.details) {
+                const d = result.details;
+                detailsHtml = `
+                    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--acu-border);text-align:left;font-size:0.85rem;">
+                        <div style="color:var(--acu-text-dim);margin-bottom:0.5rem;">对抗详情</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                            <div>
+                                <div style="color:var(--acu-accent-light);font-weight:600;">玩家</div>
+                                <div>属性: ${d.playerAttr} (${d.playerRange})</div>
+                                <div>加成: +${d.playerBonus}</div>
+                                <div>投骰: ${d.playerRoll}</div>
+                                <div style="font-weight:700;">总计: ${result.total}</div>
+                            </div>
+                            <div>
+                                <div style="color:var(--acu-danger);font-weight:600;">对手</div>
+                                <div>属性: ${d.enemyAttr} (${d.enemyRange})</div>
+                                <div>加成: +${d.enemyBonus}</div>
+                                <div>投骰: ${d.enemyRoll}</div>
+                                <div style="font-weight:700;">总计: ${d.enemyTotal}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            display.innerHTML = `
+                <div class="result-content">
+                    <div class="result-icon">${result.icon}</div>
+                    <div class="result-text">${result.outcome}</div>
+                    <div class="result-detail">${result.message} - ${modeNames[result.mode]}</div>
+                    <div class="result-stats">
+                        <div class="result-stat">
+                            <span class="label">投骰</span>
+                            <span class="value">${result.roll}</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="label">总计</span>
+                            <span class="value">${result.total}</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="label">目标</span>
+                            <span class="value">${result.target}</span>
+                        </div>
+                        <div class="result-stat">
+                            <span class="label">余量</span>
+                            <span class="value" style="color: ${result.margin >= 0 ? 'var(--acu-success)' : 'var(--acu-danger)'}">${result.margin > 0 ? '+' : ''}${result.margin}</span>
+                        </div>
+                    </div>
+                    ${detailsHtml}
+                </div>
+            `;
+        }
+
+        function addHistory(result) {
+            history.unshift(result);
+            if (history.length > 10) history.pop();
+
+            const log = document.getElementById('historyLog');
+            log.style.display = 'block';
+
+            const items = log.querySelectorAll('.history-item');
+            items.forEach(item => item.remove());
+
+            history.forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="roll">d20=${h.roll} → ${h.total}</span>
+                    <span class="result ${h.success ? 'success' : 'failure'}">${h.success ? '成功' : '失败'}</span>
+                `;
+                log.appendChild(item);
+            });
+        }
+
+        // Scroll Animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
