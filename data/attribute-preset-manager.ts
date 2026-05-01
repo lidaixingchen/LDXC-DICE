@@ -5,6 +5,7 @@
  */
 
 import type { LevelPresetConfig } from './attribute-presets';
+import { storageSyncBus } from '../utils/storage-sync';
 import { AIDM_ATTRIBUTE_PRESET } from './attribute-presets';
 import { compareVersion } from '../utils/helpers';
 
@@ -131,6 +132,15 @@ const STORAGE_KEY_PRESETS_V2 = 'acu_attribute_presets_v2';
 
 export class AttributePresetManager {
   private cache: StoredAttributePreset[] | null = null;
+
+  constructor() {
+    storageSyncBus.register(STORAGE_KEY_PRESETS, () => {
+      this.cache = null;
+    });
+    storageSyncBus.register(STORAGE_KEY_ACTIVE_PRESET, () => {
+      this.cache = null;
+    });
+  }
 
   private save(presets: StoredAttributePreset[]): void {
     try {

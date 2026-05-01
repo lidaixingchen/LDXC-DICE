@@ -1,3 +1,5 @@
+import { storageSyncBus } from '../utils/storage-sync';
+
 export interface DiceSystemSettings {
   general: GeneralSettings;
   display: DisplaySettings;
@@ -266,9 +268,13 @@ export class SettingsManager {
   constructor() {
     this.settings = this.loadFromStorage();
     this.setupAutoSave();
+    storageSyncBus.register(SETTINGS_STORAGE_KEY, () => {
+      this.settings = this.loadFromStorage();
+      this.notifyChange();
+    });
   }
 
-  private loadFromStorage(): DiceSystemSettings {
+  loadFromStorage(): DiceSystemSettings {
     const legacyConfig = this.readLegacyUiConfig();
 
     try {

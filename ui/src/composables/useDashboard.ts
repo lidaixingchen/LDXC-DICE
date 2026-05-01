@@ -1,5 +1,6 @@
 import { ref, computed, readonly } from 'vue';
 import { getDatabaseApi } from '../services/host-bridge';
+import { storageSyncBus } from '@utils/storage-sync';
 import type {
   DashboardData,
   DashboardPlayer,
@@ -99,6 +100,13 @@ const isVisible = ref(false);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const allTables = ref<{ key: string; name: string }[]>([]);
+
+storageSyncBus.register(CHANGES_STORAGE_KEY, () => {
+  loadChanges();
+});
+storageSyncBus.register(DASHBOARD_VISIBLE_KEY, (newValue) => {
+  isVisible.value = newValue === 'true';
+});
 
 function getTableData(options?: { silent?: boolean }): Record<string, any> | null {
   const api = getDatabaseApi();

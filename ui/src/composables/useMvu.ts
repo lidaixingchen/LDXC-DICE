@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { getTopWindow } from '@utils/host-environment';
 import { getDatabaseApi } from '../services/host-bridge';
+import { storageSyncBus } from '@utils/storage-sync';
 import type { MvuData, MvuPanelState, MvuVariable, NumericVariable } from '../types/mvu';
 
 const MVU_NUMERIC_MODE_KEY = 'acu_mvu_numeric_mode';
@@ -380,6 +381,24 @@ function initMvu(): void {
 
   loadSavedState();
   refresh();
+
+  storageSyncBus.register(MVU_NUMERIC_MODE_KEY, (newValue) => {
+    panelState.value.numericMode = newValue === 'true';
+  });
+  storageSyncBus.register(MVU_VISIBLE_LEVELS_KEY, (newValue) => {
+    if (newValue) {
+      try { panelState.value.visibleLevels = JSON.parse(newValue); } catch {}
+    }
+  });
+  storageSyncBus.register(MVU_PANEL_STATE_KEY, (newValue) => {
+    if (newValue) {
+      try {
+        const parsed = JSON.parse(newValue);
+        panelState.value.height = parsed.height ?? 400;
+        panelState.value.position = parsed.position ?? { x: 20, y: 80 };
+      } catch {}
+    }
+  });
 
   if (typeof window !== 'undefined') {
     window.addEventListener('acu-data-updated', handleDataUpdated);

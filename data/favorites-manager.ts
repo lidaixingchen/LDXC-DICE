@@ -1,4 +1,5 @@
 import type { AdvancedDicePreset } from '../core/types';
+import { storageSyncBus } from '../utils/storage-sync';
 
 export interface FavoriteItem {
   id: string;
@@ -58,9 +59,15 @@ export class FavoritesManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(FAVORITES_STORAGE_KEY, () => {
+      this.loadFromStorage();
+    });
+    storageSyncBus.register(FAVORITE_GROUPS_STORAGE_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
       if (storedFavorites) {

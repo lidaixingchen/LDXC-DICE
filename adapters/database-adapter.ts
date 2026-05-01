@@ -42,6 +42,11 @@ export interface DatabaseAdapter {
   getPrimaryKey(tableName: string): string | null;
   getSheetKeyByTableName(tableName: string): string | null;
   findRowIndexByPrimaryKey(sheetKey: string, tableName: string, primaryKeyValue: string): number | null;
+  resolveRowContentByPrimaryKey(
+    sheetKey: string,
+    tableName: string,
+    primaryKeyValue: string,
+  ): { rowIndex: number; row: (string | number | null)[] } | null;
   getLockState(sheetKey: string): DatabaseLockState | null;
   updateAttribute(
     characterName: string,
@@ -160,6 +165,45 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
       const row = sheet.content[i];
       if (row && String(row[pkIndex]) === String(actualValue)) {
         return i - 1;
+      }
+    }
+
+    return null;
+  }
+
+  resolveRowContentByPrimaryKey(
+    sheetKey: string,
+    tableName: string,
+    primaryKeyValue: string,
+  ): { rowIndex: number; row: (string | number | null)[] } | null {
+    const data = this.getTableData();
+    if (!data) return null;
+
+    const sheet = data[sheetKey];
+    if (!sheet?.content || sheet.content.length < 2) return null;
+
+    const headers = sheet.content[0] as string[];
+    const pkField = this.getPrimaryKey(tableName);
+
+    if (pkField === null) {
+      return primaryKeyValue === '_row_0' ? { rowIndex: 0, row: sheet.content[1] } : null;
+    }
+
+    if (!pkField) return null;
+
+    const pkIndex = headers.indexOf(pkField);
+    if (pkIndex === -1) return null;
+
+    let actualValue = primaryKeyValue;
+    const eqIdx = primaryKeyValue.indexOf('=');
+    if (eqIdx !== -1) {
+      actualValue = primaryKeyValue.substring(eqIdx + 1);
+    }
+
+    for (let i = 1; i < sheet.content.length; i++) {
+      const row = sheet.content[i];
+      if (row && String(row[pkIndex]) === String(actualValue)) {
+        return { rowIndex: i - 1, row };
       }
     }
 
@@ -310,7 +354,9 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
 
     const lockState = this.getLockState(targetSheetKey);
     if (lockState) {
-      const isRowLocked = lockState.rows?.includes(targetRowIndex) ?? false;
+      const isRowLocked =
+        (lockState.rowKeys?.includes(characterName) ?? false) ||
+        (lockState.rows?.includes(targetRowIndex) ?? false);
       if (isRowLocked) {
         return { success: false, oldValue: 0, newValue: 0, error: `角色 ${characterName} 的整行已被锁定` };
       }

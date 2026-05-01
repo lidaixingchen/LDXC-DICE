@@ -5,6 +5,7 @@
  */
 
 import { AIDM_VALIDATION_PRESET } from './validation-presets';
+import { storageSyncBus } from '../utils/storage-sync';
 import type { ValidationRuleConfig, ValidationPreset } from './validation-presets';
 import { compareVersion } from '../utils/helpers';
 
@@ -23,6 +24,15 @@ export interface StoredValidationPreset {
 
 export class ValidationPresetManager {
   private cache: StoredValidationPreset[] | null = null;
+
+  constructor() {
+    storageSyncBus.register(STORAGE_KEY_PRESETS, () => {
+      this.cache = null;
+    });
+    storageSyncBus.register(STORAGE_KEY_ACTIVE_PRESET, () => {
+      this.cache = null;
+    });
+  }
 
   private save(presets: StoredValidationPreset[]): void {
     try {

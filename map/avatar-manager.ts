@@ -36,17 +36,31 @@ export interface AvatarPack {
   createdAt: number;
 }
 
+import { safeLocalStorageSet } from '../utils/safe-storage';
+import { storageSyncBus } from '../utils/storage-sync';
+
 const AVATARS_STORAGE_KEY = 'acu_dice_avatars';
 const CATEGORIES_STORAGE_KEY = 'acu_dice_avatar_categories';
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export class AvatarManager {
   private avatars: Map<string, Avatar> = new Map();
   private categories: Map<string, AvatarCategory> = new Map();
-  private maxAvatars: number = 500;
+  private maxAvatars: number = 100;
 
   constructor() {
     this.loadFromStorage();
     this.initializeDefaultCategories();
+    this.migrateThumbnails();
+
+    storageSyncBus.register(AVATARS_STORAGE_KEY, () => {
+      this.avatars.clear();
+      this.loadFromStorage();
+    });
+    storageSyncBus.register(CATEGORIES_STORAGE_KEY, () => {
+      this.categories.clear();
+      this.loadFromStorage();
+    });
   }
 
   private loadFromStorage(): void {
@@ -76,12 +90,52 @@ export class AvatarManager {
   }
 
   private saveToStorage(): void {
-    try {
-      localStorage.setItem(AVATARS_STORAGE_KEY, JSON.stringify(Array.from(this.avatars.values())));
-      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(Array.from(this.categories.values())));
-    } catch (e) {
-      console.warn('[AvatarManager] 保存头像数据失败:', e);
+    const avatarsJson = JSON.stringify(Array.from(this.avatars.values()));
+    const categoriesJson = JSON.stringify(Array.from(this.categories.values()));
+
+    if (!safeLocalStorageSet(AVATARS_STORAGE_KEY, avatarsJson)) {
+      const evictCount = Math.max(1, Math.floor(this.avatars.size * 0.2));
+      const evicted = this.evictLeastRecentlyUsed(evictCount);
+      console.warn(`[AvatarManager] 存储空间不足，已清理 ${evicted} 个旧头像`);
+      const retryJson = JSON.stringify(Array.from(this.avatars.values()));
+      if (!safeLocalStorageSet(AVATARS_STORAGE_KEY, retryJson)) {
+        console.error('[AvatarManager] 清理后仍无法保存，请手动减少头像数量');
+      }
     }
+
+    safeLocalStorageSet(CATEGORIES_STORAGE_KEY, categoriesJson);
+  }
+
+  private evictLeastRecentlyUsed(count: number): number {
+    const sorted = Array.from(this.avatars.values()).sort((a, b) => a.updatedAt - b.updatedAt);
+    let evicted = 0;
+    for (let i = 0; i < Math.min(count, sorted.length); i++) {
+      this.avatars.delete(sorted[i].id);
+      for (const category of this.categories.values()) {
+        const idx = category.avatarIds.indexOf(sorted[i].id);
+        if (idx >= 0) category.avatarIds.splice(idx, 1);
+      }
+      evicted++;
+    }
+    return evicted;
+  }
+
+  private migrateThumbnails(): void {
+    const toMigrate = Array.from(this.avatars.values()).filter(
+      a => a.image && !a.thumbnail && a.image.length > 10000,
+    );
+    if (toMigrate.length === 0) return;
+
+    Promise.all(
+      toMigrate.map(avatar =>
+        this.createThumbnail(avatar.image, 64).then(thumbnail => {
+          avatar.image = thumbnail;
+        }),
+      ),
+    ).then(() => {
+      this.saveToStorage();
+      console.log(`[AvatarManager] 迁移了 ${toMigrate.length} 个头像为缩略图`);
+    }).catch(() => {});
   }
 
   private initializeDefaultCategories(): void {
@@ -262,6 +316,9 @@ export class AvatarManager {
   }
 
   async loadImage(file: File): Promise<string> {
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`图片文件过大: ${(file.size / 1024 / 1024).toFixed(1)}MB (最大 5MB)`);
+    }
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
@@ -273,11 +330,12 @@ export class AvatarManager {
   async importFromImage(file: File, options: Partial<Avatar> = {}): Promise<Avatar | null> {
     try {
       const imageData = await this.loadImage(file);
+      const thumbnail = await this.createThumbnail(imageData, 64);
 
       return this.addAvatar({
         name: options.name || file.name.replace(/\.[^/.]+$/, ''),
         type: options.type || 'custom',
-        image: imageData,
+        image: thumbnail,
         size: options.size || { width: 50, height: 50 },
         color: options.color || '#89b4fa',
         tags: options.tags || [],

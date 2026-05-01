@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import { getSillyTavern } from '../services/host-bridge';
+import { storageSyncBus } from '@utils/storage-sync';
 
 const STORAGE_KEY_PREFIX = 'acu_bookmarks_v1_';
 const MAX_CONTEXTS = 20;
@@ -85,6 +86,10 @@ const bookmarks = ref<Record<string, Record<string, boolean>>>(loadBookmarks());
 watch(bookmarks, (newVal) => {
   saveBookmarks(newVal);
 }, { deep: true });
+
+storageSyncBus.register(getStorageKey(), () => {
+  bookmarks.value = loadBookmarks();
+});
 
 export function useBookmarks() {
   function isBookmarked(tableName: string, rowKey: string): boolean {

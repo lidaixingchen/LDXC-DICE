@@ -6,6 +6,7 @@ import type {
   MapPosition,
   DiceMap,
 } from './types';
+import { storageSyncBus } from '../utils/storage-sync';
 
 export interface InteractionContext {
   mapId: string;
@@ -46,6 +47,11 @@ export class InteractionEngine {
   constructor() {
     this.initializeDefaultHandlers();
     this.loadFromStorage();
+
+    storageSyncBus.register(INTERACTIONS_STORAGE_KEY, () => {
+      this.rules.clear();
+      this.loadFromStorage();
+    });
   }
 
   private initializeDefaultHandlers(): void {

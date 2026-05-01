@@ -1,3 +1,5 @@
+import { storageSyncBus } from '../utils/storage-sync';
+
 const BOOKMARKS_STORAGE_KEY = 'acu_dice_bookmarks';
 
 export type BookmarkType = 'preset' | 'table' | 'variable' | 'map' | 'settings' | 'custom';
@@ -43,9 +45,12 @@ export class BookmarkManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(BOOKMARKS_STORAGE_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(BOOKMARKS_STORAGE_KEY);
       if (stored) {

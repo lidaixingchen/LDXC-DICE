@@ -279,6 +279,7 @@ export interface TableData {
 
 export interface DatabaseLockState {
   rows?: number[];
+  rowKeys?: string[];
   cells?: string[];
 }
 

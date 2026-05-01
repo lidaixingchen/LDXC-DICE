@@ -1,4 +1,5 @@
 import type { RegexRule, RegexRuleCategory, TransformOptions } from '../core/validation/regex-engine';
+import { storageSyncBus } from '../utils/storage-sync';
 import { regexEngine } from '../core/validation/regex-engine';
 
 const REGEX_PRESETS_KEY = 'acu_regex_presets';
@@ -43,9 +44,15 @@ export class RegexRuleManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(REGEX_PRESETS_KEY, () => {
+      this.loadFromStorage();
+    });
+    storageSyncBus.register(CURRENT_REGEX_PRESET_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(REGEX_PRESETS_KEY);
       if (stored) {

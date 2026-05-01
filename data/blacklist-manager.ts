@@ -1,3 +1,5 @@
+import { storageSyncBus } from '../utils/storage-sync';
+
 const BLACKLIST_STORAGE_KEY = 'acu_variable_blacklist';
 
 export interface BlacklistEntry {
@@ -26,9 +28,12 @@ export class BlacklistManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(BLACKLIST_STORAGE_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(BLACKLIST_STORAGE_KEY);
       if (stored) {

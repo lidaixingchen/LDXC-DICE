@@ -1,4 +1,5 @@
 import type { MapInteraction, MapInteractionAction, MapInteractionTrigger } from '../map/types';
+import { storageSyncBus } from '../utils/storage-sync';
 import { interactionEngine } from '../map/interaction-engine';
 
 const INTERACTION_PRESETS_KEY = 'acu_interaction_presets';
@@ -103,9 +104,12 @@ export class InteractionRuleManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(INTERACTION_PRESETS_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(INTERACTION_PRESETS_KEY);
       if (stored) {

@@ -4,6 +4,8 @@ interface AttributeInfo {
   name: string;
   value: number;
   tableName?: string;
+  sheetKey?: string;
+  pkValue?: string;
   rowIndex?: number;
   colIndex?: number;
 }
@@ -44,8 +46,23 @@ export class AttributeManager {
     aliasCandidates?: string[],
   ): Promise<AttributeInfo | null> {
     const cacheKey = `${characterName}.${attrName}`;
-    if (this.attributeCache.has(cacheKey)) {
-      return this.attributeCache.get(cacheKey) || null;
+    const cached = this.attributeCache.get(cacheKey);
+    if (cached && cached.sheetKey && cached.pkValue && cached.colIndex !== undefined) {
+      const resolved = this.dbAdapter.resolveRowContentByPrimaryKey(
+        cached.sheetKey,
+        cached.tableName || '',
+        cached.pkValue,
+      );
+      if (resolved && resolved.row[cached.colIndex] !== undefined) {
+        const rawValue = resolved.row[cached.colIndex];
+        const value = typeof rawValue === 'number' ? rawValue : parseFloat(String(rawValue || '0'));
+        return {
+          ...cached,
+          value: isNaN(value) ? 0 : value,
+          rowIndex: resolved.rowIndex,
+        };
+      }
+      this.attributeCache.delete(cacheKey);
     }
 
     const data = this.dbAdapter.getTableData();
@@ -98,6 +115,8 @@ export class AttributeManager {
               name: searchName,
               value: isNaN(value) ? 0 : value,
               tableName: sheet.name,
+              sheetKey,
+              pkValue: characterName,
               rowIndex: i - 1,
               colIndex,
             };
@@ -149,6 +168,8 @@ export class AttributeManager {
               name: header,
               value,
               tableName: sheet.name,
+              sheetKey,
+              pkValue: characterName,
               rowIndex: i - 1,
               colIndex,
             });
@@ -288,6 +309,8 @@ export class AttributeManager {
       name: resolvedAttrName,
       value: newValue,
       tableName: data[targetSheetKey].name,
+      sheetKey: targetSheetKey,
+      pkValue: characterName,
       rowIndex: targetRowIndex,
       colIndex: targetColIndex,
     });

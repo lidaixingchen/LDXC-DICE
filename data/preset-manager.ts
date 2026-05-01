@@ -1,4 +1,5 @@
 import type { AdvancedDicePreset, OutcomeLevel } from '../core/types';
+import { storageSyncBus } from '../utils/storage-sync';
 import { PRESET_FORMAT_VERSION } from '../core/types';
 import { validatePreset, type ValidationResult } from '../core/validation';
 import { loadPresetFromJson, type ImportResult } from '../presets/advanced-preset-loader';
@@ -14,13 +15,16 @@ export class PresetManager {
 
   constructor() {
     this.loadFromStorage();
+    storageSyncBus.register(PRESETS_STORAGE_KEY, () => {
+      this.loadFromStorage();
+    });
   }
 
   setValidationEnabled(enabled: boolean): void {
     this.validationEnabled = enabled;
   }
 
-  private loadFromStorage(): void {
+  loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(PRESETS_STORAGE_KEY);
       if (stored) {

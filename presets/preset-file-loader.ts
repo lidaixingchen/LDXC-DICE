@@ -1,6 +1,7 @@
 import type { AdvancedDicePreset } from '../core/types';
 import { presetManager } from '../data/preset-manager';
 import { loadPresetFromJson } from './advanced-preset-loader';
+import { storageSyncBus } from '../utils/storage-sync';
 
 const PRESET_FILES_STORAGE_KEY = 'acu_loaded_preset_files';
 
@@ -17,6 +18,11 @@ export class PresetFileLoader {
 
   constructor() {
     this.loadFromStorage();
+
+    storageSyncBus.register(PRESET_FILES_STORAGE_KEY, () => {
+      this.loadedFiles.clear();
+      this.loadFromStorage();
+    });
   }
 
   private loadFromStorage(): void {

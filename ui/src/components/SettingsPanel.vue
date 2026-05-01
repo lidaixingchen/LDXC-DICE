@@ -11,7 +11,7 @@ import {
 import { validationPresetManager } from '@data/validation-preset-manager';
 import type { ValidationRuleConfig } from '@data/validation-presets';
 import { groupErrorsByTable, validateAllData, type ValidationError, type RawData } from '@data/validation-executor';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 import AttributeRuleManager from './AttributeRuleManager.vue';
 import BlacklistManager from './BlacklistManager.vue';
@@ -466,11 +466,19 @@ function openAdvancedManager(type: string) {
   }
 }
 
+let unsubscribeSettings: (() => void) | null = null;
+
 onMounted(() => {
   if (props.requestedSection) activeSection.value = props.requestedSection;
-  settingsManager.onChange(syncAll);
+  unsubscribeSettings = settingsManager.onChange(syncAll);
   loadValidationPresets();
   loadRegexPresets();
+});
+
+onUnmounted(() => {
+  if (unsubscribeSettings) {
+    unsubscribeSettings();
+  }
 });
 </script>
 
