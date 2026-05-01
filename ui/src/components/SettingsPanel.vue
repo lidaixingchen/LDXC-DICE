@@ -14,6 +14,9 @@ import { groupErrorsByTable, validateAllData, type ValidationError, type RawData
 import { computed, onMounted, ref } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 import AttributeRuleManager from './AttributeRuleManager.vue';
+import BlacklistManager from './BlacklistManager.vue';
+import BookmarkManager from './BookmarkManager.vue';
+import DebugConsole from './DebugConsole.vue';
 import InteractionManager from './InteractionManager.vue';
 import PresetManager from './PresetManager.vue';
 import RegexManager from './RegexManager.vue';

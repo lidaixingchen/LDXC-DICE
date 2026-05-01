@@ -264,7 +264,7 @@ const levelProgress = computed(() => {
   if (!data) return null;
   
   const baseAttrs = playerInfo.value?.baseAttrs || [];
-  const totalAttrs = baseAttrs.reduce((sum, attr) => sum + Number(attr.value) || 0, 0);
+  const totalAttrs = baseAttrs.reduce((sum, attr) => sum + (Number(attr.value) || 0), 0);
   
   const progress = Math.min(100, Math.max(0, 
     ((totalAttrs - data.minTotal) / (data.maxTotal - data.minTotal)) * 100

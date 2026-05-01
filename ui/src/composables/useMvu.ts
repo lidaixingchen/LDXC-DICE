@@ -370,6 +370,10 @@ function setPosition(x: number, y: number): void {
 
 let mvuInitialized = false;
 
+function handleDataUpdated(): void {
+  refresh();
+}
+
 function initMvu(): void {
   if (mvuInitialized) return;
   mvuInitialized = true;
@@ -378,9 +382,15 @@ function initMvu(): void {
   refresh();
 
   if (typeof window !== 'undefined') {
-    window.addEventListener('acu-data-updated', () => {
-      refresh();
-    });
+    window.addEventListener('acu-data-updated', handleDataUpdated);
+  }
+}
+
+function destroyMvu(): void {
+  if (!mvuInitialized) return;
+  mvuInitialized = false;
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('acu-data-updated', handleDataUpdated);
   }
 }
 
@@ -406,5 +416,6 @@ export function useMvu() {
     restore,
     setHeight,
     setPosition,
+    destroy: destroyMvu,
   };
 }

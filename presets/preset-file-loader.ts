@@ -216,3 +216,4 @@ export const presetFileLoader = new PresetFileLoader();
 export async function initializePresetFiles(): Promise<void> {
   // 目前无内置预设文件需要加载，保留函数以备将来扩展
   // 加载流程：从 defaultPresets 数组读取 JSON 内容并注册到 presetManager
+}

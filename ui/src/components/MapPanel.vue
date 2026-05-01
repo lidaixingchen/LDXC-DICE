@@ -199,6 +199,8 @@ function handleInteract(worldPos: { x: number; y: number }): void {
       console.log('[MapPanel] 交互处理结果:', result);
       render();
     }
+  }).catch((err: unknown) => {
+    console.warn('[MapPanel] 交互处理失败:', err);
   });
 }
 
