@@ -165,15 +165,15 @@ const marginText = computed(() => {
 .acu-result-crit-success {
   border-color: var(--acu-warning);
   background: linear-gradient(135deg, rgba(var(--acu-accent-rgb), 0.1), rgba(var(--acu-warning-rgb), 0.1));
-  .acu-result-badge { background: var(--acu-warning); color: #000; box-shadow: 0 0 15px var(--acu-warning); }
+  .acu-result-badge { background: var(--acu-warning); color: var(--acu-button-text-on-accent, #000); box-shadow: 0 0 15px var(--acu-warning); }
   .acu-result-outcome { color: var(--acu-warning); text-shadow: 0 0 8px rgba(var(--acu-warning-rgb), 0.5); }
 }
 
 .acu-result-crit-failure {
-  border-color: #ff0000;
-  background: rgba(255, 0, 0, 0.05);
-  .acu-result-badge { background: #ff0000; color: #fff; animation: acu-shake 0.5s infinite; }
-  .acu-result-outcome { color: #ff0000; }
+  border-color: var(--acu-error-text, #ff0000);
+  background: rgba(var(--acu-danger-rgb, 255, 0, 0), 0.05);
+  .acu-result-badge { background: var(--acu-error-text, #ff0000); color: var(--acu-button-text-on-accent, #fff); animation: acu-shake 0.5s infinite; }
+  .acu-result-outcome { color: var(--acu-error-text, #ff0000); }
 }
 
 @keyframes acu-shake {

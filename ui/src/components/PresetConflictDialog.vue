@@ -87,7 +87,7 @@ function handleConfirm(): void {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 31300;
+  z-index: var(--acu-z-popover, 31200);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -128,7 +128,7 @@ function handleConfirm(): void {
 
 .acu-warning-icon {
   font-size: 36px;
-  color: #f39c12;
+  color: var(--acu-warning-text, #f39c12);
   margin-bottom: 8px;
 }
 
@@ -205,7 +205,7 @@ function handleConfirm(): void {
 
 .acu-btn-confirm {
   background: var(--acu-primary, #6c8cff);
-  color: #fff;
+  color: var(--acu-button-text-on-accent, #fff);
 
   &:hover {
     background: var(--acu-primary-hover, #5a7ae6);

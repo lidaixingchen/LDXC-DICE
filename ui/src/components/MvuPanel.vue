@@ -184,11 +184,11 @@ onMounted(() => {
     }
 
     .new.up {
-      color: #10b981;
+      color: var(--acu-success-text, #10b981);
     }
 
     .new.down {
-      color: #ef4444;
+      color: var(--acu-error-text, #ef4444);
     }
 
     .curr {

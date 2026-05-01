@@ -77,21 +77,20 @@ const emit = defineEmits<{
 .acu-status-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
 .acu-status-item {
   padding: 5px 8px; border-radius: 4px; border-left: 3px solid; font-size: 10px;
-  &.status-buff { border-color: #27ae60; background: rgba(39, 174, 96, 0.08); }
-  &.status-debuff { border-color: #e74c3c; background: rgba(231, 76, 60, 0.08); }
-  &.status-dot { border-color: #f39c12; background: rgba(243, 156, 18, 0.08); }
-  &.status-control { border-color: #9b59b6; background: rgba(155, 89, 182, 0.08); }
-  &.status-shield { border-color: #3498db; background: rgba(52, 152, 219, 0.08); }
+  &.status-buff { border-color: var(--acu-success-text, #27ae60); background: rgba(var(--acu-success-rgb, 39, 174, 96), 0.08); }
+  &.status-debuff { border-color: var(--acu-error-text, #e74c3c); background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.08); }
+  &.status-dot { border-color: var(--acu-warning-text, #f39c12); background: rgba(var(--acu-warning-rgb, 243, 156, 18), 0.08); }
+  &.status-control { border-color: var(--acu-accent, #9b59b6); background: rgba(var(--acu-accent-rgb, 155, 89, 182), 0.08); }
+  &.status-shield { border-color: var(--acu-color-info, #3498db); background: rgba(52, 152, 219, 0.08); }
 }
 .acu-status-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .acu-status-name { font-weight: 700; color: var(--acu-text-main); }
-.acu-status-badge { font-size: 9px; padding: 0 4px; border-radius: 3px; &.weak { background: #95a5a6; color: white; } &.medium { background: #f39c12; color: white; } &.strong { background: #e74c3c; color: white; } }
+.acu-status-badge { font-size: 9px; padding: 0 4px; border-radius: 3px; &.weak { background: var(--acu-text-sub, #95a5a6); color: var(--acu-button-text-on-accent, white); } &.medium { background: var(--acu-warning-text, #f39c12); color: var(--acu-button-text-on-accent, white); } &.strong { background: var(--acu-error-text, #e74c3c); color: var(--acu-button-text-on-accent, white); } }
 .acu-status-type { font-size: 9px; color: var(--acu-text-sub); }
-.acu-status-remove { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; border: none; background: transparent; color: var(--acu-text-sub); cursor: pointer; font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center; &:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.15); } }
+.acu-status-remove { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; border: none; background: transparent; color: var(--acu-text-sub); cursor: pointer; font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center; &:hover { color: var(--acu-error-text, #e74c3c); background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.15); } }
 .acu-status-detail { font-size: 9px; color: var(--acu-text-sub); margin-top: 2px; padding-left: 4px; }
 .acu-status-add { margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--acu-border); .cols-5 { grid-template-columns: 1fr 70px 60px 50px 45px; gap: 3px; } .accent { background: var(--acu-accent); color: white; border-color: var(--acu-accent); &:hover { opacity: 0.85; } } }
 .acu-empty-hint { font-size: 11px; color: var(--acu-text-sub); opacity: 0.6; }
-.acu-tiny-btn { font-size: 10px; padding: 2px 6px; border: 1px solid var(--acu-border); background: var(--acu-bg-header); color: var(--acu-text-sub); border-radius: 4px; cursor: pointer; &:hover { border-color: var(--acu-accent); color: var(--acu-accent); } &.danger:hover { border-color: #e74c3c; color: #e74c3c; } &.accent { background: var(--acu-accent); color: white; border-color: var(--acu-accent); } }
 .acu-dice-input, .acu-dice-select { width: 100%; height: 28px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--acu-border); background: var(--acu-bg-header); color: var(--acu-text-main); font-size: 12px; outline: none; transition: border-color 0.15s; &:focus { border-color: var(--acu-accent); } }
 .acu-dice-form-row { display: grid; gap: 8px; }
 </style>

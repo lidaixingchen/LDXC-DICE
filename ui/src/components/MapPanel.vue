@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { mapManager, type DiceMap, type MapToken, type MapViewport, type MapTool, MAP_TOOLS } from '@map';
+import { THEME_COLORS } from '../utils/theme-utils';
 import { mapRenderer } from '@map/map-renderer';
 import { interactionEngine, type InteractionContext, type InteractionResult } from '@map/interaction-engine';
 
@@ -163,8 +164,8 @@ function handleTokenPlace(worldPos: { x: number; y: number }): void {
     position: snappedPos,
     size: { width: 50, height: 50 },
     rotation: 0,
-    color: '#89b4fa',
-    borderColor: '#1e1e2e',
+    color: THEME_COLORS.accent(),
+    borderColor: THEME_COLORS.bgPanel(),
     borderWidth: 2,
     opacity: 1,
     locked: false,
@@ -211,7 +212,7 @@ function drawPreview(endPos: { x: number; y: number }): void {
   if (!ctx) return;
 
   ctx.save();
-  ctx.strokeStyle = '#89b4fa';
+  ctx.strokeStyle = THEME_COLORS.accent();
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
 
@@ -244,8 +245,8 @@ function finishDrawing(endPos: { x: number; y: number }): void {
         type: 'rect',
         position: { x: Math.min(startPos.x, endPos.x), y: Math.min(startPos.y, endPos.y) },
         size: { width: Math.abs(endPos.x - startPos.x), height: Math.abs(endPos.y - startPos.y) },
-        color: '#89b4fa',
-        borderColor: '#89b4fa',
+        color: THEME_COLORS.accent(),
+        borderColor: THEME_COLORS.accent(),
         borderWidth: 2,
         opacity: 0.5,
         rotation: 0,
@@ -259,8 +260,8 @@ function finishDrawing(endPos: { x: number; y: number }): void {
         type: 'circle',
         position: { x: startPos.x - radius, y: startPos.y - radius },
         size: { width: radius * 2, height: radius * 2 },
-        color: '#89b4fa',
-        borderColor: '#89b4fa',
+        color: THEME_COLORS.accent(),
+        borderColor: THEME_COLORS.accent(),
         borderWidth: 2,
         opacity: 0.5,
         rotation: 0,

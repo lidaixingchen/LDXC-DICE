@@ -104,20 +104,19 @@ const generatedSkills = ref<GeneratedSkill[]>([]);
 }
 .acu-tool-content { min-height: 40px; }
 .acu-world-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-.acu-world-item { padding: 5px 8px; border-radius: 5px; border-left: 3px solid #9b59b6; background: rgba(155, 89, 182, 0.06); }
+.acu-world-item { padding: 5px 8px; border-radius: 5px; border-left: 3px solid var(--acu-accent, #9b59b6); background: rgba(var(--acu-accent-rgb, 155, 89, 182), 0.06); }
 .acu-world-header { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 10px; }
 .acu-world-name { font-weight: 700; color: var(--acu-text-main); }
-.acu-world-tier { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: #95a5a6; color: white; &.high { background: #27ae60; } &.low { background: #e74c3c; } }
-.acu-world-type { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.acu-world-tier { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: var(--acu-text-sub, #95a5a6); color: var(--acu-button-text-on-accent, white); &.high { background: var(--acu-success-text, #27ae60); } &.low { background: var(--acu-error-text, #e74c3c); } }
+.acu-world-type { font-size: 8px; padding: 1px 4px; border-radius: 3px; background: rgba(52, 152, 219, 0.2); color: var(--acu-color-info, #3498db); }
 .acu-world-diff { font-size: 9px; letter-spacing: -1px; }
 .acu-world-desc { font-size: 9px; color: var(--acu-text-sub); margin-top: 2px; padding-left: 4px; }
 .acu-save-slots { display: flex; flex-direction: column; gap: 4px; }
 .acu-save-slot { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--acu-text-main); }
 .acu-skill-list { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
-.acu-skill-item { padding: 4px 8px; border-radius: 4px; font-size: 9px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; &.active-skill { border-left: 3px solid #e67e22; background: rgba(230, 126, 34, 0.06); } &.passive-skill { border-left: 3px solid #3498db; background: rgba(52, 152, 219, 0.06); } }
-.acu-skill-badge { font-size: 7px; padding: 1px 4px; border-radius: 3px; font-weight: 700; .active-skill & { background: #e67e22; color: white; } .passive-skill & { background: #3498db; color: white; } }
+.acu-skill-item { padding: 4px 8px; border-radius: 4px; font-size: 9px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; &.active-skill { border-left: 3px solid var(--acu-warning-icon, #e67e22); background: rgba(var(--acu-warning-rgb, 230, 126, 34), 0.06); } &.passive-skill { border-left: 3px solid var(--acu-color-info, #3498db); background: rgba(52, 152, 219, 0.06); } }
+.acu-skill-badge { font-size: 7px; padding: 1px 4px; border-radius: 3px; font-weight: 700; .active-skill & { background: var(--acu-warning-icon, #e67e22); color: var(--acu-button-text-on-accent, white); } .passive-skill & { background: var(--acu-color-info, #3498db); color: var(--acu-button-text-on-accent, white); } }
 .acu-skill-name { font-weight: 700; color: var(--acu-text-main); }
 .acu-skill-effect { color: var(--acu-text-sub); font-size: 8px; }
-.acu-tiny-btn { font-size: 10px; padding: 2px 6px; border: 1px solid var(--acu-border); background: var(--acu-bg-header); color: var(--acu-text-sub); border-radius: 4px; cursor: pointer; &:hover { border-color: var(--acu-accent); color: var(--acu-accent); } &.accent { background: var(--acu-accent); color: white; border-color: var(--acu-accent); } }
 .acu-dice-select { height: 28px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--acu-border); background: var(--acu-bg-header); color: var(--acu-text-main); font-size: 12px; outline: none; }
 </style>

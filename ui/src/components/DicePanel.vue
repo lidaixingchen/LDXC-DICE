@@ -832,14 +832,14 @@ onMounted(() => {
 
 .acu-dice-result-value {
   font-size: 22px; font-weight: 900;
-  &.success { color: #2ecc71; text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
-  &.failure { color: #e74c3c; text-shadow: 0 0 10px rgba(231, 76, 60, 0.5); }
+  &.success { color: var(--acu-success-text, #2ecc71); text-shadow: 0 0 10px rgba(var(--acu-success-rgb, 46, 204, 113), 0.5); }
+  &.failure { color: var(--acu-error-text, #e74c3c); text-shadow: 0 0 10px rgba(var(--acu-danger-rgb, 231, 76, 60), 0.5); }
 }
 
 .acu-dice-result-badge {
   padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-  &.success { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; box-shadow: 0 2px 8px rgba(46, 204, 113, 0.4); }
-  &.failure { background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4); }
+  &.success { background: linear-gradient(135deg, var(--acu-success-text, #27ae60), var(--acu-success-text, #2ecc71)); color: var(--acu-button-text-on-accent, white); box-shadow: 0 2px 8px rgba(var(--acu-success-rgb, 46, 204, 113), 0.4); }
+  &.failure { background: linear-gradient(135deg, var(--acu-error-text, #c0392b), var(--acu-error-text, #e74c3c)); color: var(--acu-button-text-on-accent, white); box-shadow: 0 2px 8px rgba(var(--acu-danger-rgb, 231, 76, 60), 0.4); }
 }
 
 .acu-dice-retry-btn {

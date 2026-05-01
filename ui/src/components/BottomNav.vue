@@ -115,23 +115,23 @@ defineExpose({
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .acu-bottom-nav {
   position: fixed;
-  bottom: 20px;
+  bottom: var(--acu-bottom-offset, 20px);
   left: 50%;
   transform: translateX(-50%);
-  background: #f5f0e8;
-  border-radius: 16px;
+  background: var(--acu-bg-nav);
+  border-radius: var(--acu-radius-xl, 16px);
   padding: 12px 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--acu-shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.15));
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 99999;
+  gap: var(--acu-space-sm, 8px);
+  z-index: var(--acu-z-fixed, 1030);
   min-width: 600px;
   max-width: 90vw;
-  border: 1px solid #e0d8cc;
+  border: 1px solid var(--acu-border);
 }
 
 .acu-bottom-nav.collapsed {
@@ -158,9 +158,9 @@ defineExpose({
   gap: 6px;
   padding: 8px 14px;
   border: none;
-  border-radius: 10px;
-  background: #e8e2d9;
-  color: #5c5548;
+  border-radius: var(--acu-radius-lg, 10px);
+  background: var(--acu-btn-bg);
+  color: var(--acu-text-main);
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
@@ -168,13 +168,13 @@ defineExpose({
 }
 
 .acu-nav-btn:hover {
-  background: #ddd5c8;
+  background: var(--acu-btn-hover);
   transform: translateY(-1px);
 }
 
 .acu-nav-btn.active {
-  background: #8b7355;
-  color: #fff;
+  background: var(--acu-btn-active-bg);
+  color: var(--acu-btn-active-text);
 }
 
 .acu-nav-btn i {
@@ -186,16 +186,16 @@ defineExpose({
   justify-content: flex-end;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid #e0d8cc;
+  border-top: 1px solid var(--acu-border);
 }
 
 .acu-action-icon {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 8px;
-  background: #e8e2d9;
-  color: #7a7265;
+  border-radius: var(--acu-radius-md, 8px);
+  background: var(--acu-btn-bg);
+  color: var(--acu-text-sub);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -204,8 +204,8 @@ defineExpose({
 }
 
 .acu-action-icon:hover {
-  background: #ddd5c8;
-  color: #5c5548;
+  background: var(--acu-btn-hover);
+  color: var(--acu-text-main);
 }
 
 .acu-action-icon.rotate i {

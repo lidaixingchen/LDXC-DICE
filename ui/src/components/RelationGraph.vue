@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
+import { THEME_COLORS } from '../utils/theme-utils';
 import type { RelationNode, RelationEdge } from '../types/dashboard';
 
 const { getTableData, findTableByKeywords, parseRelationData } = useDashboard();
@@ -214,20 +215,20 @@ function drawGraph() {
     ctx.arc(pos.x, pos.y, isSel ? nodeRadius + 4 : nodeRadius, 0, 2 * Math.PI);
 
     if (isSel) {
-      ctx.fillStyle = '#89b4fa';
+      ctx.fillStyle = THEME_COLORS.accent();
     } else if (isConn) {
-      ctx.fillStyle = '#585b70';
+      ctx.fillStyle = THEME_COLORS.btnHover();
     } else {
-      ctx.fillStyle = '#313244';
+      ctx.fillStyle = THEME_COLORS.btnBg();
     }
     ctx.fill();
 
-    ctx.strokeStyle = isSel ? '#89b4fa' : isConn ? '#585b70' : '#45475a';
+    ctx.strokeStyle = isSel ? THEME_COLORS.accent() : isConn ? THEME_COLORS.btnHover() : THEME_COLORS.border();
     ctx.lineWidth = isSel ? 2.5 : 1.5;
     ctx.stroke();
 
     // 节点名称
-    ctx.fillStyle = isSel || isConn ? '#cdd6f4' : '#a6adc8';
+    ctx.fillStyle = isSel || isConn ? THEME_COLORS.textMain() : THEME_COLORS.textSub();
     ctx.font = `bold ${Math.max(10, Math.min(12, nodeRadius - 6))}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -239,7 +240,7 @@ function drawGraph() {
 
     // 选中节点标签
     if (isSel) {
-      ctx.fillStyle = '#cdd6f4';
+      ctx.fillStyle = THEME_COLORS.textMain();
       ctx.font = 'bold 11px sans-serif';
       ctx.textBaseline = 'top';
       ctx.fillText(node.name, pos.x, pos.y + nodeRadius + 8);
@@ -503,7 +504,9 @@ defineExpose({ show, hide, toggle });
   border: 1px solid var(--acu-border, #313244);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  z-index: 99999;
+  /* Teleported modal overlay: keep above page content by default, while
+     allowing applications to override the layer centrally via --acu-z-modal. */
+  z-index: var(--acu-z-modal, 31100);
   display: flex;
   flex-direction: column;
   overflow: hidden;

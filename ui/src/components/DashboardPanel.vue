@@ -9,7 +9,7 @@ const emit = defineEmits<{
 const { getTableData } = useDashboard();
 
 const activeMobileTab = ref<'player' | 'world' | 'items'>('player');
-const isMobile = ref(false);
+const isMobile = ref(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
 
 const COLLAPSED_STORAGE_KEY = 'acu-dashboard-collapsed';
 
@@ -69,18 +69,20 @@ function collapseAllSections() {
   saveCollapsedState();
 }
 
-function checkMobile() {
-  isMobile.value = window.innerWidth < 768;
+let mobileQuery: MediaQueryList | null = null;
+
+function onMobileChange(e: MediaQueryListEvent) {
+  isMobile.value = e.matches;
 }
 
 onMounted(() => {
   loadCollapsedState();
-  checkMobile();
-  window.addEventListener('resize', checkMobile);
+  mobileQuery = window.matchMedia('(max-width: 767px)');
+  mobileQuery.addEventListener('change', onMobileChange);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkMobile);
+  mobileQuery?.removeEventListener('change', onMobileChange);
 });
 
 const ATTR_MAX_VALUE = 20;
@@ -107,7 +109,7 @@ interface CombatState {
   playerShield: number;
 }
 
-const combat = inject<any>('aidmCombat');
+const combat = inject('aidmCombat') as { value: CombatState } | undefined;
 
 const data = computed(() => {
   const raw = getTableData();
@@ -127,7 +129,7 @@ const data = computed(() => {
   };
 });
 
-function parseAttrs(str: any) {
+function parseAttrs(str: unknown) {
   if (!str) return [];
   return String(str).split(/[;；]/).map(s => {
     const m = s.trim().match(/^([^:：]+)[:：]\s*(\d+)$/);
@@ -135,7 +137,7 @@ function parseAttrs(str: any) {
   }).filter(Boolean) as Array<{name: string, value: string}>;
 }
 
-function parseResources(str: any) {
+function parseResources(str: unknown) {
   if (!str) return [];
   return String(str).split(/[;；]/).map(s => {
     const m = s.trim().match(/^([^:：]+)[:：]?\s*(\d+)$/);
@@ -228,17 +230,32 @@ const worldLevel = computed(() => {
   return levelMatch ? levelMatch[1].toUpperCase() + '级' : level;
 });
 
-const LEVEL_COLORS: Record<string, string> = {
-  'F级': '#9ca3af',
-  'E级': '#22c55e',
-  'D级': '#3b82f6',
-  'C级': '#8b5cf6',
-  'B级': '#f59e0b',
-  'A级': '#ef4444',
-  'S级': '#ec4899',
-  'SS级': '#f97316',
-  'SSS级': '#ffd700'
+// 等级颜色通过 CSS 变量定义，支持主题切换
+const LEVEL_COLOR_VARS: Record<string, string> = {
+  'F级': '--acu-level-f',
+  'E级': '--acu-level-e',
+  'D级': '--acu-level-d',
+  'C级': '--acu-level-c',
+  'B级': '--acu-level-b',
+  'A级': '--acu-level-a',
+  'S级': '--acu-level-s',
+  'SS级': '--acu-level-ss',
+  'SSS级': '--acu-level-sss',
 };
+
+const LEVEL_COLOR_FALLBACKS: Record<string, string> = {
+  'F级': '#9ca3af', 'E级': '#22c55e', 'D级': '#3b82f6', 'C级': '#8b5cf6',
+  'B级': '#f59e0b', 'A级': '#ef4444', 'S级': '#ec4899', 'SS级': '#f97316', 'SSS级': '#ffd700',
+};
+
+function getLevelColor(level: string): string {
+  const varName = LEVEL_COLOR_VARS[level];
+  if (varName && typeof window !== 'undefined') {
+    const cssValue = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    if (cssValue) return cssValue;
+  }
+  return LEVEL_COLOR_FALLBACKS[level] || 'var(--acu-accent)';
+}
 
 const LEVEL_DATA: Record<string, { minTotal: number; maxTotal: number; maxSingle: number }> = {
   'F级': { minTotal: 30, maxTotal: 119, maxSingle: 30 },
@@ -251,10 +268,6 @@ const LEVEL_DATA: Record<string, { minTotal: number; maxTotal: number; maxSingle
   'SS级': { minTotal: 1110, maxTotal: 1379, maxSingle: 180 },
   'SSS级': { minTotal: 1380, maxTotal: 9999, maxSingle: 999 }
 };
-
-function getLevelColor(level: string): string {
-  return LEVEL_COLORS[level] || 'var(--acu-accent)';
-}
 
 const levelProgress = computed(() => {
   const level = playerInfo.value?.level || worldLevel.value;
@@ -1267,13 +1280,13 @@ const questList = computed(() => {
   border-left: 3px solid var(--acu-accent);
   
   &.active {
-    border-left-color: #f59e0b;
-    background: rgba(245, 158, 11, 0.05);
+    border-left-color: var(--acu-warning-text, #f59e0b);
+    background: rgba(var(--acu-warning-rgb, 245, 158, 11), 0.05);
   }
-  
+
   &.passive {
-    border-left-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.05);
+    border-left-color: var(--acu-accent, #8b5cf6);
+    background: rgba(var(--acu-accent-rgb, 139, 92, 246), 0.05);
   }
 }
 
@@ -1295,7 +1308,7 @@ const questList = computed(() => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #f59e0b;
+  color: var(--acu-warning-text, #f59e0b);
   
   i {
     font-size: 10px;
@@ -1323,28 +1336,7 @@ const questList = computed(() => {
   }
 }
 
-/* ========== 装备区 ========== */
-.acu-equip-grid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--acu-space-sm, 8px);
-}
-
-.acu-equip-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--acu-space-md, 12px);
-  padding: var(--acu-space-sm, 8px) var(--acu-space-md, 12px);
-  background: var(--acu-card-bg);
-  border: 1px solid var(--acu-border);
-  border-radius: var(--acu-radius-md, 6px);
-  transition: all 0.2s ease;
-  
-  &:hover {
-    border-color: var(--acu-accent);
-    background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.05);
-  }
-}
+/* ========== 装备区（已合并，避免重复定义） ========== */
 
 .acu-equip-slot {
   display: flex;
@@ -1699,11 +1691,11 @@ const questList = computed(() => {
   }
   
   &.acu-maxed {
-    color: #22c55e;
+    color: var(--acu-success-text, #22c55e);
     font-weight: 500;
-    
+
     i {
-      color: #22c55e;
+      color: var(--acu-success-text, #22c55e);
     }
   }
 }
@@ -1958,7 +1950,8 @@ const questList = computed(() => {
 
 .acu-hp-fill {
   height: 100%;
-  background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(90deg, var(--acu-error-text, #e74c3c) 0%, #c0392b 100%);
+  background: linear-gradient(90deg, var(--acu-error-text, #e74c3c) 0%, color-mix(in srgb, var(--acu-error-text, #e74c3c) 80%, black) 100%);
   transition: width 0.3s ease;
   border-radius: 5px;
 }
@@ -1968,7 +1961,8 @@ const questList = computed(() => {
   top: 0;
   right: 0;
   height: 100%;
-  background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+  background: linear-gradient(90deg, var(--acu-color-info, #3498db) 0%, #2980b9 100%);
+  background: linear-gradient(90deg, var(--acu-color-info, #3498db) 0%, color-mix(in srgb, var(--acu-color-info, #3498db) 80%, black) 100%);
   transition: width 0.3s ease;
   border-radius: 5px;
 }
@@ -1978,7 +1972,7 @@ const questList = computed(() => {
   align-items: center;
   gap: 2px;
   font-size: 8px;
-  color: #3498db;
+  color: var(--acu-color-info, #3498db);
   margin-top: 1px;
   
   i { font-size: 7px; }
@@ -2036,24 +2030,13 @@ const questList = computed(() => {
 
 .acu-enemy-hp-fill {
   height: 100%;
-  background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(90deg, var(--acu-error-text, #e74c3c) 0%, color-mix(in srgb, var(--acu-error-text, #e74c3c) 80%, black) 100%);
   transition: width 0.3s ease;
 }
 
 /* 状态效果样式已移除 */
 
 /* 按钮样式 */
-.acu-tiny-btn {
-  padding: 2px 6px;
-  border: none;
-  border-radius: 3px;
-  background: var(--acu-btn-bg);
-  color: var(--acu-text-main);
-  cursor: pointer;
-  font-size: 9px;
-  margin-left: 4px;
-  transition: all 0.2s;
-}
 
 .acu-tiny-btn:hover {
   background: var(--acu-btn-hover);
@@ -2248,7 +2231,12 @@ const questList = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--acu-table-hover);
+  }
+
   i { font-size: 9px; opacity: 0.4; }
 }
 
@@ -2291,22 +2279,22 @@ const questList = computed(() => {
 /* ========== 战斗状态视觉区分 ========== */
 .acu-dashboard.acu-in-combat {
   .acu-player-core {
-    border-color: #ef4444;
+    border-color: var(--acu-error-text, #ef4444);
     animation: acuCombatPulse 2s ease infinite;
   }
-  
+
   .acu-player-avatar {
-    border-color: #ef4444;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: var(--acu-error-text, #ef4444);
+    background: linear-gradient(135deg, var(--acu-error-text, #ef4444) 0%, color-mix(in srgb, var(--acu-error-text, #ef4444) 85%, black) 100%);
   }
 }
 
 @keyframes acuCombatPulse {
-  0%, 100% { 
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(var(--acu-danger-rgb, 239, 68, 68), 0.2);
   }
-  50% { 
-    box-shadow: 0 4px 24px rgba(239, 68, 68, 0.4);
+  50% {
+    box-shadow: 0 4px 24px rgba(var(--acu-danger-rgb, 239, 68, 68), 0.4);
   }
 }
 

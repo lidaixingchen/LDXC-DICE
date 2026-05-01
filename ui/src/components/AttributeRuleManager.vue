@@ -610,7 +610,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 32000;
+  z-index: var(--acu-z-modal-backdrop, 31010);
 }
 
 .acu-modal {

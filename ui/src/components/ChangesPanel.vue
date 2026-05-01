@@ -126,9 +126,9 @@ function handleAction(action: string) {
 }
 
 .acu-change-badge { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: white; }
-.acu-change-modified .acu-change-badge { background: #3b82f6; }
-.acu-change-added .acu-change-badge { background: #10b981; }
-.acu-change-deleted .acu-change-badge { background: #ef4444; }
+.acu-change-modified .acu-change-badge { background: var(--acu-color-info, #3b82f6); }
+.acu-change-added .acu-change-badge { background: var(--acu-success-text, #10b981); }
+.acu-change-deleted .acu-change-badge { background: var(--acu-error-text, #ef4444); }
 
 .acu-change-info { 
   flex: 1; display: flex; flex-direction: column; gap: 2px;

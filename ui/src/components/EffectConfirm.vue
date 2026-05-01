@@ -56,11 +56,11 @@ function handleCancel(): void {
 .acu-effect-confirm-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100000;
+  z-index: var(--acu-z-modal-backdrop, 31010);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--acu-overlay-bg, rgba(0, 0, 0, 0.6));
   backdrop-filter: blur(4px);
 }
 

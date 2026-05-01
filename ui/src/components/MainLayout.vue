@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { settingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
+import { clearThemeColorCache } from '../utils/theme-utils';
 import { syncRulesToEngine } from '@core/validation/regex-sync';
 import { setTableDataProvider, type AttributeData } from '@core/crazy-mode';
 import { initCrazyModeTrigger } from '@core/crazy-mode-trigger';
@@ -206,7 +207,12 @@ function closeAllPanels() {
   showOpposedCheck.value = false;
 }
 
-function isNavItemActive(item: any): boolean {
+interface NavItemConfig {
+  key: string;
+  isTable?: boolean;
+}
+
+function isNavItemActive(item: NavItemConfig): boolean {
   if (item.isTable) return activeTab.value === item.key;
   if (item.key === '__dice__') return showDice.value;
   if (item.key === '__changes__') return showChanges.value;
@@ -360,6 +366,13 @@ watch(
   },
 );
 
+watch(
+  () => legacySettings.value.theme,
+  () => {
+    clearThemeColorCache();
+  },
+);
+
 onUnmounted(() => {
   if (tableRefreshTimer) clearTimeout(tableRefreshTimer);
   window.removeEventListener('acu-data-updated', loadTables);
@@ -387,7 +400,8 @@ onUnmounted(() => {
   >
     <!-- 1. 数据展示区 (基于绝对定位弹出) -->
     <div id="acu-data-area" class="acu-data-display" :class="{ visible: showDataDisplay && !isCollapsed }">
-      <KeepAlive>
+      <!-- Cache only the 3 most recently used panels to preserve quick switching without retaining every panel instance in memory. -->
+      <KeepAlive :max="3">
         <DashboardPanel v-if="showDashboard" @close="showDashboard = false" />
         <DicePanel
           v-else-if="showDice"
@@ -495,7 +509,7 @@ onUnmounted(() => {
 /* 核心容器：复刻原版 flex-direction */
 .acu-wrapper {
   position: relative;
-  z-index: 31000;
+  z-index: var(--acu-z-fixed, 31000);
   font-family: var(--acu-font-family, sans-serif);
   display: flex;
   flex-direction: column-reverse;
@@ -534,7 +548,7 @@ onUnmounted(() => {
   background: var(--acu-bg-panel);
   max-height: 80vh;
   overflow: hidden;
-  z-index: 31010;
+  z-index: var(--acu-z-modal-backdrop, 31010);
 }
 .acu-data-display.visible {
   display: flex;
@@ -579,7 +593,7 @@ onUnmounted(() => {
   padding: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 31005;
+  z-index: calc(var(--acu-z-fixed, 31000) + 5);
   &.collapsed {
     padding: 4px 8px;
   }
@@ -627,7 +641,7 @@ onUnmounted(() => {
   min-width: 320px;
   margin: 0 auto;
   position: relative;
-  z-index: 31001;
+  z-index: calc(var(--acu-z-fixed, 31000) + 1);
 
   /* 顶部停靠：将操作组移到上方 */
   &.acu-pos-top {
@@ -700,7 +714,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  z-index: 31005;
+  z-index: calc(var(--acu-z-fixed, 31000) + 5);
   &.acu-col-bar {
     width: var(--acu-card-width, 380px);
     justify-content: center;

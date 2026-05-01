@@ -49,7 +49,21 @@ const tables = computed(() => {
     .map(k => ({ key: k, name: rawData[k].name }));
 });
 
-const validationPresets = ref<any[]>([]);
+interface RegexPreset {
+  id: string;
+  name: string;
+}
+
+interface RegexRule {
+  id: string;
+  name: string;
+  pattern: string;
+  replacement: string;
+  enabled: boolean;
+  description: string;
+}
+
+const validationPresets = ref<{ id: string; name: string; rules: ValidationRuleConfig[] }[]>([]);
 const currentValidationPreset = ref<string>('');
 const validationRules = ref<ValidationRuleConfig[]>([]);
 const editingRule = ref<ValidationRuleConfig | null>(null);
@@ -58,10 +72,10 @@ const validationResults = ref<ValidationError[]>([]);
 const validationRunning = ref(false);
 const selectedErrorTable = ref<string | null>(null);
 
-const regexPresets = ref<any[]>([]);
+const regexPresets = ref<RegexPreset[]>([]);
 const currentRegexPreset = ref<string>('');
-const regexRules = ref<any[]>([]);
-const editingRegex = ref<any>(null);
+const regexRules = ref<RegexRule[]>([]);
+const editingRegex = ref<RegexRule | null>(null);
 const showRegexEditor = ref(false);
 
 const showPresetManager = ref(false);
@@ -335,18 +349,19 @@ function deleteRegexPreset(presetId: string) {
   }
 }
 
-function editRegexRule(rule: any) {
+function editRegexRule(rule: RegexRule) {
   editingRegex.value = { ...rule };
   showRegexEditor.value = true;
 }
 
 function saveRegexRule() {
-  if (!editingRegex.value) return;
-  const idx = regexRules.value.findIndex(r => r.id === editingRegex.value.id);
+  const rule = editingRegex.value;
+  if (!rule) return;
+  const idx = regexRules.value.findIndex(r => r.id === rule.id);
   if (idx >= 0) {
-    regexRules.value[idx] = editingRegex.value;
+    regexRules.value[idx] = rule;
   } else {
-    regexRules.value.push(editingRegex.value);
+    regexRules.value.push(rule);
   }
   localStorage.setItem(`acu_regex_rules_${currentRegexPreset.value}`, JSON.stringify(regexRules.value));
   showRegexEditor.value = false;
@@ -418,7 +433,7 @@ function importFromSillyTavern() {
       try {
         const stData = JSON.parse(ev.target?.result as string);
         const stRegex = stData.regex_scripts || [];
-        const converted = stRegex.map((r: any, i: number) => ({
+        const converted = stRegex.map((r: { scriptName?: string; findRegex?: string; replaceString?: string }, i: number) => ({
           id: `st_${Date.now()}_${i}`,
           name: r.scriptName || `酒馆正则 ${i + 1}`,
           pattern: r.findRegex || '',
@@ -801,7 +816,7 @@ onUnmounted(() => {
               @change="
                 e => {
                   const keys = new Set(settings.hiddenTableKeys);
-                  if ((e.target as any).checked) keys.delete(t.key);
+                  if ((e.target as HTMLInputElement).checked) keys.delete(t.key);
                   else keys.add(t.key);
                   updateLegacy({ hiddenTableKeys: [...keys] });
                 }
@@ -1136,7 +1151,8 @@ onUnmounted(() => {
   flex-direction: column;
   width: var(--acu-card-width, 380px); /* 强制统一 */
   min-width: 320px;
-  height: 500px;
+  height: 100%;
+  max-height: 500px;
   background: var(--acu-bg-panel);
 }
 
@@ -1177,7 +1193,8 @@ onUnmounted(() => {
 .acu-settings-main {
   padding: 12px;
   overflow-y: auto;
-  max-height: 450px;
+  flex: 1;
+  min-height: 0;
 }
 .acu-group-label {
   font-size: 10px;
@@ -1288,10 +1305,10 @@ onUnmounted(() => {
     border-color: var(--acu-accent);
   }
   &.danger {
-    border-color: #e74c3c;
-    color: #e74c3c;
+    border-color: var(--acu-error-text, #e74c3c);
+    color: var(--acu-error-text, #e74c3c);
     &:hover {
-      background: #ffebee;
+      background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
     }
   }
   &.special {
@@ -1324,10 +1341,10 @@ onUnmounted(() => {
     border-color: var(--acu-accent);
   }
   &.danger {
-    border-color: #e74c3c;
-    color: #e74c3c;
+    border-color: var(--acu-error-text, #e74c3c);
+    color: var(--acu-error-text, #e74c3c);
     &:hover {
-      background: #ffebee;
+      background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
     }
   }
 }
@@ -1384,8 +1401,8 @@ onUnmounted(() => {
       color: var(--acu-accent);
     }
     &.danger:hover {
-      background: #ffebee;
-      color: #e74c3c;
+      background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
+      color: var(--acu-error-text, #e74c3c);
     }
   }
 }
@@ -1432,22 +1449,23 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--acu-overlay-bg, rgba(0, 0, 0, 0.5));
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--acu-z-modal-backdrop, 31010);
 }
 
 .acu-modal {
   background: var(--acu-bg-panel);
-  border-radius: 8px;
+  border-radius: var(--acu-radius-lg, 8px);
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--acu-shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.3));
+  z-index: var(--acu-z-modal, 31100);
 }
 
 .acu-modal-header {
@@ -1568,8 +1586,8 @@ onUnmounted(() => {
 /* 验证结果样式 */
 .acu-validation-results {
   margin-top: 12px;
-  border: 1px solid #e74c3c;
-  border-radius: 6px;
+  border: 1px solid var(--acu-error-border, rgba(231, 76, 60, 0.5));
+  border-radius: var(--acu-radius-md, 6px);
   background: var(--acu-bg-header);
   overflow: hidden;
 }
@@ -1579,14 +1597,14 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: rgba(231, 76, 60, 0.1);
-  border-bottom: 1px solid #e74c3c;
+  background: var(--acu-error-bg, rgba(231, 76, 60, 0.1));
+  border-bottom: 1px solid var(--acu-error-border, rgba(231, 76, 60, 0.5));
 }
 
 .acu-validation-title {
   font-size: 12px;
   font-weight: 600;
-  color: #e74c3c;
+  color: var(--acu-error-text, #e74c3c);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1605,8 +1623,8 @@ onUnmounted(() => {
   border-radius: 4px;
   transition: all 0.2s;
   &:hover {
-    background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    background: var(--acu-error-bg, rgba(231, 76, 60, 0.1));
+    color: var(--acu-error-text, #e74c3c);
   }
 }
 
@@ -1644,7 +1662,7 @@ onUnmounted(() => {
 }
 
 .acu-error-count {
-  background: #e74c3c;
+  background: var(--acu-error-text, #e74c3c);
   color: white;
   font-size: 10px;
   font-weight: 600;
@@ -1702,7 +1720,7 @@ onUnmounted(() => {
 
 .acu-error-message {
   font-size: 11px;
-  color: #e74c3c;
+  color: var(--acu-error-text, #e74c3c);
   margin-bottom: 4px;
   line-height: 1.4;
 }

@@ -434,10 +434,10 @@ onMounted(() => {
   }
 
   &.danger {
-    color: #e74c3c;
+    color: var(--acu-error-text, #e74c3c);
     &:hover {
-      background: #ffebee;
-      border-color: #e74c3c;
+      background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
+      border-color: var(--acu-error-text, #e74c3c);
     }
   }
 }
@@ -543,8 +543,8 @@ onMounted(() => {
     }
 
     &.danger:hover {
-      background: #ffebee;
-      color: #e74c3c;
+      background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
+      color: var(--acu-error-text, #e74c3c);
     }
   }
 }
@@ -578,7 +578,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--acu-z-modal, 31100);
 }
 
 .acu-modal {
@@ -731,19 +731,19 @@ onMounted(() => {
 }
 
 .acu-test-matches {
-  color: #e74c3c;
+  color: var(--acu-error-text, #e74c3c);
 }
 
 .acu-test-non-matches {
-  color: #27ae60;
+  color: var(--acu-success-text, #27ae60);
   margin-top: 8px;
 }
 
 .acu-error-message {
-  color: #e74c3c;
+  color: var(--acu-error-text, #e74c3c);
   font-size: 12px;
   padding: 8px;
-  background: #ffebee;
+  background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
   border-radius: 4px;
 }
 

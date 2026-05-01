@@ -547,7 +547,7 @@ function exportTableJson(): void {
 
   &.active {
     background: var(--acu-accent, #89b4fa);
-    color: #1e1e2e;
+    color: var(--acu-text-main, #1e1e2e);
     border-color: var(--acu-accent, #89b4fa);
   }
 }
@@ -611,7 +611,7 @@ function exportTableJson(): void {
   border: none;
   border-radius: 4px;
   background: var(--acu-accent, #89b4fa);
-  color: #1e1e2e;
+  color: var(--acu-text-main, #1e1e2e);
   font-size: 11px;
   cursor: pointer;
 }

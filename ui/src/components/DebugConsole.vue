@@ -300,8 +300,8 @@ onUnmounted(() => {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--acu-bg-panel, #1e1e1e);
+  color: var(--acu-text-main, #d4d4d4);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 12px;
 }
@@ -311,13 +311,13 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  border-bottom: 1px solid #3c3c3c;
-  background: #252526;
+  border-bottom: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-bg-header, #252526);
 }
 
 .acu-panel-title {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--acu-text-main, #ffffff);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -328,19 +328,19 @@ onUnmounted(() => {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 3px;
-  background: #5a5a5a;
-  color: #999;
+  background: var(--acu-btn-bg, #5a5a5a);
+  color: var(--acu-text-sub, #999);
 
   &.enabled {
-    background: #1e4620;
-    color: #89d185;
+    background: var(--acu-success-bg, #1e4620);
+    color: var(--acu-success-text, #89d185);
   }
 }
 
 .acu-close-btn {
   background: transparent;
   border: none;
-  color: #999;
+  color: var(--acu-text-sub, #999);
   cursor: pointer;
   width: 28px;
   height: 28px;
@@ -349,7 +349,7 @@ onUnmounted(() => {
   justify-content: center;
   border-radius: 4px;
   &:hover {
-    background: #3c3c3c;
+    background: var(--acu-btn-bg, #3c3c3c);
     color: #fff;
   }
 }
@@ -358,16 +358,16 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid #3c3c3c;
-  background: #252526;
+  border-bottom: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-bg-header, #252526);
 }
 
 .acu-toolbar-btn {
   padding: 6px 12px;
   border-radius: 4px;
-  border: 1px solid #3c3c3c;
-  background: #3c3c3c;
-  color: #d4d4d4;
+  border: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-btn-bg, #3c3c3c);
+  color: var(--acu-text-main, #d4d4d4);
   cursor: pointer;
   font-size: 12px;
   display: flex;
@@ -375,22 +375,22 @@ onUnmounted(() => {
   gap: 6px;
 
   &:hover {
-    background: #4a4a4a;
+    background: var(--acu-btn-hover, #4a4a4a);
   }
 
   &.active {
-    background: #1e4620;
-    border-color: #89d185;
-    color: #89d185;
+    background: var(--acu-success-bg, #1e4620);
+    border-color: var(--acu-success-text, #89d185);
+    color: var(--acu-success-text, #89d185);
   }
 }
 
 .acu-filter-select {
   padding: 6px 8px;
   border-radius: 4px;
-  border: 1px solid #3c3c3c;
-  background: #3c3c3c;
-  color: #d4d4d4;
+  border: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-btn-bg, #3c3c3c);
+  color: var(--acu-text-main, #d4d4d4);
   font-size: 12px;
   cursor: pointer;
 }
@@ -400,13 +400,13 @@ onUnmounted(() => {
   height: 32px;
   padding: 0 12px;
   border-radius: 4px;
-  border: 1px solid #3c3c3c;
-  background: #3c3c3c;
-  color: #d4d4d4;
+  border: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-btn-bg, #3c3c3c);
+  color: var(--acu-text-main, #d4d4d4);
   font-size: 12px;
 
   &::placeholder {
-    color: #666;
+    color: var(--acu-text-sub, #666);
   }
 }
 
@@ -420,16 +420,16 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #3c3c3c;
+  border: 1px solid var(--acu-border, #3c3c3c);
 }
 
 .acu-panel-label {
   padding: 6px 12px;
-  background: #252526;
-  border-bottom: 1px solid #3c3c3c;
+  background: var(--acu-bg-header, #252526);
+  border-bottom: 1px solid var(--acu-border, #3c3c3c);
   font-size: 11px;
   font-weight: 600;
-  color: #999;
+  color: var(--acu-text-sub, #999);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -438,11 +438,11 @@ onUnmounted(() => {
 .acu-clear-btn {
   background: transparent;
   border: none;
-  color: #666;
+  color: var(--acu-text-sub, #666);
   cursor: pointer;
   font-size: 10px;
   &:hover {
-    color: #d4d4d4;
+    color: var(--acu-text-main, #d4d4d4);
   }
 }
 
@@ -458,26 +458,26 @@ onUnmounted(() => {
   margin-bottom: 2px;
 
   &.debug {
-    color: #9e9e9e;
+    color: var(--acu-text-sub, #9e9e9e);
   }
 
   &.info {
-    color: #d4d4d4;
+    color: var(--acu-text-main, #d4d4d4);
   }
 
   &.warn {
-    background: #3a2a1a;
-    color: #ff9800;
+    background: var(--acu-warning-bg, #3a2a1a);
+    color: var(--acu-warning-text, #ff9800);
   }
 
   &.error {
-    background: #3a1a1a;
-    color: #f44336;
+    background: var(--acu-error-bg, #3a1a1a);
+    color: var(--acu-error-text, #f44336);
   }
 }
 
 .acu-log-time {
-  color: #666;
+  color: var(--acu-text-sub, #666);
   margin-right: 8px;
 }
 
@@ -487,7 +487,7 @@ onUnmounted(() => {
 }
 
 .acu-log-source {
-  color: #569cd6;
+  color: var(--acu-accent, #569cd6);
   margin-right: 4px;
 }
 
@@ -498,7 +498,7 @@ onUnmounted(() => {
 .acu-log-data {
   margin: 4px 0 0 16px;
   padding: 8px;
-  background: #2d2d2d;
+  background: var(--acu-card-bg, #2d2d2d);
   border-radius: 4px;
   font-size: 11px;
   white-space: pre-wrap;
@@ -507,7 +507,7 @@ onUnmounted(() => {
 
 .acu-empty-logs {
   text-align: center;
-  color: #666;
+  color: var(--acu-text-sub, #666);
   padding: 20px;
 }
 
@@ -515,32 +515,32 @@ onUnmounted(() => {
   width: 350px;
   display: flex;
   flex-direction: column;
-  background: #1e1e1e;
+  background: var(--acu-bg-panel, #1e1e1e);
 }
 
 .acu-output-container {
   flex: 1;
   overflow-y: auto;
   padding: 8px;
-  background: #0d0d0d;
+  background: var(--acu-bg-nav, #0d0d0d);
 }
 
 .acu-output-line {
   padding: 2px 0;
   white-space: pre-wrap;
   word-break: break-all;
-  color: #d4d4d4;
+  color: var(--acu-text-main, #d4d4d4);
 }
 
 .acu-command-input {
   display: flex;
   align-items: center;
   padding: 8px;
-  background: #252526;
-  border-top: 1px solid #3c3c3c;
+  background: var(--acu-bg-header, #252526);
+  border: 1px solid var(--acu-border, #3c3c3c);
 
   .acu-prompt {
-    color: #89d185;
+    color: var(--acu-success-text, #89d185);
     margin-right: 8px;
     font-weight: 600;
   }
@@ -549,20 +549,20 @@ onUnmounted(() => {
     flex: 1;
     background: transparent;
     border: none;
-    color: #d4d4d4;
+    color: var(--acu-text-main, #d4d4d4);
     font-size: 12px;
     font-family: inherit;
     outline: none;
 
     &::placeholder {
-      color: #666;
+      color: var(--acu-text-sub, #666);
     }
   }
 }
 
 .acu-commands-panel {
-  border-top: 1px solid #3c3c3c;
-  background: #252526;
+  border: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-bg-header, #252526);
   max-height: 120px;
   overflow-y: auto;
 }
@@ -579,17 +579,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background: #3c3c3c;
+  background: var(--acu-btn-bg, #3c3c3c);
   border-radius: 4px;
   font-size: 11px;
 }
 
 .acu-command-name {
-  color: #569cd6;
+  color: var(--acu-accent, #569cd6);
   font-weight: 600;
 }
 
 .acu-command-desc {
-  color: #999;
+  color: var(--acu-text-sub, #999);
 }
 </style>

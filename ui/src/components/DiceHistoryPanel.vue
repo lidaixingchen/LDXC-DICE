@@ -262,7 +262,7 @@ function handleClear() {
 
   &:hover {
     background: rgba(255, 80, 80, 0.15);
-    color: #ff6b6b;
+    color: var(--acu-error-text, #ff6b6b);
     border-color: rgba(255, 80, 80, 0.3);
   }
 }
@@ -306,7 +306,7 @@ function handleClear() {
   font-size: 12px;
 
   &:hover {
-    color: #e74c3c;
+    color: var(--acu-error-text, #e74c3c);
     border-color: rgba(231, 76, 60, 0.3);
   }
 }
@@ -357,8 +357,8 @@ function handleClear() {
   border: 1px solid var(--acu-border, rgba(255,255,255,0.15));
   color: var(--acu-text-sub, #888);
 
-  &.check { border-color: rgba(52, 152, 219, 0.4); color: #5dade2; }
-  &.contest { border-color: rgba(155, 89, 182, 0.4); color: #bb8fce; }
+  &.check { border-color: rgba(52, 152, 219, 0.4); color: var(--acu-color-info, #5dade2); }
+  &.contest { border-color: rgba(155, 89, 182, 0.4); color: var(--acu-accent, #bb8fce); }
 }
 
 .history-title-text {
@@ -439,7 +439,7 @@ function handleClear() {
   font-size: 10px;
   cursor: pointer;
 
-  &:hover { color: #5dade2; border-color: rgba(52, 152, 219, 0.4); }
+  &:hover { color: var(--acu-color-info, #5dade2); border-color: rgba(52, 152, 219, 0.4); }
 }
 
 .history-detail-content {

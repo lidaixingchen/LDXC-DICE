@@ -294,7 +294,7 @@ defineEmits<{
 
   &:hover {
     background: rgba(255, 80, 80, 0.15);
-    color: #ff6b6b;
+    color: var(--acu-error-text, #ff6b6b);
     border-color: rgba(255, 80, 80, 0.3);
   }
 }
@@ -427,8 +427,8 @@ defineEmits<{
   }
 
   &.danger:hover:not(:disabled) {
-    border-color: #e74c3c;
-    color: #e74c3c;
+    border-color: var(--acu-error-text, #e74c3c);
+    color: var(--acu-error-text, #e74c3c);
     background: rgba(231, 76, 60, 0.1);
   }
 }
@@ -464,11 +464,11 @@ defineEmits<{
   &.primary {
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(52, 152, 219, 0.05));
     border-color: rgba(52, 152, 219, 0.25);
-    color: #5dade2;
+    color: var(--acu-color-info, #5dade2);
 
     &:hover {
       background: linear-gradient(135deg, rgba(52, 152, 219, 0.25), rgba(52, 152, 219, 0.1));
-      border-color: #5dade2;
+      border-color: var(--acu-color-info, #5dade2);
     }
   }
 }

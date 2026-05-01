@@ -128,20 +128,20 @@ const emit = defineEmits<{
   .acu-combat-round-badge {
     font-size: 11px;
     font-weight: 700;
-    color: #f39c12;
+    color: var(--acu-warning-text, #f39c12);
     padding: 2px 8px;
     border-radius: 10px;
-    background: rgba(243, 156, 18, 0.15);
+    background: rgba(var(--acu-warning-rgb, 243, 156, 18), 0.15);
   }
 }
 
 .acu-combat-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .acu-combat-bar-group { display: flex; flex-direction: column; gap: 2px; .acu-combat-bar-label { font-size: 10px; font-weight: 700; color: var(--acu-text-main); } }
-.acu-hp-bar { height: 12px; border-radius: 6px; overflow: hidden; background: rgba(231, 76, 60, 0.2); position: relative; &.enemy { background: rgba(231, 76, 60, 0.15); } }
-.acu-hp-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; &.player { background: linear-gradient(90deg, #27ae60, #2ecc71); } &.enemy { background: linear-gradient(90deg, #c0392b, #e74c3c); } }
+.acu-hp-bar { height: 12px; border-radius: 6px; overflow: hidden; background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.2); position: relative; &.enemy { background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.15); } }
+.acu-hp-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; &.player { background: linear-gradient(90deg, var(--acu-success-text, #27ae60), var(--acu-success-text, #2ecc71)); } &.enemy { background: linear-gradient(90deg, var(--acu-error-text, #c0392b), var(--acu-error-text, #e74c3c)); } }
 .acu-hp-text { font-size: 9px; color: var(--acu-text-sub); }
-.acu-shield-text { color: #3498db; font-weight: 700; }
-.acu-env-erosion { margin-top: 6px; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #e67e22; background: rgba(230, 126, 34, 0.1); border: 1px dashed rgba(230, 126, 34, 0.3); }
+.acu-shield-text { color: var(--acu-color-info, #3498db); font-weight: 700; }
+.acu-env-erosion { margin-top: 6px; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: var(--acu-warning-icon, #e67e22); background: rgba(var(--acu-warning-rgb, 230, 126, 34), 0.1); border: 1px dashed rgba(var(--acu-warning-rgb, 230, 126, 34), 0.3); }
 .acu-combat-actions { margin-top: 8px; padding: 6px; background: var(--acu-bg-header); border-radius: 6px; }
 .acu-action-row { margin-bottom: 6px; &:last-child { margin-bottom: 0; } }
 .acu-action-label { font-size: 10px; color: var(--acu-text-sub); margin-bottom: 4px; }
@@ -149,11 +149,10 @@ const emit = defineEmits<{
 .acu-action-btn {
   padding: 4px 10px; border-radius: 4px; border: 1px solid var(--acu-border); background: var(--acu-bg-main); color: var(--acu-text-main); font-size: 11px; cursor: pointer; transition: all 0.15s;
   &:disabled { opacity: 0.5; cursor: not-allowed; }
-  &.attack { border-color: #e74c3c; background: rgba(231, 76, 60, 0.1); color: #e74c3c; &:hover:not(:disabled) { background: rgba(231, 76, 60, 0.2); } }
-  &.skill { border-color: #3498db; background: rgba(52, 152, 219, 0.1); color: #3498db; &:hover:not(:disabled) { background: rgba(52, 152, 219, 0.2); } }
-  &.item { border-color: #27ae60; background: rgba(39, 174, 96, 0.1); color: #27ae60; &:hover:not(:disabled) { background: rgba(39, 174, 96, 0.2); } }
+  &.attack { border-color: var(--acu-error-text, #e74c3c); background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.1); color: var(--acu-error-text, #e74c3c); &:hover:not(:disabled) { background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.2); } }
+  &.skill { border-color: var(--acu-color-info, #3498db); background: rgba(52, 152, 219, 0.1); color: var(--acu-color-info, #3498db); &:hover:not(:disabled) { background: rgba(52, 152, 219, 0.2); } }
+  &.item { border-color: var(--acu-success-text, #27ae60); background: rgba(var(--acu-success-rgb, 39, 174, 96), 0.1); color: var(--acu-success-text, #27ae60); &:hover:not(:disabled) { background: rgba(var(--acu-success-rgb, 39, 174, 96), 0.2); } }
   span { font-size: 9px; opacity: 0.7; margin-left: 2px; }
 }
-.acu-tiny-btn { font-size: 10px; padding: 2px 6px; border: 1px solid var(--acu-border); background: var(--acu-bg-header); color: var(--acu-text-sub); border-radius: 4px; cursor: pointer; &:hover { border-color: var(--acu-accent); color: var(--acu-accent); } &.danger:hover { border-color: #e74c3c; color: #e74c3c; } &.accent { background: var(--acu-accent); color: white; border-color: var(--acu-accent); } }
 .acu-empty-hint { font-size: 11px; color: var(--acu-text-sub); opacity: 0.6; }
 </style>
