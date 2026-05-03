@@ -261,6 +261,35 @@
     font-size: var(--acu-font-xl);
     font-weight: bold;
     color: var(--acu-text-main);
+    flex: 1;
+    min-width: 0;
+}
+
+.acu-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--acu-space-xs);
+    flex-shrink: 0;
+}
+
+.acu-close-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--acu-radius-sm);
+    background: var(--acu-btn-bg);
+    color: var(--acu-text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+        background: var(--acu-btn-hover);
+        color: var(--acu-accent);
+    }
 }
 
 /* ========== 面板操作按钮 ========== */

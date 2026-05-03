@@ -67,17 +67,23 @@ function inlineCssAndInitPlugin(): Plugin {
 }
 
 function generateJsonPlugin(): Plugin {
+  let isWatchMode = false
+
   return {
     name: 'generate-json',
     enforce: 'post',
+    buildStart() {
+      isWatchMode = this.meta.watchMode as boolean
+    },
     closeBundle() {
+      if (isWatchMode) return
+
       const jsPath = resolve(__dirname, '../dist/stable.js');
       const distDir = resolve(__dirname, '../dist');
 
       if (fs.existsSync(jsPath)) {
         const jsContent = fs.readFileSync(jsPath, 'utf-8');
 
-        // 本地测试版本 - 直接嵌入代码
         const localJsonData = {
           id: 'acu-dice-system-2.0.0-local',
           name: 'AcuDice-骰子系统(本地)',
@@ -92,7 +98,6 @@ function generateJsonPlugin(): Plugin {
           'utf-8',
         );
 
-        // 远程部署版本 - 使用 import() 加载
         const remoteJsonData = {
           id: 'acu-dice-system-2.0.0',
           name: 'AcuDice-骰子系统',

@@ -8,7 +8,7 @@ const emit = defineEmits<{
 
 const { getTableData } = useDashboard();
 
-const activeMobileTab = ref<'player' | 'world' | 'items'>('player');
+const activeMobileTab = ref<'player' | 'items'>('player');
 const isMobile = ref(typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false);
 
 const COLLAPSED_STORAGE_KEY = 'acu-dashboard-collapsed';
@@ -17,8 +17,6 @@ const defaultCollapsedState: Record<string, boolean> = {
   baseAttrs: false,
   specialAttrs: false,
   skills: false,
-  locations: false,
-  npcs: false,
   items: false,
   equips: false,
   quests: false
@@ -120,8 +118,6 @@ const data = computed(() => {
   return {
     global: findT('全局'),
     player: findT('主角') || findT('玩家'),
-    npc: findT('角色') || findT('NPC'),
-    location: findT('地点') || findT('地图'),
     bag: findT('物品') || findT('背包') || findT('道具'),
     quest: findT('任务') || findT('备忘'),
     equip: findT('装备'),
@@ -357,45 +353,6 @@ const playerHP = computed(() => {
     };
   }
   return null;
-});
-
-const currentLocation = computed(() => {
-  const g = data.value?.global;
-  if (!g?.content) return '';
-  
-  const row = g.content[1] || [];
-  return row[2] || row[1] || '';
-});
-
-const locationList = computed(() => {
-  const loc = data.value?.location;
-  if (!loc?.content) return [];
-  
-  return loc.content.slice(1).map((row: any, idx: number) => ({
-    name: row[1] || '未知地点',
-    index: idx,
-    isCurrent: currentLocation.value && (row[1]?.includes(currentLocation.value) || currentLocation.value.includes(row[1]))
-  }));
-});
-
-const npcList = computed(() => {
-  const npc = data.value?.npc;
-  if (!npc?.content) return [];
-  
-  const headers = npc.content[0] || [];
-  const inSceneIdx = headers.findIndex((h: string) => h?.includes('在场') || h?.includes('状态'));
-  
-  return npc.content.slice(1).map((row: any, idx: number) => {
-    const inSceneVal = String(row[inSceneIdx] || '').toLowerCase();
-    const isInScene = inSceneVal === 'true' || inSceneVal === '在场' || !inSceneVal;
-    
-    return {
-      name: row[1] || '未知',
-      status: row[2] || (isInScene ? '在场' : '离场'),
-      index: idx,
-      isInScene
-    };
-  }).sort((a: { isInScene: boolean }, b: { isInScene: boolean }) => (b.isInScene ? 1 : 0) - (a.isInScene ? 1 : 0));
 });
 
 const bagList = computed(() => {
@@ -657,14 +614,6 @@ const questList = computed(() => {
           </button>
           <button 
             class="acu-tab-btn" 
-            :class="{ active: activeMobileTab === 'world' }"
-            @click="activeMobileTab = 'world'"
-          >
-            <i class="fa-solid fa-map"></i>
-            <span>世界</span>
-          </button>
-          <button 
-            class="acu-tab-btn" 
             :class="{ active: activeMobileTab === 'items' }"
             @click="activeMobileTab = 'items'"
           >
@@ -809,64 +758,6 @@ const questList = computed(() => {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 地点与角色 -->
-        <div class="acu-dash-locations" :class="{ 'acu-mobile-hidden': isMobile && activeMobileTab !== 'world' }">
-          <!-- 地点区（可折叠） -->
-          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('locations') }">
-            <div class="acu-collapsible-header" @click="toggleSection('locations')">
-              <h4 class="acu-section-title">
-                <i class="fa-solid fa-map"></i>
-                地点 ({{ locationList.length }})
-              </h4>
-              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
-            </div>
-            <div class="acu-collapsible-content">
-              <div v-if="locationList.length" class="acu-location-grid">
-                <div v-for="loc in locationList" :key="loc.name" 
-                     class="acu-location-item" 
-                     :class="{ 'acu-current': loc.isCurrent }">
-                  <i :class="loc.isCurrent ? 'fa-solid fa-location-dot' : 'fa-solid fa-map-pin'"></i>
-                  <span>{{ loc.name }}</span>
-                  <i v-if="!loc.isCurrent" class="fa-solid fa-walking acu-action-icon"></i>
-                </div>
-              </div>
-              <div v-else class="acu-empty-state">
-                <i class="fa-solid fa-map"></i>
-                <span>暂无地点信息</span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 角色区（可折叠） -->
-          <div class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('npcs') }">
-            <div class="acu-collapsible-header" @click="toggleSection('npcs')">
-              <h4 class="acu-section-title">
-                <i class="fa-solid fa-users"></i>
-                角色 ({{ npcList.length }})
-              </h4>
-              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
-            </div>
-            <div class="acu-collapsible-content">
-              <div v-if="npcList.length" class="acu-npc-grid">
-                <div v-for="npc in npcList" :key="npc.name" 
-                     class="acu-npc-item"
-                     :class="{ 'acu-offscene': !npc.isInScene }">
-                  <div class="acu-npc-avatar">{{ npc.name.charAt(0) }}</div>
-                  <div class="acu-npc-info">
-                    <div class="name">{{ npc.name }}</div>
-                    <div class="status">{{ npc.status }}</div>
-                  </div>
-                  <i class="fa-solid fa-people-arrows acu-action-icon"></i>
-                </div>
-              </div>
-              <div v-else class="acu-empty-state">
-                <i class="fa-solid fa-users"></i>
-                <span>暂无角色信息</span>
               </div>
             </div>
           </div>
@@ -1145,7 +1036,6 @@ const questList = computed(() => {
   i { font-size: 11px; }
 }
 
-.acu-dash-locations,
 .acu-dash-intel {
   display: flex;
   flex-direction: column;
@@ -2087,102 +1977,6 @@ const questList = computed(() => {
   border-color: var(--acu-accent);
 }
 
-/* 地点 */
-.acu-location-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 6px;
-  max-height: 110px;
-  overflow-y: auto;
-  margin-bottom: 10px;
-}
-
-.acu-location-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  border-radius: 4px;
-  
-  &:hover { background: var(--acu-table-hover); }
-  
-  &.acu-current {
-    color: var(--acu-accent);
-    background: var(--acu-accent-light);
-  }
-  
-  .acu-action-icon {
-    margin-left: auto;
-    color: var(--acu-text-sub);
-    opacity: 0.4;
-    font-size: 10px;
-    cursor: pointer;
-    &:hover { opacity: 1; color: var(--acu-accent); }
-  }
-}
-
-/* NPC */
-.acu-npc-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 6px;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.acu-npc-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 4px;
-  border-bottom: 1px dashed var(--acu-border);
-  cursor: pointer;
-  transition: all 0.15s;
-  
-  &:hover { background: var(--acu-table-hover); }
-  
-  &.acu-offscene {
-    opacity: 0.5;
-    filter: grayscale(80%);
-  }
-  
-  .acu-npc-avatar {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--acu-badge-bg);
-    border: 1.5px solid var(--acu-accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: bold;
-    color: var(--acu-accent);
-    flex-shrink: 0;
-  }
-  
-  .acu-npc-info {
-    flex: 1;
-    min-width: 0;
-    
-    .name { font-size: 12px; font-weight: 700; }
-    .status { font-size: 10px; color: var(--acu-text-sub); }
-  }
-  
-  .acu-action-icon {
-    color: var(--acu-text-sub);
-    opacity: 0.4;
-    font-size: 8px;
-    cursor: pointer;
-    flex-shrink: 0;
-    &:hover { opacity: 1; color: var(--acu-accent); }
-  }
-}
-
 /* 物品 */
 .acu-bag-grid {
   display: grid;
@@ -2328,14 +2122,18 @@ const questList = computed(() => {
   }
   
   .acu-dash-player {
-    grid-column: 1 / -1;
+    grid-column: 1;
+  }
+  
+  .acu-dash-intel {
+    grid-column: 2;
   }
 }
 
 /* 中等屏幕 (768px - 1023px): 双列布局，隐藏移动端 Tab */
 @media (min-width: 768px) {
   .acu-dash-body {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: var(--acu-space-lg, 16px);
   }
   
@@ -2344,7 +2142,6 @@ const questList = computed(() => {
   }
   
   .acu-dash-player,
-  .acu-dash-locations,
   .acu-dash-intel {
     display: flex !important;
   }
@@ -2354,10 +2151,10 @@ const questList = computed(() => {
   }
 }
 
-/* 大屏幕 (≥ 1024px): 三列布局 */
+/* 大屏幕 (≥ 1024px): 双列等宽布局 */
 @media (min-width: 1024px) {
   .acu-dash-body {
-    grid-template-columns: 280px 1fr 280px;
+    grid-template-columns: 1fr 1fr;
     gap: var(--acu-space-lg, 16px);
     padding: var(--acu-space-lg, 16px);
   }
@@ -2370,27 +2167,23 @@ const questList = computed(() => {
     grid-column: 1;
   }
   
-  .acu-dash-locations {
+  .acu-dash-intel {
     grid-column: 2;
   }
-  
-  .acu-dash-intel {
-    grid-column: 3;
-  }
 }
 
-/* 超大屏幕 (≥ 1280px): 更宽的三列布局 */
+/* 超大屏幕 (≥ 1280px): 双列等宽布局 */
 @media (min-width: 1280px) {
   .acu-dash-body {
-    grid-template-columns: 300px 1fr 300px;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-/* 超超大屏幕 (≥ 1536px): 最宽的三列布局 */
+/* 超超大屏幕 (≥ 1536px): 双列等宽布局 */
 @media (min-width: 1536px) {
   .acu-dash-body {
-    grid-template-columns: 320px 1fr 320px;
-    max-width: 1600px;
+    grid-template-columns: 1fr 1fr;
+    max-width: 1200px;
     margin: 0 auto;
   }
 }
