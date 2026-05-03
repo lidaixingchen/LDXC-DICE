@@ -820,6 +820,7 @@ onUnmounted(() => {
 
   .acu-data-display {
     width: fit-content !important;
+    min-width: var(--acu-card-width, 380px);
   }
 }
 </style>

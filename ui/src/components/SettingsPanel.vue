@@ -1149,7 +1149,7 @@ onUnmounted(() => {
 .acu-settings-container {
   display: flex;
   flex-direction: column;
-  width: var(--acu-card-width, 380px); /* 强制统一 */
+  width: 100%;
   min-width: 320px;
   height: 100%;
   max-height: 500px;

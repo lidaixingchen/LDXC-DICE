@@ -234,8 +234,8 @@ const activeTab = ref<'world' | 'skill'>('world');
 
 <style scoped lang="scss">
 .acu-generate-panel {
-  width: var(--acu-card-width, 380px);
-  max-width: 95vw;
+  width: 100%;
+  min-width: 280px;
   background: var(--acu-bg-panel);
   border: 1px solid var(--acu-border);
   border-radius: var(--acu-radius-lg);

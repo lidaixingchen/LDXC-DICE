@@ -72,3 +72,6 @@ vite.config.ts.timestamp-*
 .trae/
 CLAUDE.md
 
+#示例
+docs/示例
+
