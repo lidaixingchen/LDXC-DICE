@@ -10,7 +10,7 @@ interface StatusEffect {
   id: number; name: string;
   type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
   intensity: 'weak' | 'medium' | 'strong';
-  value: number; remainingRounds: number; description: string;
+  value: number; remainingRounds: number; totalRounds?: number; description: string;
 }
 
 interface EquipmentSlot {

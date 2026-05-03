@@ -5,6 +5,7 @@ export interface StatusEffect {
   intensity: 'weak' | 'medium' | 'strong';
   value: number;
   remainingRounds: number;
+  totalRounds?: number;
   description: string;
 }
 

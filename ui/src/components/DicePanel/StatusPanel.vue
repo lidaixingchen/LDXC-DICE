@@ -47,7 +47,7 @@ const emit = defineEmits<{
           <span class="acu-rounds-info">剩余: {{ s.remainingRounds }}回合</span>
         </div>
         <div v-if="typeof s.remainingRounds === 'number' && s.remainingRounds > 0" class="acu-rounds-bar">
-          <div class="acu-rounds-fill" :class="`rounds-${s.remainingRounds <= 1 ? 'critical' : s.remainingRounds <= 3 ? 'low' : 'ok'}`" :style="{ width: Math.min(s.remainingRounds / 10 * 100, 100) + '%' }"></div>
+          <div class="acu-rounds-fill" :class="`rounds-${s.remainingRounds <= 1 ? 'critical' : s.remainingRounds <= 3 ? 'low' : 'ok'}`" :style="{ width: (s.totalRounds ? Math.min(s.remainingRounds / s.totalRounds * 100, 100) : Math.min(s.remainingRounds / 10 * 100, 100)) + '%' }"></div>
         </div>
       </div>
     </div>

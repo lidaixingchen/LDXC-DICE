@@ -21,6 +21,7 @@ export function useStatusEffects() {
       intensity,
       value,
       remainingRounds,
+      totalRounds: remainingRounds,
       description: '',
     });
   }
