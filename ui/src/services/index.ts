@@ -14,8 +14,7 @@ export type {
   InitiativeCheckParams,
   EscapeCheckParams,
 } from './CheckCalculationService';
-export type { SkillData, ItemData } from './CharacterDataService';
-export type { StatusEffect, CombatState, EquipmentSlot, SaveData, SaveSlot } from './SaveService';
+export type { StatusEffect, CombatState, EquipmentSlot, SaveData, SaveSlot, SkillData, ItemData, CharacterSnapshot, ResourceItem, DashboardNpcSnapshot, DashboardQuestSnapshot, DashboardSnapshot, GameStateInput, GameStateOutput } from './SaveService';
 export type { GeneratedWorld, GeneratedSkill } from './WorldGenerationService';
 
 export {

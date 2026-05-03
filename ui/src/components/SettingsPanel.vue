@@ -3,6 +3,7 @@ import {
   settingsManager,
   type AdvancedSettings,
   type BehaviorSettings,
+  type DiceSystemSettings,
   type DisplaySettings,
   type GeneralSettings,
   type LegacySettings,
@@ -122,6 +123,15 @@ function updateLegacy(updates: Partial<LegacySettings>) {
   if (updates.theme) {
     emit('themeChange', updates.theme);
   }
+}
+
+function updateGroupSetting<K extends keyof DiceSystemSettings, F extends keyof DiceSystemSettings[K]>(
+  group: K,
+  field: F,
+  value: DiceSystemSettings[K][F],
+) {
+  settingsManager.updateValue(group, field, value);
+  syncAll();
 }
 
 function clearSystemCache() {
@@ -569,6 +579,17 @@ onUnmounted(() => {
               @input="updateLegacy({ cardWidth: parseInt(($event.target as any).value) })"
             />
           </div>
+          <div class="acu-setting-row">
+            <label>全局字体大小 ({{ settings.fontSize }}px)</label>
+            <input
+              type="range"
+              min="10"
+              max="24"
+              step="1"
+              :value="settings.fontSize"
+              @input="updateLegacy({ fontSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
         </div>
 
         <!-- 2. 布局 [全量找回] -->
@@ -685,6 +706,26 @@ onUnmounted(() => {
               <option value="left">左对齐</option>
               <option value="center">居中</option>
             </select>
+          </div>
+          <div class="acu-setting-row">
+            <label>导航按钮高度 ({{ settings.navButtonHeight }}px)</label>
+            <input
+              type="range"
+              min="24"
+              max="64"
+              :value="settings.navButtonHeight"
+              @input="updateLegacy({ navButtonHeight: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>导航图标大小 ({{ settings.navButtonIconSize }}px)</label>
+            <input
+              type="range"
+              min="8"
+              max="24"
+              :value="settings.navButtonIconSize"
+              @input="updateLegacy({ navButtonIconSize: parseInt(($event.target as any).value) })"
+            />
           </div>
         </div>
 
@@ -803,6 +844,35 @@ onUnmounted(() => {
               @input="updateLegacy({ offSceneNpcWeight: parseInt(($event.target as any).value) })"
             />
           </div>
+          <div class="acu-group-label">按钮尺寸</div>
+          <div class="acu-setting-row">
+            <label>动作按钮尺寸 ({{ settings.actionButtonSize }}px)</label>
+            <input
+              type="range"
+              min="24"
+              max="56"
+              :value="settings.actionButtonSize"
+              @input="updateLegacy({ actionButtonSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>动作图标大小 ({{ settings.actionButtonIconSize }}px)</label>
+            <input
+              type="range"
+              min="8"
+              max="20"
+              :value="settings.actionButtonIconSize"
+              @input="updateLegacy({ actionButtonIconSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row checkbox">
+            <label>隐藏仪表盘按钮</label>
+            <input
+              type="checkbox"
+              :checked="settings.hideDashboardButton"
+              @change="updateLegacy({ hideDashboardButton: ($event.target as any).checked })"
+            />
+          </div>
         </div>
 
         <!-- 4. 表格 -->
@@ -822,6 +892,42 @@ onUnmounted(() => {
                 }
               "
             />
+          </div>
+          <div class="acu-group-label">表格排序</div>
+          <div v-if="tables.length > 0" class="acu-table-order-list">
+            <div
+              v-for="(t, idx) in tables"
+              :key="t.key"
+              class="acu-table-order-item"
+            >
+              <span class="acu-order-num">{{ idx + 1 }}</span>
+              <span class="acu-table-name">{{ t.name }}</span>
+              <div class="acu-order-actions">
+                <button
+                  :disabled="idx === 0"
+                  title="上移"
+                  @click="() => {
+                    const keys = [...(settings.tableOrderKeys.length > 0 ? settings.tableOrderKeys : tables.map(t2 => t2.key))];
+                    [keys[idx - 1], keys[idx]] = [keys[idx], keys[idx - 1]];
+                    updateLegacy({ tableOrderKeys: keys });
+                  }"
+                >
+                  <i class="fa-solid fa-chevron-up"></i>
+                </button>
+                <button
+                  :disabled="idx === tables.length - 1"
+                  title="下移"
+                  @click="() => {
+                    const keys = [...(settings.tableOrderKeys.length > 0 ? settings.tableOrderKeys : tables.map(t2 => t2.key))];
+                    [keys[idx], keys[idx + 1]] = [keys[idx + 1], keys[idx]];
+                    updateLegacy({ tableOrderKeys: keys });
+                  }"
+                >
+                  <i class="fa-solid fa-chevron-down"></i>
+                </button>
+              </div>
+            </div>
+            <div class="acu-order-hint">使用上下箭头调整表格在导航中的显示顺序</div>
           </div>
         </div>
 
@@ -1033,6 +1139,242 @@ onUnmounted(() => {
             </button>
           </div>
 
+          <div class="acu-group-label">常规选项</div>
+          <details class="acu-setting-details">
+            <summary class="acu-details-summary">常规设置（默认预设 / 自动保存 / 语言）</summary>
+            <div class="acu-details-body">
+              <div class="acu-setting-row">
+                <label>默认检定预设</label>
+                <input type="text" :value="general.defaultPresetId" @change="updateGroupSetting('general', 'defaultPresetId', ($event.target as HTMLInputElement).value)" />
+              </div>
+              <div class="acu-setting-row">
+                <label>默认检定属性</label>
+                <input type="text" :value="general.defaultAttribute" @change="updateGroupSetting('general', 'defaultAttribute', ($event.target as HTMLInputElement).value)" />
+              </div>
+              <div class="acu-setting-row">
+                <label>默认 DC</label>
+                <input type="number" :value="general.defaultDc" @change="updateGroupSetting('general', 'defaultDc', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+              <div class="acu-setting-row">
+                <label>默认修正值</label>
+                <input type="number" :value="general.defaultModifier" @change="updateGroupSetting('general', 'defaultModifier', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>自动保存</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="general.autoSave" @change="updateGroupSetting('general', 'autoSave', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>自动保存间隔 (ms)</label>
+                <input type="number" :value="general.autoSaveInterval" @change="updateGroupSetting('general', 'autoSaveInterval', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+              <div class="acu-setting-row">
+                <label>语言</label>
+                <select :value="general.language" @change="updateGroupSetting('general', 'language', ($event.target as HTMLSelectElement).value as 'zh-CN' | 'en-US')">
+                  <option value="zh-CN">中文</option>
+                  <option value="en-US">English</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <details class="acu-setting-details">
+            <summary class="acu-details-summary">显示设置（字体 / 动画 / 紧凑模式）</summary>
+            <div class="acu-details-body">
+              <div class="acu-setting-row">
+                <label>字体大小</label>
+                <select :value="display.fontSize" @change="updateGroupSetting('display', 'fontSize', ($event.target as HTMLSelectElement).value as 'small' | 'medium' | 'large')">
+                  <option value="small">小</option>
+                  <option value="medium">中</option>
+                  <option value="large">大</option>
+                </select>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>显示动画</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="display.showAnimations" @change="updateGroupSetting('display', 'showAnimations', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>显示提示</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="display.showTooltips" @change="updateGroupSetting('display', 'showTooltips', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>紧凑模式</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="display.compactMode" @change="updateGroupSetting('display', 'compactMode', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>掷骰动画</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="display.showRollAnimation" @change="updateGroupSetting('display', 'showRollAnimation', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>结果显示模式</label>
+                <select :value="display.resultDisplayMode" @change="updateGroupSetting('display', 'resultDisplayMode', ($event.target as HTMLSelectElement).value as 'simple' | 'detailed' | 'verbose')">
+                  <option value="simple">简洁</option>
+                  <option value="detailed">详细</option>
+                  <option value="verbose">完整</option>
+                </select>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>显示效果确认</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="display.showEffectConfirmation" @change="updateGroupSetting('display', 'showEffectConfirmation', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <details class="acu-setting-details">
+            <summary class="acu-details-summary">交互行为（确认 / 快速投骰 / 历史记录）</summary>
+            <div class="acu-details-body">
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>效果前确认</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="behavior.confirmBeforeEffect" @change="updateGroupSetting('behavior', 'confirmBeforeEffect', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>自动应用效果</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="behavior.autoApplyEffects" @change="updateGroupSetting('behavior', 'autoApplyEffects', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>记住上次值</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="behavior.rememberLastValues" @change="updateGroupSetting('behavior', 'rememberLastValues', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>快速投骰</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="behavior.quickRollEnabled" @change="updateGroupSetting('behavior', 'quickRollEnabled', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>快速投骰修正</label>
+                <input type="number" :value="behavior.quickRollModifier" @change="updateGroupSetting('behavior', 'quickRollModifier', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+              <div class="acu-setting-row">
+                <label>历史记录条数</label>
+                <input type="number" :value="behavior.historySize" @change="updateGroupSetting('behavior', 'historySize', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>自动隐藏面板</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="behavior.autoHidePanel" @change="updateGroupSetting('behavior', 'autoHidePanel', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>自动隐藏延迟 (ms)</label>
+                <input type="number" :value="behavior.autoHideDelay" @change="updateGroupSetting('behavior', 'autoHideDelay', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+            </div>
+          </details>
+
+          <details class="acu-setting-details">
+            <summary class="acu-details-summary">验证设置（严格模式 / 加载/保存验证）</summary>
+            <div class="acu-details-body">
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>严格模式</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="validation.strictMode" @change="updateGroupSetting('validation', 'strictMode', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>加载时验证</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="validation.validateOnLoad" @change="updateGroupSetting('validation', 'validateOnLoad', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>保存时验证</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="validation.validateOnSave" @change="updateGroupSetting('validation', 'validateOnSave', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>显示验证警告</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="validation.showValidationWarnings" @change="updateGroupSetting('validation', 'showValidationWarnings', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>自动修复常见错误</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="validation.autoFixCommonErrors" @change="updateGroupSetting('validation', 'autoFixCommonErrors', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <details class="acu-setting-details">
+            <summary class="acu-details-summary">开发者选项（Debug / 日志 / 自定义 CSS）</summary>
+            <div class="acu-details-body">
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>Debug 模式</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="advanced.debugMode" @change="updateGroupSetting('advanced', 'debugMode', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>日志级别</label>
+                <select :value="advanced.logLevel" @change="updateGroupSetting('advanced', 'logLevel', ($event.target as HTMLSelectElement).value as 'debug' | 'info' | 'warn' | 'error')">
+                  <option value="debug">Debug</option>
+                  <option value="info">Info</option>
+                  <option value="warn">Warn</option>
+                  <option value="error">Error</option>
+                </select>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>实验性功能</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="advanced.enableExperimentalFeatures" @change="updateGroupSetting('advanced', 'enableExperimentalFeatures', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>自定义 CSS</label>
+                <textarea :value="advanced.customCss" @change="updateGroupSetting('advanced', 'customCss', ($event.target as HTMLTextAreaElement).value)" rows="3"></textarea>
+              </div>
+              <div class="acu-setting-row acu-setting-row-toggle">
+                <label>性能模式</label>
+                <label class="acu-toggle">
+                  <input type="checkbox" :checked="advanced.performanceMode" @change="updateGroupSetting('advanced', 'performanceMode', ($event.target as HTMLInputElement).checked)" />
+                  <span class="acu-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>缓存大小</label>
+                <input type="number" :value="advanced.cacheSize" @change="updateGroupSetting('advanced', 'cacheSize', parseInt(($event.target as HTMLInputElement).value))" />
+              </div>
+            </div>
+          </details>
+
           <div class="acu-group-label">系统维护</div>
           <button class="acu-full-btn danger" @click="clearSystemCache">
             <i class="fa-solid fa-bomb"></i> 彻底重置系统缓存
@@ -1200,7 +1542,6 @@ onUnmounted(() => {
   font-size: 10px;
   font-weight: 900;
   color: var(--acu-accent);
-  text-transform: uppercase;
   margin: 12px 0 8px;
   border-bottom: 1px solid var(--acu-border);
 }
@@ -1535,6 +1876,103 @@ onUnmounted(() => {
   gap: 8px;
   padding: 12px 16px;
   border-top: 1px solid var(--acu-border);
+}
+
+.acu-setting-details {
+  margin-bottom: 4px;
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  background: var(--acu-bg-header);
+  overflow: hidden;
+}
+
+.acu-details-summary {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  user-select: none;
+  &:hover {
+    color: var(--acu-accent);
+  }
+}
+
+.acu-details-body {
+  padding: 8px 12px;
+  border-top: 1px solid var(--acu-border);
+  background: var(--acu-bg-panel);
+}
+
+.acu-table-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.acu-table-order-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--acu-bg-panel);
+  border: 1px solid var(--acu-border);
+}
+
+.acu-order-num {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--acu-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.acu-table-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--acu-text);
+}
+
+.acu-order-actions {
+  display: flex;
+  gap: 2px;
+  button {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--acu-border);
+    border-radius: 4px;
+    background: var(--acu-bg-header);
+    color: var(--acu-text);
+    cursor: pointer;
+    font-size: 10px;
+    padding: 0;
+    &:hover:not(:disabled) {
+      background: var(--acu-accent);
+      color: #fff;
+    }
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.acu-order-hint {
+  font-size: 10px;
+  color: var(--acu-text-sub);
+  opacity: 0.6;
+  padding: 4px 0;
 }
 
 /* 预览块颜色对齐 */

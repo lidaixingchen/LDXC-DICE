@@ -26,6 +26,7 @@ export { useDefenseCheck } from './useDefenseCheck';
 export { useInitiativeCheck } from './useInitiativeCheck';
 export { useEscapeCheck } from './useEscapeCheck';
 export { useStatusEffects } from './useStatusEffects';
+export { getStatusIdCounter, setStatusIdCounter } from './useStatusEffects';
 export { useEquipment } from './useEquipment';
 export { sendToTextarea } from './useTextareaSender';
 export type {

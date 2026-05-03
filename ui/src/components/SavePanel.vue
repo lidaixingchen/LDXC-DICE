@@ -1,189 +1,209 @@
 <script setup lang="ts">
-import { computed, ref, type Ref } from 'vue';
-import { CombatCalculationService } from '../services/CombatCalculationService';
-import { WorldConfigService } from '../services/WorldConfigService';
-import { useCombatState, useEquipment, useCharacterData, useStatusEffects } from '../composables';
+import { computed, ref } from 'vue'
+import { CombatCalculationService } from '../services/CombatCalculationService'
+import { WorldConfigService } from '../services/WorldConfigService'
+import { SaveService } from '../services/SaveService'
+import { useCombatState, useEquipment, useCharacterData, useStatusEffects, getStatusIdCounter, setStatusIdCounter } from '../composables'
+import { useDashboard } from '../composables/useDashboard'
+import type { SaveSlot, GameStateInput, GameStateOutput } from '../services/SaveService'
 
-const SAVE_KEY = 'aidm_save_slots';
+const { initiatorName, worldLevel, combat, activeSkills, usableItems } = useCombatState()
+const { equipment } = useEquipment()
+const { activeStatuses } = useStatusEffects()
+const { currentCharacter, characters, attributeButtons, selectCharacter, updateAttributeButtons } = useCharacterData()
+const { dashboardData } = useDashboard()
 
-interface StatusEffect {
-  id: number; name: string;
-  type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
-  intensity: 'weak' | 'medium' | 'strong';
-  value: number; remainingRounds: number; totalRounds?: number; description: string;
-}
-
-interface EquipmentSlot {
-  name: string; physDmg: number; magicDmg: number;
-  physDef: number; magicDef: number; hpBonus: number; dodgeBonus: number;
-}
-
-interface CombatState {
-  active: boolean; round: number; enemyName: string;
-  enemyMaxHP: number; enemyCurrentHP: number;
-  playerMaxHP: number; playerCurrentHP: number; playerShield: number;
-}
-
-interface SaveSlot {
-  id: number;
-  timestamp: string;
-  data: SaveData;
-}
-
-interface SaveData {
-  playerName: string;
-  level: string;
-  attrs: Record<string, number>;
-  combat: CombatState;
-  equipment: EquipmentSlot;
-  statuses: StatusEffect[];
-  worldName: string;
-  location: string;
-}
-
-const { initiatorName, worldLevel, combat } = useCombatState();
-const { equipment } = useEquipment();
-const { activeStatuses } = useStatusEffects();
-const { currentCharacter, characters } = useCharacterData();
-
-const saveSlots = ref<SaveSlot[]>([]);
-const exportText = ref('');
-const importText = ref('');
+const saveSlots = ref<SaveSlot[]>([])
+const exportText = ref('')
+const importText = ref('')
+const importError = ref('')
 
 function findSaveSlot(id: number): SaveSlot | undefined {
-  return saveSlots.value.find(s => s.id === id);
+  return saveSlots.value.find(s => s.id === id)
 }
 
 function loadSaveSlots(): void {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      saveSlots.value = JSON.parse(raw);
-    } else {
-      saveSlots.value = [];
-    }
-  } catch {
-    saveSlots.value = [];
+  saveSlots.value = SaveService.loadSaveSlots()
+}
+
+function collectGameState(): GameStateInput {
+  const charName = currentCharacter.value
+  const charSnapshot = characters.value.map(c => ({
+    name: c.name,
+    attributes: { ...c.attributes },
+  }))
+
+  const combatData = combat?.value || {
+    active: false, round: 1, enemyName: '', enemyMaxHP: 0,
+    enemyCurrentHP: 0, playerMaxHP: 0, playerCurrentHP: 0, playerShield: 0,
+  }
+  const equipData = equipment?.value || {
+    name: '', physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0,
+  }
+  const statusData = activeStatuses?.value || []
+  const skillsData = activeSkills?.value || []
+  const itemsData = usableItems?.value || []
+
+  const dashboard = dashboardData.value
+  const playerResources = dashboard?.player?.resources?.map(r => ({
+    name: r.name,
+    value: String(r.value),
+  })) || []
+  const npcs = dashboard?.npcs?.map(n => ({
+    name: n.name,
+    status: n.status,
+    position: n.position,
+    inScene: n.inScene,
+  })) || []
+  const quests = dashboard?.quests?.map(q => ({
+    name: q.name,
+    type: q.type,
+    status: q.status,
+    priority: q.priority,
+    progress: q.progress,
+  })) || []
+
+  return {
+    playerName: initiatorName?.value || '冒险者',
+    level: worldLevel?.value || 'F级',
+    currentCharacter: charName,
+    characters: charSnapshot,
+    combat: { ...combatData },
+    equipment: { ...equipData },
+    statuses: statusData.map(s => ({ ...s })),
+    activeSkills: skillsData.map(s => ({ ...s })),
+    usableItems: itemsData.map(i => ({ ...i })),
+    statusIdCounter: getStatusIdCounter(),
+    dashboard: {
+      playerResources,
+      npcs,
+      quests,
+      currentLocation: dashboard?.currentLocation || '',
+    },
+    worldName: combatData.enemyName || '',
+    location: dashboard?.currentLocation || '未知',
   }
 }
 
-function persistSaveSlots(): void {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(saveSlots.value));
+function applyGameState(state: GameStateOutput): void {
+  if (initiatorName) initiatorName.value = state.playerName
+  if (worldLevel) worldLevel.value = state.level
+
+  if (characters) {
+    characters.value = state.characters.map(c => ({
+      name: c.name,
+      attributes: { ...c.attributes },
+    }))
+  }
+
+  const targetChar = state.currentCharacter || state.playerName
+  if (currentCharacter) {
+    currentCharacter.value = targetChar
+  }
+
+  if (state.characters.length > 0) {
+    const char = state.characters.find(c => c.name === targetChar) || state.characters[0]
+    updateAttributeButtons(char.attributes)
+  }
+
+  if (combat) combat.value = { ...state.combat }
+  if (equipment) equipment.value = { ...state.equipment }
+  if (activeStatuses) activeStatuses.value = state.statuses.map(s => ({ ...s }))
+  if (activeSkills) activeSkills.value = state.activeSkills.map(s => ({ ...s }))
+  if (usableItems) usableItems.value = state.usableItems.map(i => ({ ...i }))
+  setStatusIdCounter(state.statusIdCounter)
 }
 
 function saveGame(slotId: number): void {
   if (saveSlots.value.length >= 3 && !saveSlots.value.find(s => s.id === slotId)) {
-    if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return;
+    if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return
   }
 
-  const charName = currentCharacter.value;
-  const attrs: Record<string, number> = {};
-  if (charName) {
-    const charObj = characters.value.find(c => c.name === charName);
-    if (charObj) {
-      Object.entries(charObj.attributes).forEach(([k, v]) => { attrs[k] = v; });
-    }
-  }
-
-  const combatData = combat?.value || { active: false, round: 1, enemyName: '', enemyMaxHP: 0, enemyCurrentHP: 0, playerMaxHP: 0, playerCurrentHP: 0, playerShield: 0 };
-  const equipData = equipment?.value || { name: '', physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 };
-  const statusData = activeStatuses?.value || [];
-
-  const saveData: SaveData = {
-    playerName: initiatorName?.value || '冒险者',
-    level: worldLevel?.value || 'F级',
-    attrs,
-    combat: { ...combatData },
-    equipment: { ...equipData },
-    statuses: statusData.map(s => ({ ...s })),
-    worldName: combatData.enemyName || '',
-    location: '未知',
-  };
-
-  const existingIdx = saveSlots.value.findIndex(s => s.id === slotId);
-  const slot: SaveSlot = {
-    id: slotId,
-    timestamp: new Date().toLocaleString(),
-    data: saveData,
-  };
-
-  if (existingIdx >= 0) {
-    saveSlots.value[existingIdx] = slot;
-  } else {
-    saveSlots.value.push(slot);
-  }
-
-  persistSaveSlots();
+  const state = collectGameState()
+  const packed = SaveService.packGameState(state)
+  saveSlots.value = SaveService.saveGame(slotId, saveSlots.value, packed)
 }
 
-function loadGame(slotId: number): boolean {
-  const slot = saveSlots.value.find(s => s.id === slotId);
-  if (!slot) return false;
+function loadGame(slotId: number): void {
+  const slot = saveSlots.value.find(s => s.id === slotId)
+  if (!slot) {
+    alert(`存档位 ${slotId} 为空`)
+    return
+  }
 
-  const d = slot.data;
-  if (initiatorName) initiatorName.value = d.playerName;
-  if (worldLevel) worldLevel.value = d.level;
-  if (combat) combat.value = { ...d.combat };
-  if (equipment) equipment.value = { ...d.equipment };
-  if (activeStatuses) activeStatuses.value = d.statuses.map(s => ({ ...s }));
+  const state = SaveService.unpackGameState(slot)
+  if (!state) {
+    alert(`存档位 ${slotId} 数据损坏，无法读取`)
+    return
+  }
 
-  return true;
+  if (!confirm(`确定读取存档位 ${slotId}？（当前未保存的进度将丢失）`)) return
+  applyGameState(state)
 }
 
 function exportSave(): void {
-  const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 };
-  const charName = currentCharacter.value;
-  const charObj = characters.value.find(c => c.name === charName);
+  const state = collectGameState()
+
+  const charName = currentCharacter.value
+  const charObj = characters.value.find(c => c.name === charName)
+  const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 }
   const stats = charObj
     ? CombatCalculationService.deriveCombatStats(charObj.attributes, worldLevel?.value || 'F级', eq)
-    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 0 };
+    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 0 }
 
-  const spv = WorldConfigService.getSPV(worldLevel?.value || 'F级');
-  const cb = combat?.value || { playerCurrentHP: 0, playerMaxHP: 0, playerShield: 0, active: false, round: 0, enemyName: '', enemyCurrentHP: 0, enemyMaxHP: 0 };
-  const st = activeStatuses?.value || [];
-
-  exportText.value = `═════════════════════════════════
-【轮回者存档】
-═════════════════════════════════
-
-【角色信息】
-名称：${initiatorName?.value || '冒险者'}
-等级：${worldLevel?.value || 'F级'} | SPV：${spv}
-
-【战斗属性】
-HP：${cb.playerCurrentHP}/${cb.playerMaxHP}
-护盾：${cb.playerShield}
-物攻：${stats.physAtk} | 法攻：${stats.magicAtk}
-物防：${stats.physDef} | 法防：${stats.magicDef}
-DDC：${stats.ddc} | 暴击率：${stats.critRate}%
-
-${st.length > 0 ? `【状态效果】\n${st.map(s => `・${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}
-
-${cb.active ? `【战斗中】第${cb.round}回合 | 敌人:${cb.enemyName} HP:${cb.enemyCurrentHP}/${cb.enemyMaxHP}` : ''}
-═════════════════════════════════`;
+  exportText.value = SaveService.exportSaveText(state, stats)
 }
 
-function importSave(): boolean {
-  const text = importText.value.trim();
-  if (!text.includes('轮回者存档')) {
-    alert('存档格式无效：未检测到存档标识');
-    return false;
+function importSave(): void {
+  importError.value = ''
+  const text = importText.value.trim()
+  if (!text) {
+    importError.value = '请粘贴存档内容'
+    return
   }
-  alert('存档导入成功！（演示模式：请手动恢复各项数值）');
-  return true;
+
+  const state = SaveService.parseImportText(text)
+  if (!state) {
+    importError.value = '存档格式无效：未检测到有效存档数据'
+    return
+  }
+
+  if (!confirm('确定导入存档？（当前未保存的进度将被覆盖）')) return
+  applyGameState(state)
+  importText.value = ''
+  importError.value = ''
 }
 
 function deleteSave(slotId: number): void {
-  if (!confirm(`确定删除存档位 ${slotId}？`)) return;
-  saveSlots.value = saveSlots.value.filter(s => s.id !== slotId);
-  persistSaveSlots();
+  if (!confirm(`确定删除存档位 ${slotId}？`)) return
+  saveSlots.value = SaveService.deleteSave(saveSlots.value, slotId)
 }
 
-loadSaveSlots();
+const slotPreview = computed(() => {
+  return [1, 2, 3].map(id => {
+    const slot = findSaveSlot(id)
+    if (!slot) return { id, hasData: false }
+    const d = slot.data
+    return {
+      id,
+      hasData: true,
+      timestamp: slot.timestamp,
+      playerName: d.playerName,
+      level: d.level,
+      hpLabel: d.combat.active
+        ? `HP ${d.combat.playerCurrentHP}/${d.combat.playerMaxHP}`
+        : '',
+      statusCount: d.statuses.length > 0 ? `${d.statuses.length}个状态` : '',
+      location: d.dashboard?.currentLocation || '',
+    }
+  })
+})
+
+loadSaveSlots()
 
 defineEmits<{
-  (e: 'close'): void;
-}>();
+  (e: 'close'): void
+}>()
 </script>
 
 <template>
@@ -201,24 +221,32 @@ defineEmits<{
     <div class="save-panel-body">
       <div class="save-section-label">📦 存档位</div>
       <div class="save-slots-grid">
-        <div v-for="slot in [1, 2, 3]" :key="slot" class="save-slot-card" :class="{ 'has-data': findSaveSlot(slot) }">
+        <div
+          v-for="s in slotPreview"
+          :key="s.id"
+          class="save-slot-card"
+          :class="{ 'has-data': s.hasData }"
+        >
           <div class="save-slot-card-header">
-            <span class="save-slot-num"> Slot {{ slot }} </span>
-            <span v-if="findSaveSlot(slot)" class="save-slot-time">{{ findSaveSlot(slot)?.timestamp }}</span>
+            <span class="save-slot-num"> Slot {{ s.id }} </span>
+            <span v-if="s.hasData" class="save-slot-time">{{ s.timestamp }}</span>
             <span v-else class="save-slot-empty">— 空 —</span>
           </div>
-          <div v-if="findSaveSlot(slot)" class="save-slot-preview">
-            <span class="preview-name">{{ findSaveSlot(slot)?.data.playerName }}</span>
-            <span class="preview-level">{{ findSaveSlot(slot)?.data.level }}</span>
+          <div v-if="s.hasData" class="save-slot-preview">
+            <span class="preview-name">{{ s.playerName }}</span>
+            <span class="preview-level">{{ s.level }}</span>
           </div>
+          <div v-if="s.hasData && s.hpLabel" class="save-slot-hp">{{ s.hpLabel }}</div>
+          <div v-if="s.hasData && s.statusCount" class="save-slot-statuses">{{ s.statusCount }}</div>
+          <div v-if="s.hasData && s.location" class="save-slot-location">{{ s.location }}</div>
           <div class="save-slot-actions">
-            <button class="save-btn primary" @click="saveGame(slot)" title="保存当前进度">
+            <button class="save-btn primary" @click="saveGame(s.id)" title="保存当前进度">
               <i class="fa-solid fa-floppy-disk"></i> 存档
             </button>
-            <button class="save-btn" :disabled="!findSaveSlot(slot)" @click="loadGame(slot)" title="读取存档">
+            <button class="save-btn" :disabled="!s.hasData" @click="loadGame(s.id)" title="读取存档">
               <i class="fa-solid fa-folder-open"></i> 读档
             </button>
-            <button class="save-btn danger" :disabled="!findSaveSlot(slot)" @click="deleteSave(slot)" title="删除存档">
+            <button class="save-btn danger" :disabled="!s.hasData" @click="deleteSave(s.id)" title="删除存档">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -243,12 +271,15 @@ defineEmits<{
         rows="6"
         placeholder="导出的存档内容..."
       ></textarea>
+
       <textarea
         v-model="importText"
         class="save-textarea"
         rows="3"
         placeholder="粘贴存档内容以导入..."
       ></textarea>
+
+      <div v-if="importError" class="save-import-error">{{ importError }}</div>
     </div>
   </div>
 </template>
@@ -371,7 +402,7 @@ defineEmits<{
   display: flex;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 
   .preview-name {
     font-size: 10px;
@@ -388,9 +419,19 @@ defineEmits<{
   }
 }
 
+.save-slot-hp,
+.save-slot-statuses,
+.save-slot-location {
+  text-align: center;
+  font-size: 8px;
+  color: var(--acu-text-sub, #777);
+  margin-bottom: 2px;
+}
+
 .save-slot-actions {
   display: flex;
   gap: 3px;
+  margin-top: 4px;
 }
 
 .save-btn {
@@ -495,5 +536,15 @@ defineEmits<{
     color: var(--acu-text-sub, #555);
     opacity: 0.5;
   }
+}
+
+.save-import-error {
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.25);
+  color: var(--acu-error-text, #e74c3c);
+  font-size: 10px;
 }
 </style>

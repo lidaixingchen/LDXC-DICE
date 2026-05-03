@@ -778,7 +778,6 @@ function goToPage(page: number) {
     font-weight: 700;
     font-size: 11px;
     color: var(--acu-accent);
-    letter-spacing: 0.3px;
     white-space: nowrap;
     position: sticky;
     top: 0;
@@ -983,8 +982,6 @@ function goToPage(page: number) {
   display: flex;
   align-items: center;
   gap: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
 
   i { font-size: 10px; opacity: 0.7; }
 }
@@ -1010,8 +1007,6 @@ function goToPage(page: number) {
   font-size: 9px;
   color: var(--acu-text-sub);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
 }
 
 .acu-profile-field-value {

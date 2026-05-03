@@ -36,7 +36,9 @@ interface ExchangePrices { equipment: Record<string, Record<string, number>>; sk
 // ============================================================
 
 type SchemaLeaf = string[]
-type SchemaBranch = Record<string, SchemaBranch | SchemaLeaf>
+type SchemaScalar = null
+type SchemaNode = SchemaBranch | SchemaLeaf | SchemaScalar
+type SchemaBranch = Record<string, SchemaNode>
 type SchemaDef = SchemaBranch
 
 function validateSchema(yamlObj: unknown, schema: SchemaDef, yamlFile: string, basePath = ''): void {
@@ -46,17 +48,28 @@ function validateSchema(yamlObj: unknown, schema: SchemaDef, yamlFile: string, b
 
   const obj = yamlObj as Record<string, unknown>
   const existingKeys = Object.keys(obj)
+  const schemaKeys = Object.keys(schema)
+
+  const extraKeys = existingKeys.filter(k => !schemaKeys.includes(k))
+  const structuralExtra = extraKeys.filter(k => typeof obj[k] === 'object' && obj[k] !== null)
+  if (structuralExtra.length > 0) {
+    throw new Error(
+      `[sync-config] YAML 包含未知结构化字段:\n  文件: ${yamlFile}${basePath ? ' → ' + basePath : ''}\n  期望字段: ${schemaKeys.join(', ')}\n  未知结构: ${structuralExtra.join(', ')}（世界书可能新增了区块，需同步更新 schema）`,
+    )
+  }
 
   for (const [key, subSchema] of Object.entries(schema)) {
     const fullPath = basePath ? `${basePath} → ${key}` : key
 
     if (!(key in obj)) {
+      const schemaDesc = subSchema === null ? '（标量值）' : Array.isArray(subSchema) ? subSchema.join(', ') : Object.keys(subSchema as Record<string, unknown>).join(', ')
       throw new Error(
-        `[sync-config] YAML 字段缺失:\n  文件: ${yamlFile}\n  路径: ${fullPath}\n  期望字段: ${Array.isArray(subSchema) ? subSchema.join(', ') : Object.keys(subSchema).join(', ')}\n  当前顶层字段: ${existingKeys.join(', ')}`,
+        `[sync-config] YAML 字段缺失:\n  文件: ${yamlFile}\n  路径: ${fullPath}\n  期望字段: ${schemaDesc}\n  当前顶层字段: ${existingKeys.join(', ')}`,
       )
     }
 
-    if (Array.isArray(subSchema)) {
+    if (subSchema === null) {
+    } else if (Array.isArray(subSchema)) {
       if (typeof obj[key] !== 'object' || obj[key] === null) {
         throw new Error(`[sync-config] YAML 结构错误: ${yamlFile}\n  路径: ${fullPath}\n  期望: 对象\n  实际: ${typeof obj[key]}`)
       }
@@ -80,42 +93,78 @@ function validateSchema(yamlObj: unknown, schema: SchemaDef, yamlFile: string, b
 // ============================================================
 
 const DC_TABLE_SCHEMA: SchemaDef = {
-  'DC表': { '基础DC': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'] },
+  'DC表': {
+    '说明': null,
+    '基础DC': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '困难DC': null,
+    '极难DC': null,
+    '使用说明': null,
+  },
 }
 
 const HP_BASE_SCHEMA: SchemaDef = {
-  'HP基础值': { '各等级HP基础值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+  'HP基础值': {
+    '说明': null,
+    '各等级HP基础值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+    'HP计算公式': null,
+  },
 }
 
 const MASTERY_SCHEMA: SchemaDef = {
-  '掌握加成表': { '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+  '掌握加成表': {
+    '说明': null,
+    '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+  },
 }
 
 const LEVEL_SYSTEM_SCHEMA: SchemaDef = {
   '人物等级体系': {
-    '等级划分': { '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+    '说明': null,
+    '等级划分': {
+      '说明': null,
+      '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+    },
     '单项属性上限': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+    '属性加成': null,
+    '初始设定': null,
   },
 }
 
 const SPV_SCHEMA: SchemaDef = {
-  'SPV体系': { '等级阶位与SPV对照': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+  'SPV体系': {
+    '说明': null,
+    '定义': null,
+    '等级阶位与SPV对照': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+    '应用系数': ['主动技能伤害', '被动技能数值', '装备核心数值', 'HP等级基础值', '属性增加', '体质治疗', '智力治疗', '吸血效果', '护盾值'],
+  },
 }
 
 const ATTR_MODIFIER_SCHEMA: SchemaDef = {
-  '属性加成表': { '对照表': ['381+'] },
+  '属性加成表': {
+    '说明': null,
+    '对照表': ['381+'],
+  },
 }
 
 const ACTIVE_SKILL_SCHEMA: SchemaDef = {
-  '主动技能数值': { '伤害与治疗数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+  '主动技能数值': {
+    '说明': null,
+    '伤害与治疗数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+    '冷却时间': null,
+    '消耗': null,
+  },
 }
 
 const PASSIVE_SKILL_SCHEMA: SchemaDef = {
-  '被动技能数值': { '属性加成数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'] },
+  '被动技能数值': {
+    '说明': null,
+    '属性加成数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+  },
 }
 
 const WEAPON_SCHEMA: SchemaDef = {
   '武器数值': {
+    '说明': null,
     '攻击装备数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
     '词条数量': ['F级', 'E级', 'D级', 'C级', 'B级及以上'],
   },
@@ -123,6 +172,7 @@ const WEAPON_SCHEMA: SchemaDef = {
 
 const ARMOR_SCHEMA: SchemaDef = {
   '防具数值': {
+    '说明': null,
     '防御装备数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
     '词条数量': ['F级', 'E级', 'D级', 'C级', 'B级及以上'],
   },
@@ -132,12 +182,23 @@ const STATUS_RULES_SCHEMA: SchemaDef = {
   '状态规则': {
     '叠加规则': ['同类型负面', '同类型正面', '正负抵消', '持续时间'],
     '状态强度等级': ['弱效', '中效', '强效'],
+    '持续伤害状态详情': null,
+    '控制效果详情': null,
+    '减益效果详情': null,
+    '增益效果详情': null,
+    '防护效果详情': null,
   },
 }
 
 const TASK_REWARD_SCHEMA: SchemaDef = {
   '任务奖励': {
-    '物品奖励': ['主线任务', '支线任务品级投掷规则', '隐藏任务品级投掷规则'],
+    '物品奖励': {
+      '说明': null,
+      '主线任务': { '品级': null },
+      '支线任务品级投掷规则': null,
+      '隐藏任务品级投掷规则': null,
+      '预投掷结果（如果超出任务生成个数，则取前几个）': null,
+    },
     '属性点奖励': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
     '兑换点奖励': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
   },
@@ -145,6 +206,7 @@ const TASK_REWARD_SCHEMA: SchemaDef = {
 
 const PROMOTION_SCHEMA: SchemaDef = {
   '晋级消耗': ['晋升E级', '晋升D级', '晋升C级', '晋升B级', '晋升A级', '晋升S级', '晋升SS级', '晋升SSS级'],
+  '晋级条件': { '说明': null },
 }
 
 const EXCHANGE_PRICE_SCHEMA: SchemaDef = {

@@ -87,5 +87,5 @@ const emit = defineEmits<{
 
 <style scoped lang="scss">
 @use './shared-styles' as *;
-.acu-dice-section-title { font-size: 10px; font-weight: 900; color: var(--acu-accent); text-transform: uppercase; letter-spacing: 0.5px; }
+.acu-dice-section-title { font-size: 10px; font-weight: 900; color: var(--acu-accent); }
 </style>

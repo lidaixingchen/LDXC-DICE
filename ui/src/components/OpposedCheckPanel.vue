@@ -373,8 +373,6 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 900;
   color: var(--acu-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .acu-dice-quick-presets {

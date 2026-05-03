@@ -490,55 +490,86 @@ function openSettings() {
 }
 
 function handleSaveGame(slotId: number): void {
-  const charName = currentCharacter.value;
-  const char = characters.value.find(c => c.name === charName);
-  const attrs: Record<string, number> = {};
-  if (char) Object.entries(char.attributes).forEach(([k, v]) => { attrs[k] = v; });
+  const charName = currentCharacter.value
+  const charSnapshots = characters.value.map(c => ({
+    name: c.name,
+    attributes: { ...c.attributes },
+  }))
 
-  saveSlots.value = SaveService.saveGame(slotId, saveSlots.value, {
+  saveSlots.value = SaveService.saveGame(slotId, saveSlots.value, SaveService.packGameState({
     playerName: initiatorName.value || '冒险者',
     level: worldLevel.value,
-    attrs,
+    currentCharacter: charName,
+    characters: charSnapshots,
     combat: { ...combat.value },
     equipment: { ...equipment.value },
     statuses: activeStatuses.value.map(s => ({ ...s })),
+    activeSkills: activeSkills?.value || [],
+    usableItems: usableItems?.value || [],
+    statusIdCounter: 0,
+    dashboard: {
+      playerResources: [],
+      npcs: [],
+      quests: [],
+      currentLocation: '',
+    },
     worldName: combat.value.enemyName || '',
     location: '未知',
-  });
+  }))
 }
 
 function handleLoadGame(slotId: number): void {
-  const data = SaveService.loadGame(saveSlots.value, slotId);
-  if (!data) return;
-  initiatorName.value = data.playerName;
-  worldLevel.value = data.level;
-  combat.value = { ...data.combat };
-  equipment.value = { ...data.equipment };
-  activeStatuses.value = data.statuses.map(s => ({ ...s }));
+  const slot = saveSlots.value.find(s => s.id === slotId)
+  if (!slot) return
+  const state = SaveService.unpackGameState(slot)
+  if (!state) return
+  initiatorName.value = state.playerName
+  worldLevel.value = state.level
+  combat.value = { ...state.combat }
+  equipment.value = { ...state.equipment }
+  activeStatuses.value = state.statuses.map(s => ({ ...s }))
 }
 
 function handleExportSave(): void {
-  const charName = currentCharacter.value;
-  const char = characters.value.find(c => c.name === charName);
+  const charName = currentCharacter.value
+  const char = characters.value.find(c => c.name === charName)
   const stats = char
     ? CombatCalculationService.deriveCombatStats(char.attributes, worldLevel.value, equipment.value)
-    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 10 };
+    : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 10 }
 
-  exportText.value = SaveService.exportSaveText(
-    initiatorName.value || '冒险者',
-    worldLevel.value,
-    combat.value,
-    equipment.value,
-    activeStatuses.value,
-    stats,
-  );
+  const charSnapshots = characters.value.map(c => ({
+    name: c.name,
+    attributes: { ...c.attributes },
+  }))
+
+  exportText.value = SaveService.exportSaveText({
+    playerName: initiatorName.value || '冒险者',
+    level: worldLevel.value,
+    currentCharacter: charName,
+    characters: charSnapshots,
+    combat: { ...combat.value },
+    equipment: { ...equipment.value },
+    statuses: activeStatuses.value.map(s => ({ ...s })),
+    activeSkills: activeSkills?.value || [],
+    usableItems: usableItems?.value || [],
+    statusIdCounter: 0,
+    dashboard: { playerResources: [], npcs: [], quests: [], currentLocation: '' },
+    worldName: combat.value.enemyName || '',
+    location: '未知',
+  }, stats)
 }
 
 function handleImportSave(): void {
-  if (!SaveService.importSave(importText.value)) {
-    alert('存档格式无效：未检测到存档标识');
+  const state = SaveService.parseImportText(importText.value)
+  if (!state) {
+    alert('存档格式无效：未检测到有效存档数据')
   } else {
-    alert('存档导入成功！（演示模式：请手动恢复各项数值）');
+    initiatorName.value = state.playerName
+    worldLevel.value = state.level
+    combat.value = { ...state.combat }
+    equipment.value = { ...state.equipment }
+    activeStatuses.value = state.statuses.map(s => ({ ...s }))
+    alert('存档导入成功！')
   }
 }
 
@@ -785,7 +816,7 @@ onMounted(() => {
 .acu-card-header {
   display: flex; align-items: center; justify-content: space-between; gap: 4px;
   font-size: 10px; font-weight: 700; color: var(--acu-accent);
-  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--acu-border);
+  margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--acu-border);
 }
 
 .acu-card-title { display: flex; align-items: center; gap: 4px; }
@@ -835,7 +866,7 @@ onMounted(() => {
 }
 
 .acu-dice-result-badge {
-  padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
   &.success { background: linear-gradient(135deg, var(--acu-success-text, #27ae60), var(--acu-success-text, #2ecc71)); color: var(--acu-button-text-on-accent, white); box-shadow: 0 2px 8px rgba(var(--acu-success-rgb, 46, 204, 113), 0.4); }
   &.failure { background: linear-gradient(135deg, var(--acu-error-text, #c0392b), var(--acu-error-text, #e74c3c)); color: var(--acu-button-text-on-accent, white); box-shadow: 0 2px 8px rgba(var(--acu-danger-rgb, 231, 76, 60), 0.4); }
 }

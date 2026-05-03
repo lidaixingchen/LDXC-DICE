@@ -1027,7 +1027,6 @@ const questList = computed(() => {
   font-size: 12px;
   font-weight: 900;
   color: var(--acu-accent);
-  text-transform: uppercase;
   margin-bottom: 8px;
   display: flex;
   align-items: center;
@@ -1154,9 +1153,7 @@ const questList = computed(() => {
   font-weight: 600;
   color: var(--acu-text-sub);
   margin-bottom: var(--acu-space-sm, 8px);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  
+
   i {
     font-size: 10px;
   }

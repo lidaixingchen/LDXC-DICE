@@ -59,13 +59,6 @@ function openDiceEditor(id: string | null): void {
   viewMode.value = 'dice-editor';
 }
 
-function selectDicePreset(preset: AdvancedDicePreset): void {
-  editingPresetId.value = preset.id;
-  editingPresetName.value = preset.name;
-  editingPresetDesc.value = preset.description || '';
-  editingPresetJson.value = JSON.stringify(preset, null, 2);
-}
-
 function hasNameConflict(preset: AdvancedDicePreset): boolean {
   return dicePresets.value.some(p => p.name === preset.name);
 }
@@ -209,7 +202,7 @@ onMounted(() => {
             v-for="preset in filteredDicePresets"
             :key="preset.id"
             class="preset-item"
-            @click="selectDicePreset(preset)"
+            @click="openDiceEditor(preset.id)"
           >
             <div class="preset-info">
               <div class="preset-name">{{ preset.name }}</div>

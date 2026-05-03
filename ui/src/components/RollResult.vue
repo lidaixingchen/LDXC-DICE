@@ -130,7 +130,7 @@ const marginText = computed(() => {
   padding-top: 12px;
 }
 
-.acu-effects-title { font-size: 10px; font-weight: 700; color: var(--acu-text-sub); text-transform: uppercase; margin-bottom: 8px; }
+.acu-effects-title { font-size: 10px; font-weight: 700; color: var(--acu-text-sub); margin-bottom: 8px; }
 
 .acu-eff-chip {
   display: flex;

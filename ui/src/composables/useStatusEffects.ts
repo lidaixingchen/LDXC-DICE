@@ -4,6 +4,14 @@ import type { StatusEffect } from '../services';
 let statusIdCounter = 0;
 const activeStatuses = ref<StatusEffect[]>([]);
 
+export function getStatusIdCounter(): number {
+  return statusIdCounter;
+}
+
+export function setStatusIdCounter(value: number): void {
+  statusIdCounter = value;
+}
+
 export function useStatusEffects() {
 
   function addStatus(

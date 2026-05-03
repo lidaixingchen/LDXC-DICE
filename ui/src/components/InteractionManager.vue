@@ -13,6 +13,31 @@ const currentPreset = ref<InteractionPreset | null>(null);
 const selectedRuleId = ref<string>('');
 const showRuleEditor = ref(false);
 const editingRule = ref<MapInteraction | null>(null);
+
+const gridCol = computed({
+  get: () => ((editingRule.value?.trigger.data as any)?.gridCell?.col) ?? 0,
+  set: (val: number) => {
+    if (!editingRule.value) return;
+    const data = editingRule.value.trigger.data as any;
+    if (!data) editingRule.value.trigger.data = {} as any;
+    const d = (editingRule.value.trigger.data as any);
+    if (!d.gridCell) d.gridCell = {} as any;
+    d.gridCell.col = val;
+  }
+});
+
+const gridRow = computed({
+  get: () => ((editingRule.value?.trigger.data as any)?.gridCell?.row) ?? 0,
+  set: (val: number) => {
+    if (!editingRule.value) return;
+    const data = editingRule.value.trigger.data as any;
+    if (!data) editingRule.value.trigger.data = {} as any;
+    const d = (editingRule.value.trigger.data as any);
+    if (!d.gridCell) d.gridCell = {} as any;
+    d.gridCell.row = val;
+  }
+});
+
 const showImportModal = ref(false);
 const importJson = ref('');
 const importError = ref('');
@@ -174,6 +199,40 @@ function getActionDescription(actions: MapInteractionAction[]): string {
   }
 }
 
+function addAction() {
+  if (!editingRule.value) return;
+  const newAction: MapInteractionAction = {
+    type: 'dice_roll',
+    data: {} as Record<string, unknown>,
+  };
+  editingRule.value = { ...editingRule.value, actions: [...editingRule.value.actions, newAction] };
+}
+
+function removeAction(index: number) {
+  if (!editingRule.value) return;
+  const actions = [...editingRule.value.actions];
+  actions.splice(index, 1);
+  editingRule.value = { ...editingRule.value, actions };
+}
+
+function updateActionField(index: number, field: string, value: unknown) {
+  if (!editingRule.value) return;
+  const actions = editingRule.value.actions.map((a, i) => {
+    if (i !== index) return a;
+    return { ...a, data: { ...(a.data || {}), [field]: value } };
+  });
+  editingRule.value = { ...editingRule.value, actions };
+}
+
+function updateActionType(index: number, newType: string) {
+  if (!editingRule.value) return;
+  const actions = editingRule.value.actions.map((a, i) => {
+    if (i !== index) return a;
+    return { ...a, type: newType as MapInteractionAction['type'], data: {} as Record<string, unknown> };
+  });
+  editingRule.value = { ...editingRule.value, actions };
+}
+
 onMounted(() => {
   loadPresets();
 });
@@ -295,6 +354,10 @@ onMounted(() => {
         </div>
         <div class="acu-modal-body">
           <div class="acu-form-row">
+            <label>规则名称</label>
+            <input v-model="editingRule.name" type="text" placeholder="给规则起个名字..." />
+          </div>
+          <div class="acu-form-row">
             <label>触发类型</label>
             <select v-model="editingRule.trigger.type">
               <option value="token">令牌</option>
@@ -303,6 +366,27 @@ onMounted(() => {
               <option value="custom">自定义</option>
             </select>
           </div>
+          <template v-if="editingRule.trigger.type === 'token'">
+            <div class="acu-form-row">
+              <label>令牌 ID</label>
+              <input v-model="editingRule.trigger.tokenId" type="text" placeholder="留空表示任意令牌" />
+            </div>
+          </template>
+          <template v-if="editingRule.trigger.type === 'region'">
+            <div class="acu-form-row">
+              <label>区域 ID</label>
+              <input v-model="editingRule.trigger.regionId" type="text" placeholder="留空表示任意区域" />
+            </div>
+          </template>
+          <template v-if="editingRule.trigger.type === 'grid'">
+            <div class="acu-form-row">
+              <label>格子位置 (col, row)</label>
+              <div class="acu-inline-fields">
+                <input v-model.number="gridCol" type="number" placeholder="列" min="0" />
+                <input v-model.number="gridRow" type="number" placeholder="行" min="0" />
+              </div>
+            </div>
+          </template>
           <div class="acu-form-row">
             <label>优先级</label>
             <input v-model.number="editingRule.priority" type="number" min="0" max="1000" />
@@ -310,6 +394,86 @@ onMounted(() => {
           <div class="acu-form-row checkbox">
             <label>启用</label>
             <input v-model="editingRule.enabled" type="checkbox" />
+          </div>
+
+          <div class="acu-form-section">
+            <div class="acu-section-header">
+              <label>动作列表</label>
+              <button class="acu-add-btn" @click="addAction"><i class="fa-solid fa-plus"></i> 添加动作</button>
+            </div>
+            <div
+              v-for="(action, idx) in editingRule.actions"
+              :key="idx"
+              class="acu-action-card"
+            >
+              <div class="acu-action-header">
+                <span class="acu-action-num">动作 {{ idx + 1 }}</span>
+                <button class="acu-remove-btn danger" @click="removeAction(idx)">
+                  <i class="fa-solid fa-times"></i>
+                </button>
+              </div>
+              <div class="acu-form-row">
+                <label>动作类型</label>
+                <select
+                  :value="action.type"
+                  @change="updateActionType(idx, ($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="dice_roll">掷骰</option>
+                  <option value="message">消息</option>
+                  <option value="effect">效果</option>
+                  <option value="move_token">移动令牌</option>
+                  <option value="change_layer">更改图层</option>
+                  <option value="custom">自定义</option>
+                </select>
+              </div>
+              <template v-if="action.type === 'dice_roll'">
+                <div class="acu-form-row">
+                  <label>预设 ID</label>
+                  <input
+                    :value="action.data?.presetId"
+                    @input="updateActionField(idx, 'presetId', ($event.target as HTMLInputElement).value)"
+                    type="text"
+                    placeholder="检定预设标识"
+                  />
+                </div>
+              </template>
+              <template v-if="action.type === 'message'">
+                <div class="acu-form-row">
+                  <label>消息文本</label>
+                  <textarea
+                    :value="String(action.data?.text ?? '')"
+                    @input="updateActionField(idx, 'text', ($event.target as HTMLTextAreaElement).value)"
+                    placeholder="要发送的消息内容..."
+                    rows="2"
+                  ></textarea>
+                </div>
+              </template>
+              <template v-if="action.type === 'effect'">
+                <div class="acu-form-row">
+                  <label>效果类型</label>
+                  <input
+                    :value="action.data?.effectType"
+                    @input="updateActionField(idx, 'effectType', ($event.target as HTMLInputElement).value)"
+                    type="text"
+                    placeholder="如: damage, buff, status..."
+                  />
+                </div>
+              </template>
+              <template v-if="action.type === 'custom'">
+                <div class="acu-form-row">
+                  <label>处理函数</label>
+                  <input
+                    :value="action.data?.handler"
+                    @input="updateActionField(idx, 'handler', ($event.target as HTMLInputElement).value)"
+                    type="text"
+                    placeholder="自定义处理函数名"
+                  />
+                </div>
+              </template>
+            </div>
+            <div v-if="editingRule.actions.length === 0" class="acu-empty-hint">
+              暂无动作，点击上方按钮添加
+            </div>
           </div>
         </div>
         <div class="acu-modal-footer">
@@ -554,7 +718,6 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 900;
   color: var(--acu-accent);
-  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
@@ -778,6 +941,93 @@ onMounted(() => {
     background: var(--acu-accent);
     color: white;
     border-color: var(--acu-accent);
+  }
+}
+
+.acu-form-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--acu-border);
+}
+
+.acu-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--acu-text-sub);
+  }
+}
+
+.acu-add-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-accent);
+  background: transparent;
+  color: var(--acu-accent);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background: var(--acu-accent);
+    color: white;
+  }
+}
+
+.acu-action-card {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  margin-bottom: 8px;
+}
+
+.acu-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.acu-action-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--acu-accent);
+}
+
+.acu-remove-btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+
+  &:hover {
+    background: var(--acu-error-bg, rgba(231, 76, 60, 0.15));
+    color: var(--acu-error-text, #e74c3c);
+  }
+}
+
+.acu-inline-fields {
+  display: flex;
+  gap: 8px;
+
+  input {
+    flex: 1;
   }
 }
 </style>

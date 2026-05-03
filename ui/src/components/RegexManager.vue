@@ -740,7 +740,6 @@ onMounted(() => {
   font-size: 10px;
   font-weight: 900;
   color: var(--acu-accent);
-  text-transform: uppercase;
   margin-bottom: 8px;
 }
 

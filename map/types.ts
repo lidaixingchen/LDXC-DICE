@@ -124,6 +124,7 @@ export interface MapBackground {
 
 export interface MapInteraction {
   id: string;
+  name?: string;
   type: MapInteractionType;
   trigger: MapInteractionTrigger;
   actions: MapInteractionAction[];
