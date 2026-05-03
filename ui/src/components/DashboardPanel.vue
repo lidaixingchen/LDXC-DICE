@@ -109,6 +109,31 @@ interface CombatState {
 
 const combat = inject('aidmCombat') as { value: CombatState } | undefined;
 
+interface SkillEntry {
+  name: string;
+  type: string;
+  effect: string;
+  value: string;
+  cooldown: string;
+  source: 'skill_table' | 'special_attr';
+}
+
+const TIER_CONFIG: Record<string, { label: string; cssClass: string; color: string }> = {
+  novice:   { label: '入门', cssClass: 'tier-novice',   color: '#6c7086' },
+  skilled:  { label: '熟练', cssClass: 'tier-skilled',  color: '#89b4fa' },
+  master:   { label: '精通', cssClass: 'tier-master',   color: '#cba6f7' },
+  grandmaster: { label: '大师', cssClass: 'tier-grandmaster', color: '#f9e2af' },
+  legendary: { label: '传说', cssClass: 'tier-legendary', color: '#f38ba8' },
+};
+
+function getTier(value: number) {
+  if (value <= 25) return TIER_CONFIG.novice;
+  if (value <= 50) return TIER_CONFIG.skilled;
+  if (value <= 75) return TIER_CONFIG.master;
+  if (value <= 95) return TIER_CONFIG.grandmaster;
+  return TIER_CONFIG.legendary;
+}
+
 const data = computed(() => {
   const raw = getTableData();
   if (!raw) return null;
@@ -206,7 +231,16 @@ const playerInfo = computed(() => {
     }
   });
   
-  return { name, level, status, position, baseAttrs, specialAttrs, resources, combatAttrs };
+  const specialSkills: SkillEntry[] = specialAttrs.map(attr => ({
+    name: attr.name,
+    type: '被动',
+    effect: '',
+    value: attr.value,
+    cooldown: '-',
+    source: 'special_attr' as const
+  }));
+
+  return { name, level, status, position, baseAttrs, specialAttrs, specialSkills, resources, combatAttrs };
 });
 
 const worldLevel = computed(() => {
@@ -383,26 +417,36 @@ const equipList = computed(() => {
 
 const skillList = computed(() => {
   const skills = data.value?.skills;
-  if (!skills?.content) return { active: [], passive: [] };
-  
-  const headers = skills.content[0] || [];
-  const typeIdx = headers.findIndex((h: string) => h?.includes('类型'));
-  const nameIdx = headers.findIndex((h: string) => h?.includes('名称'));
-  const descIdx = headers.findIndex((h: string) => h?.includes('效果') || h?.includes('描述'));
-  const valueIdx = headers.findIndex((h: string) => h?.includes('数值'));
-  const cooldownIdx = headers.findIndex((h: string) => h?.includes('冷却'));
-  
-  const allSkills = skills.content.slice(1).map((row: any) => ({
-    name: nameIdx !== -1 ? row[nameIdx] || '未知技能' : row[1] || '未知技能',
-    type: typeIdx !== -1 ? row[typeIdx] || '主动' : row[2] || '主动',
-    effect: descIdx !== -1 ? row[descIdx] || '' : row[3] || '',
-    value: valueIdx !== -1 ? row[valueIdx] || '' : row[4] || '',
-    cooldown: cooldownIdx !== -1 ? row[cooldownIdx] || '-' : row[5] || '-'
-  }));
-  
+  let tableSkills: SkillEntry[] = [];
+
+  if (skills?.content) {
+    const headers = skills.content[0] || [];
+    const typeIdx = headers.findIndex((h: string) => h?.includes('类型'));
+    const nameIdx = headers.findIndex((h: string) => h?.includes('名称'));
+    const descIdx = headers.findIndex((h: string) => h?.includes('效果') || h?.includes('描述'));
+    const valueIdx = headers.findIndex((h: string) => h?.includes('数值'));
+    const cooldownIdx = headers.findIndex((h: string) => h?.includes('冷却'));
+
+    tableSkills = skills.content.slice(1).map((row: any) => ({
+      name: nameIdx !== -1 ? row[nameIdx] || '未知技能' : row[1] || '未知技能',
+      type: typeIdx !== -1 ? row[typeIdx] || '主动' : row[2] || '主动',
+      effect: descIdx !== -1 ? row[descIdx] || '' : row[3] || '',
+      value: valueIdx !== -1 ? row[valueIdx] || '' : row[4] || '',
+      cooldown: cooldownIdx !== -1 ? row[cooldownIdx] || '-' : row[5] || '-',
+      source: 'skill_table' as const
+    }));
+  }
+
+  const specialSkills = playerInfo.value?.specialSkills || [];
+  const tableNames = new Set(tableSkills.map(s => s.name));
+  const merged: SkillEntry[] = [
+    ...tableSkills,
+    ...specialSkills.filter(s => !tableNames.has(s.name))
+  ];
+
   return {
-    active: allSkills.filter((s: any) => s.type === '主动'),
-    passive: allSkills.filter((s: any) => s.type === '被动')
+    active: merged.filter(s => s.type === '主动'),
+    passive: merged.filter(s => s.type === '被动')
   };
 });
 
@@ -688,25 +732,6 @@ const questList = computed(() => {
             </div>
           </div>
 
-          <!-- 特有属性区（可折叠） -->
-          <div v-if="playerInfo?.specialAttrs?.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('specialAttrs') }">
-            <div class="acu-collapsible-header" @click="toggleSection('specialAttrs')">
-              <h4 class="acu-section-title">
-                <i class="fa-solid fa-star"></i>
-                特有属性 ({{ playerInfo?.specialAttrs?.length || 0 }})
-              </h4>
-              <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
-            </div>
-            <div class="acu-collapsible-content">
-              <div class="acu-special-attrs-grid">
-                <div v-for="attr in playerInfo?.specialAttrs" :key="attr.name" class="acu-special-attr-item">
-                  <span class="acu-special-attr-name">{{ attr.name }}</span>
-                  <span class="acu-special-attr-value">{{ attr.value }}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
           <!-- 技能区（可折叠） -->
           <div v-if="skillList.active.length || skillList.passive.length" class="acu-collapsible" :class="{ 'acu-collapsed': isCollapsed('skills') }">
             <div class="acu-collapsible-header" @click="toggleSection('skills')">
@@ -717,17 +742,19 @@ const questList = computed(() => {
               <i class="fa-solid fa-chevron-down acu-expand-icon"></i>
             </div>
             <div class="acu-collapsible-content">
-              <!-- 主动技能 -->
               <div v-if="skillList.active.length" class="acu-skill-section">
                 <div class="acu-skill-section-title">
                   <i class="fa-solid fa-bolt"></i>
                   主动技能
                 </div>
                 <div class="acu-skill-list">
-                  <div v-for="skill in skillList.active" :key="skill.name" class="acu-skill-item active">
+                  <div v-for="skill in skillList.active" :key="skill.name" class="acu-skill-item active" :class="{ 'acu-special-derived': skill.source === 'special_attr' }">
                     <div class="acu-skill-header">
                       <span class="acu-skill-name">{{ skill.name }}</span>
-                      <span v-if="skill.cooldown !== '-'" class="acu-skill-cooldown">
+                      <span v-if="skill.source === 'special_attr' && skill.value" class="acu-skill-tier" :style="{ '--tier-color': getTier(Number(skill.value)).color }" :class="getTier(Number(skill.value)).cssClass">
+                        {{ getTier(Number(skill.value)).label }}
+                      </span>
+                      <span v-else-if="skill.cooldown !== '-'" class="acu-skill-cooldown">
                         <i class="fa-solid fa-hourglass-half"></i>
                         {{ skill.cooldown }}
                       </span>
@@ -735,26 +762,28 @@ const questList = computed(() => {
                     <div class="acu-skill-effect">{{ skill.effect }}</div>
                     <div v-if="skill.value" class="acu-skill-value">
                       <i class="fa-solid fa-chart-line"></i>
-                      {{ skill.value }}
+                      {{ skill.value }}{{ skill.source === 'special_attr' ? '%' : '' }}
                     </div>
                   </div>
                 </div>
               </div>
-              <!-- 被动技能 -->
               <div v-if="skillList.passive.length" class="acu-skill-section">
                 <div class="acu-skill-section-title">
                   <i class="fa-solid fa-star"></i>
                   被动技能
                 </div>
                 <div class="acu-skill-list">
-                  <div v-for="skill in skillList.passive" :key="skill.name" class="acu-skill-item passive">
+                  <div v-for="skill in skillList.passive" :key="skill.name" class="acu-skill-item passive" :class="{ 'acu-special-derived': skill.source === 'special_attr' }">
                     <div class="acu-skill-header">
                       <span class="acu-skill-name">{{ skill.name }}</span>
+                      <span v-if="skill.source === 'special_attr' && skill.value" class="acu-skill-tier" :style="{ '--tier-color': getTier(Number(skill.value)).color }" :class="getTier(Number(skill.value)).cssClass">
+                        {{ getTier(Number(skill.value)).label }}
+                      </span>
                     </div>
                     <div class="acu-skill-effect">{{ skill.effect }}</div>
                     <div v-if="skill.value" class="acu-skill-value">
                       <i class="fa-solid fa-chart-line"></i>
-                      {{ skill.value }}
+                      {{ skill.value }}{{ skill.source === 'special_attr' ? '%' : '' }}
                     </div>
                   </div>
                 </div>
@@ -1368,32 +1397,22 @@ const questList = computed(() => {
   transition: width 0.3s ease;
 }
 
-/* ========== 特有属性 ========== */
-.acu-special-attrs-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--acu-space-xs, 4px);
+/* ========== 技能段位徽章 ========== */
+.acu-skill-tier {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--tier-color);
+  background: color-mix(in srgb, var(--tier-color) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tier-color) 35%, transparent);
 }
 
-.acu-special-attr-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: rgba(var(--acu-accent-rgb, 137, 180, 250), 0.1);
-  border: 1px solid rgba(var(--acu-accent-rgb, 137, 180, 250), 0.3);
-  border-radius: var(--acu-radius-md, 6px);
-}
-
-.acu-special-attr-name {
-  font-size: 11px;
-  color: var(--acu-text-sub);
-}
-
-.acu-special-attr-value {
-  font-size: 11px;
-  color: var(--acu-accent);
-  font-weight: 600;
+.acu-special-derived {
+  &.passive {
+    border-left-color: color-mix(in srgb, var(--acu-accent, #8b5cf6) 60%, transparent);
+    background: linear-gradient(135deg, rgba(var(--acu-accent-rgb, 139, 92, 246), 0.08) 0%, transparent 50%);
+  }
 }
 
 /* ========== 属性可视化进度条 ========== */

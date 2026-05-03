@@ -14,27 +14,34 @@ const selectedRuleId = ref<string>('');
 const showRuleEditor = ref(false);
 const editingRule = ref<MapInteraction | null>(null);
 
+interface GridCellData {
+  gridCell?: { col: number; row: number };
+}
+
+function ensureGridCell(data: Record<string, unknown> | undefined): asserts data is Record<string, unknown> & GridCellData {
+  if (!data) return;
+  if (!data.gridCell || typeof data.gridCell !== 'object') {
+    data.gridCell = { col: 0, row: 0 };
+  }
+}
+
 const gridCol = computed({
-  get: () => ((editingRule.value?.trigger.data as any)?.gridCell?.col) ?? 0,
+  get: () => ((editingRule.value?.trigger.data as GridCellData | undefined)?.gridCell?.col) ?? 0,
   set: (val: number) => {
     if (!editingRule.value) return;
-    const data = editingRule.value.trigger.data as any;
-    if (!data) editingRule.value.trigger.data = {} as any;
-    const d = (editingRule.value.trigger.data as any);
-    if (!d.gridCell) d.gridCell = {} as any;
-    d.gridCell.col = val;
+    if (!editingRule.value.trigger.data) editingRule.value.trigger.data = {};
+    ensureGridCell(editingRule.value.trigger.data);
+    editingRule.value.trigger.data.gridCell!.col = val;
   }
 });
 
 const gridRow = computed({
-  get: () => ((editingRule.value?.trigger.data as any)?.gridCell?.row) ?? 0,
+  get: () => ((editingRule.value?.trigger.data as GridCellData | undefined)?.gridCell?.row) ?? 0,
   set: (val: number) => {
     if (!editingRule.value) return;
-    const data = editingRule.value.trigger.data as any;
-    if (!data) editingRule.value.trigger.data = {} as any;
-    const d = (editingRule.value.trigger.data as any);
-    if (!d.gridCell) d.gridCell = {} as any;
-    d.gridCell.row = val;
+    if (!editingRule.value.trigger.data) editingRule.value.trigger.data = {};
+    ensureGridCell(editingRule.value.trigger.data);
+    editingRule.value.trigger.data.gridCell!.row = val;
   }
 });
 

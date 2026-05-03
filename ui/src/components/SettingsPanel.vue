@@ -12,7 +12,7 @@ import {
 import { validationPresetManager } from '@data/validation-preset-manager';
 import type { ValidationRuleConfig } from '@data/validation-presets';
 import { groupErrorsByTable, validateAllData, type ValidationError, type RawData } from '@data/validation-executor';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onActivated, onMounted, onUnmounted, ref } from 'vue';
 import { useDashboard } from '../composables/useDashboard';
 import AttributeRuleManager from './AttributeRuleManager.vue';
 import BlacklistManager from './BlacklistManager.vue';
@@ -494,10 +494,19 @@ function openAdvancedManager(type: string) {
 let unsubscribeSettings: (() => void) | null = null;
 
 onMounted(() => {
-  if (props.requestedSection) activeSection.value = props.requestedSection;
+  if (props.requestedSection) {
+    activeSection.value = props.requestedSection;
+  }
   unsubscribeSettings = settingsManager.onChange(syncAll);
   loadValidationPresets();
   loadRegexPresets();
+});
+
+onActivated(() => {
+  const validSections = ['appearance', 'layout', 'options', 'tables', 'validation', 'regex', 'advanced'];
+  if (!validSections.includes(activeSection.value)) {
+    activeSection.value = 'appearance';
+  }
 });
 
 onUnmounted(() => {
