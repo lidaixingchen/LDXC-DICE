@@ -2,7 +2,7 @@
 import { CombatCalculationService, WorldConfigService } from '../../services';
 import type { SkillData, ItemData, CombatState, EquipmentSlot } from '../../services';
 
-defineProps<{
+const props = defineProps<{
   combat: CombatState;
   activeSkills: SkillData[];
   usableItems: ItemData[];
@@ -23,6 +23,14 @@ const emit = defineEmits<{
   (e: 'useSkill', skill: SkillData): void;
   (e: 'useItem', item: ItemData): void;
 }>();
+
+function hpColorClass(current: number, max: number): string {
+  if (max <= 0) return 'hp-critical';
+  const pct = current / max * 100;
+  if (pct > 60) return 'hp-healthy';
+  if (pct > 30) return 'hp-wounded';
+  return 'hp-critical';
+}
 </script>
 
 <template>
@@ -45,7 +53,7 @@ const emit = defineEmits<{
         <div class="acu-combat-bar-group">
           <div class="acu-combat-bar-label">👤 {{ initiatorName || '玩家' }}</div>
           <div class="acu-hp-bar">
-            <div class="acu-hp-fill player" :style="{ width: (combat.playerCurrentHP / combat.playerMaxHP * 100) + '%' }"></div>
+            <div class="acu-hp-fill player" :class="hpColorClass(combat.playerCurrentHP, combat.playerMaxHP)" :style="{ width: (combat.playerCurrentHP / combat.playerMaxHP * 100) + '%' }"></div>
           </div>
           <span class="acu-hp-text">{{ combat.playerCurrentHP }}/{{ combat.playerMaxHP }}
             <span v-if="combat.playerShield > 0" class="acu-shield-text"> 🛡️{{ combat.playerShield }}</span>
@@ -54,7 +62,7 @@ const emit = defineEmits<{
         <div class="acu-combat-bar-group">
           <div class="acu-combat-bar-label">👹 {{ combat.enemyName || '敌人' }}</div>
           <div class="acu-hp-bar enemy">
-            <div class="acu-hp-fill enemy" :style="{ width: (combat.enemyCurrentHP / combat.enemyMaxHP * 100) + '%' }"></div>
+            <div class="acu-hp-fill enemy" :class="hpColorClass(combat.enemyCurrentHP, combat.enemyMaxHP)" :style="{ width: (combat.enemyCurrentHP / combat.enemyMaxHP * 100) + '%' }"></div>
           </div>
           <span class="acu-hp-text">{{ combat.enemyCurrentHP }}/{{ combat.enemyMaxHP }}</span>
         </div>
@@ -138,7 +146,7 @@ const emit = defineEmits<{
 .acu-combat-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .acu-combat-bar-group { display: flex; flex-direction: column; gap: 2px; .acu-combat-bar-label { font-size: 10px; font-weight: 700; color: var(--acu-text-main); } }
 .acu-hp-bar { height: 12px; border-radius: 6px; overflow: hidden; background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.2); position: relative; &.enemy { background: rgba(var(--acu-danger-rgb, 231, 76, 60), 0.15); } }
-.acu-hp-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; &.player { background: linear-gradient(90deg, var(--acu-success-text, #27ae60), var(--acu-success-text, #2ecc71)); } &.enemy { background: linear-gradient(90deg, var(--acu-error-text, #c0392b), var(--acu-error-text, #e74c3c)); } }
+.acu-hp-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease, background 0.3s ease; &.player { background: var(--acu-success, #27ae60); } &.player.hp-healthy { background: var(--acu-success, #27ae60); } &.player.hp-wounded { background: var(--acu-warning, #f39c12); } &.player.hp-critical { background: var(--acu-danger, #e74c3c); } &.enemy { background: var(--acu-error-text, #e74c3c); } &.enemy.hp-healthy { background: #e74c3c; } &.enemy.hp-wounded { background: var(--acu-warning, #f39c12); } &.enemy.hp-critical { background: var(--acu-danger, #e74c3c); animation: acu-hp-pulse 1s infinite; } }
 .acu-hp-text { font-size: 9px; color: var(--acu-text-sub); }
 .acu-shield-text { color: var(--acu-color-info, #3498db); font-weight: 700; }
 .acu-env-erosion { margin-top: 6px; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: var(--acu-warning-icon, #e67e22); background: rgba(var(--acu-warning-rgb, 230, 126, 34), 0.1); border: 1px dashed rgba(var(--acu-warning-rgb, 230, 126, 34), 0.3); }
@@ -155,4 +163,9 @@ const emit = defineEmits<{
   span { font-size: 9px; opacity: 0.7; margin-left: 2px; }
 }
 .acu-empty-hint { font-size: 11px; color: var(--acu-text-sub); opacity: 0.6; }
+
+@keyframes acu-hp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 </style>

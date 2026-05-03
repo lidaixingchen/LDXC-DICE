@@ -371,7 +371,7 @@ const locationList = computed(() => {
   const loc = data.value?.location;
   if (!loc?.content) return [];
   
-  return loc.content.slice(1, 10).map((row: any, idx: number) => ({
+  return loc.content.slice(1).map((row: any, idx: number) => ({
     name: row[1] || '未知地点',
     index: idx,
     isCurrent: currentLocation.value && (row[1]?.includes(currentLocation.value) || currentLocation.value.includes(row[1]))
@@ -385,7 +385,7 @@ const npcList = computed(() => {
   const headers = npc.content[0] || [];
   const inSceneIdx = headers.findIndex((h: string) => h?.includes('在场') || h?.includes('状态'));
   
-  return npc.content.slice(1, 10).map((row: any, idx: number) => {
+  return npc.content.slice(1).map((row: any, idx: number) => {
     const inSceneVal = String(row[inSceneIdx] || '').toLowerCase();
     const isInScene = inSceneVal === 'true' || inSceneVal === '在场' || !inSceneVal;
     
@@ -402,7 +402,7 @@ const bagList = computed(() => {
   const bag = data.value?.bag;
   if (!bag?.content) return [];
   
-  return bag.content.slice(1, 10).map((row: any) => ({
+  return bag.content.slice(1).map((row: any) => ({
     name: row[1] || '未知物品',
     count: row[2] || '1'
   }));
@@ -417,7 +417,7 @@ const equipList = computed(() => {
   const nameIdx = headers.findIndex((h: string) => h?.includes('名称'));
   const effectIdx = headers.findIndex((h: string) => h?.includes('效果'));
   
-  return equip.content.slice(1, 10).map((row: any) => ({
+  return equip.content.slice(1).map((row: any) => ({
     slot: slotIdx !== -1 ? row[slotIdx] || '' : row[1] || '',
     name: nameIdx !== -1 ? row[nameIdx] || '未知装备' : row[2] || '未知装备',
     effect: effectIdx !== -1 ? row[effectIdx] || '' : row[3] || ''
@@ -435,7 +435,7 @@ const skillList = computed(() => {
   const valueIdx = headers.findIndex((h: string) => h?.includes('数值'));
   const cooldownIdx = headers.findIndex((h: string) => h?.includes('冷却'));
   
-  const allSkills = skills.content.slice(1, 10).map((row: any) => ({
+  const allSkills = skills.content.slice(1).map((row: any) => ({
     name: nameIdx !== -1 ? row[nameIdx] || '未知技能' : row[1] || '未知技能',
     type: typeIdx !== -1 ? row[typeIdx] || '主动' : row[2] || '主动',
     effect: descIdx !== -1 ? row[descIdx] || '' : row[3] || '',
@@ -475,7 +475,7 @@ const questList = computed(() => {
   const typeIdx = headers.findIndex((h: string) => h?.includes('类型'));
   const progressIdx = headers.findIndex((h: string) => h?.includes('进度'));
   
-  return quest.content.slice(1, 6).map((row: any) => {
+  return quest.content.slice(1).map((row: any) => {
     const progress = row[progressIdx] || '';
     const match = String(progress).match(/(\d+)\s*%/);
     const progressNum = match ? parseInt(match[1]) : 0;
@@ -941,6 +941,10 @@ const questList = computed(() => {
               <div v-if="questList.length" class="acu-quest-list">
                 <div v-for="quest in questList" :key="quest.name" class="acu-quest-item">
                   <div class="q-name" :class="{ 'main-quest': quest.type.includes('主线') }">
+                    <i v-if="quest.type.includes('主线')" class="fa-solid fa-star q-type-icon main"></i>
+                    <i v-else-if="quest.type.includes('支线')" class="fa-solid fa-clipboard q-type-icon side"></i>
+                    <i v-else-if="quest.type.includes('隐藏')" class="fa-solid fa-lock q-type-icon hidden"></i>
+                    <i v-else class="fa-solid fa-scroll q-type-icon"></i>
                     {{ quest.name }}
                   </div>
                   <div v-if="quest.progress > 0" class="q-progress">
@@ -1205,6 +1209,8 @@ const questList = computed(() => {
   .acu-collapsible-content {
     padding: var(--acu-space-md, 12px);
     animation: acuSlideDown 0.2s ease;
+    max-height: 300px;
+    overflow-y: auto;
   }
 }
 
@@ -2096,7 +2102,7 @@ const questList = computed(() => {
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
@@ -2163,8 +2169,8 @@ const questList = computed(() => {
     flex: 1;
     min-width: 0;
     
-    .name { font-size: 11px; font-weight: 700; }
-    .status { font-size: 9px; color: var(--acu-text-sub); }
+    .name { font-size: 12px; font-weight: 700; }
+    .status { font-size: 10px; color: var(--acu-text-sub); }
   }
   
   .acu-action-icon {
@@ -2192,11 +2198,11 @@ const questList = computed(() => {
   align-items: center;
   gap: 4px;
   padding: 5px 4px;
-  font-size: 11px;
+  font-size: 12px;
   border-bottom: 1px dashed var(--acu-border);
   cursor: pointer;
   
-  i:first-child { font-size: 9px; opacity: 0.4; }
+  i:first-child { font-size: 10px; opacity: 0.4; }
   span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .count { font-size: 10px; color: var(--acu-text-sub); flex: 0 0 auto; }
   
@@ -2252,8 +2258,19 @@ const questList = computed(() => {
   cursor: pointer;
   
   .q-name {
-    font-size: 11px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
     &.main-quest { font-weight: 600; color: var(--acu-accent); }
+  }
+
+  .q-type-icon {
+    font-size: 9px;
+    opacity: 0.6;
+    &.main { color: #f9e2af; opacity: 1; }
+    &.side { color: var(--acu-accent); }
+    &.hidden { color: var(--acu-text-sub); }
   }
   
   .q-progress {

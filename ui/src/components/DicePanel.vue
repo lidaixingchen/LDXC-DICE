@@ -73,7 +73,6 @@ const lastResult = ref<CheckResult | null>(null);
 const showResult = ref(false);
 
 const checkMode = ref<CheckMode>('standard');
-const showMoreModes = ref(false);
 const { initiatorName, worldLevel } = useCombatState();
 const attrName = ref('');
 const attrValue = ref<number | string>('');
@@ -575,7 +574,6 @@ onMounted(() => {
     <div class="acu-dice-panel-body">
       <ModeSelector
         v-model:current-mode="checkMode"
-        v-model:show-more-modes="showMoreModes"
       />
 
       <StandardCheckPanel
