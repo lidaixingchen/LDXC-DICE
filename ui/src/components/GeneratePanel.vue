@@ -182,6 +182,9 @@ const activeTab = ref<'world' | 'skill'>('world');
       </div>
 
       <div v-if="activeTab === 'world'" class="acu-generate-content">
+        <button class="acu-full-btn accent" style="margin-bottom: 8px;" @click="generateWorlds()">
+          🔄 {{ generatedWorlds.length > 0 ? '重新生成' : '生成世界' }}
+        </button>
         <div v-if="generatedWorlds.length > 0" class="acu-world-list">
           <div v-for="(w, idx) in generatedWorlds" :key="idx" class="acu-world-item">
             <div class="acu-world-header">
@@ -194,11 +197,8 @@ const activeTab = ref<'world' | 'skill'>('world');
             </div>
             <div class="acu-world-desc">{{ w.description }}</div>
           </div>
-          <button class="acu-full-btn accent" style="margin-top: 8px;" @click="generateWorlds()">
-            🔄 重新生成
-          </button>
         </div>
-        <div v-else class="acu-empty-hint">点击上方「世界」标签生成候选世界列表</div>
+        <div v-else class="acu-empty-hint">点击上方按钮生成候选世界列表</div>
       </div>
 
       <div v-if="activeTab === 'skill'" class="acu-generate-content">

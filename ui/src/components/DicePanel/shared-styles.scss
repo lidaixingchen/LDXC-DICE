@@ -34,6 +34,19 @@
   &.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 }
 
+@media (max-width: 480px) {
+  .acu-dice-form-row {
+    &.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+}
+
+@media (max-width: 360px) {
+  .acu-dice-form-row {
+    &.cols-2 { grid-template-columns: 1fr; }
+    &.cols-3 { grid-template-columns: 1fr; }
+  }
+}
+
 .acu-dice-field { display: flex; flex-direction: column; gap: 2px; }
 
 .acu-dice-form-label {
@@ -52,6 +65,14 @@
 .acu-random-skill-btn { background: transparent; border: none; color: var(--acu-accent); cursor: pointer; padding: 0; font-size: 11px; opacity: 0.7; &:hover { opacity: 1; } }
 
 .acu-info-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+@media (max-width: 360px) {
+  .acu-info-cards { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 300px) {
+  .acu-info-cards { grid-template-columns: 1fr; }
+}
 
 .acu-info-card {
   background: linear-gradient(135deg, var(--acu-bg-header), var(--acu-bg-panel));

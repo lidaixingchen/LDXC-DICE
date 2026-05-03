@@ -541,7 +541,8 @@ onUnmounted(() => {
   position: absolute;
   left: 0;
   right: 0;
-  width: var(--acu-card-width, 380px);
+  width: 100%;
+  min-width: var(--acu-card-width, 380px);
   max-width: min(95vw, 1200px);
   margin: 0 auto;
   border-radius: 12px;
@@ -584,8 +585,8 @@ onUnmounted(() => {
 
 /* 选项面板 */
 .acu-option-panel {
-  width: var(--acu-card-width, 380px);
-  min-width: 320px;
+  width: 100%;
+  min-width: 280px;
   max-width: 100%;
   margin: 0 auto 10px auto;
   background: var(--acu-bg-nav);
@@ -638,8 +639,8 @@ onUnmounted(() => {
   border: 1px solid var(--acu-border);
   border-radius: 10px;
   box-shadow: 0 2px 6px var(--acu-shadow);
-  width: var(--acu-card-width, 380px);
-  min-width: 320px;
+  width: 100%;
+  min-width: 280px;
   margin: 0 auto;
   position: relative;
   z-index: calc(var(--acu-z-fixed, 31000) + 1);
@@ -717,7 +718,7 @@ onUnmounted(() => {
   gap: 6px;
   z-index: calc(var(--acu-z-fixed, 31000) + 5);
   &.acu-col-bar {
-    width: var(--acu-card-width, 380px);
+    width: 100%;
     justify-content: center;
     padding: 8px 10px;
     border-radius: 6px;
@@ -770,7 +771,7 @@ onUnmounted(() => {
     justify-content: flex-start !important;
     align-items: center !important;
     height: auto !important;
-    width: var(--acu-card-width, 380px);
+    width: 100%;
   }
 
   .acu-nav-container .acu-nav-btn {
