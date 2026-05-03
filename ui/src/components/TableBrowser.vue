@@ -91,10 +91,93 @@ function isSpecialTable(tableName: string): boolean {
   return name.includes('纪要') || name.includes('选项') || name.includes('summary') || name.includes('option');
 }
 
+function isPlayerTableName(tableName: string): boolean {
+  const name = tableName.toLowerCase();
+  return name.includes('主角') || name.includes('玩家信息') || name.includes('角色信息');
+}
+
 const isVerticalLayout = computed(() => {
   if (!tableData.value?.name) return false;
   return isSpecialTable(tableData.value.name);
 });
+
+const isPlayerTable = computed(() => {
+  if (!tableData.value?.name) return false;
+  return isPlayerTableName(tableData.value.name);
+});
+
+const playerRow = computed(() => {
+  if (!isPlayerTable.value || !tableData.value?.content) return null;
+  if (tableData.value.content.length < 2) return null;
+  return { data: tableData.value.content[1], originalIndex: 0 };
+});
+
+const playerBasicFields = computed(() => {
+  if (!playerRow.value || !headers.value.length) return [];
+  const basicKeywords = ['姓名', '等级', '性别', '年龄', '种族', '血脉', '外貌', '身份', '状态', '地点', '性格'];
+  const result: { key: string; value: any; cIdx: number }[] = [];
+  headers.value.forEach((h, idx) => {
+    if (!h || idx === 0) return;
+    const hLower = h.toLowerCase();
+    const isBasic = basicKeywords.some(k => hLower.includes(k.toLowerCase()));
+    const isComplex = ['基础属性', '特有属性', '战斗属性', '资源', '金钱', '货币', '兑换点', '沉淀点'].some(k => hLower.includes(k.toLowerCase()));
+    if (isBasic && !isComplex) {
+      result.push({ key: h, value: playerRow.value!.data[idx], cIdx: idx });
+    }
+  });
+  return result;
+});
+
+const playerAttrGroups = computed(() => {
+  if (!playerRow.value || !headers.value.length) return [];
+  const groups: { title: string; attrs: { name: string; value: string }[]; cIdx: number }[] = [];
+  const attrKeywords: Record<string, string> = { '基础属性': '基础属性', '特有属性': '特有属性', '战斗属性': '战斗属性' };
+  headers.value.forEach((h, idx) => {
+    if (!h || idx === 0) return;
+    const hLower = h.toLowerCase();
+    for (const [keyword, title] of Object.entries(attrKeywords)) {
+      if (hLower.includes(keyword.toLowerCase())) {
+        const val = String(playerRow.value!.data[idx] || '');
+        const attrs = parseAttributeList(val);
+        groups.push({ title, attrs, cIdx: idx });
+        break;
+      }
+    }
+  });
+  return groups;
+});
+
+const playerResourceFields = computed(() => {
+  if (!playerRow.value || !headers.value.length) return { items: [], points: [] };
+  const items: { name: string; value: string; cIdx: number }[] = [];
+  const points: { key: string; value: any; cIdx: number }[] = [];
+  const resourceKeywords = ['资源', '金钱', '货币'];
+  const pointKeywords = ['兑换点', '沉淀点'];
+  headers.value.forEach((h, idx) => {
+    if (!h || idx === 0) return;
+    const hLower = h.toLowerCase();
+    if (resourceKeywords.some(k => hLower.includes(k.toLowerCase()))) {
+      const val = String(playerRow.value!.data[idx] || '');
+      const attrs = parseAttributeList(val);
+      attrs.forEach(a => items.push({ name: a.name, value: a.value, cIdx: idx }));
+    }
+    if (pointKeywords.some(k => hLower.includes(k.toLowerCase()))) {
+      points.push({ key: h, value: playerRow.value!.data[idx], cIdx: idx });
+    }
+  });
+  return { items, points };
+});
+
+function parseAttributeList(str: string): { name: string; value: string }[] {
+  if (!str) return [];
+  const result: { name: string; value: string }[] = [];
+  const parts = str.split(/[;；,，\n]/);
+  for (const part of parts) {
+    const match = part.trim().match(/^(.+?)[：:＝=\s]*(.+)$/);
+    if (match) result.push({ name: match[1].trim(), value: match[2].trim() });
+  }
+  return result;
+}
 
 const processedRows = computed(() => {
   if (!tableData.value?.content) return [];
@@ -328,7 +411,7 @@ function goToPage(page: number) {
               <i class="fa-solid fa-table-list"></i>
             </button>
             <span class="acu-toolbar-divider"></span>
-            <button class="acu-toolbar-btn" title="添加行" @click="addRow">
+            <button v-if="!isPlayerTable" class="acu-toolbar-btn" title="添加行" @click="addRow">
               <i class="fa-solid fa-plus"></i> <span class="acu-toolbar-text">添加行</span>
             </button>
             <button class="acu-toolbar-btn" :class="{ active: isReversed }" title="切换倒序显示" @click="toggleReverse">
@@ -450,8 +533,77 @@ function goToPage(page: number) {
           </div>
         </div>
 
+        <!-- ====== 角色档案视图（主角表专用） ====== -->
+        <div v-if="isPlayerTable && playerRow && viewMode === 'card'" class="acu-profile-view">
+          <div class="acu-profile-header">
+            <div class="acu-profile-avatar">{{ (playerRow.data[1] || '主').charAt(0) }}</div>
+            <div class="acu-profile-identity">
+              <div class="acu-profile-name">{{ playerRow.data[1] || '主角' }}</div>
+              <div class="acu-profile-meta">
+                <span v-for="f in playerBasicFields.filter((_, i) => i > 0 && i <= 4)" :key="f.key" class="acu-profile-tag">
+                  {{ f.value || '-' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="acu-profile-section">
+            <div class="acu-profile-section-title"><i class="fa-solid fa-id-card"></i> 基本信息</div>
+            <div class="acu-profile-grid">
+              <div v-for="f in playerBasicFields" :key="f.key" class="acu-profile-field" :class="{ 'acu-field-invalid': isInvalidValue(f.value) }">
+                <span class="acu-profile-field-label">{{ f.key }}</span>
+                <span class="acu-profile-field-value" :class="getCellClass(playerRow.originalIndex, f.cIdx)">
+                  <template v-if="isEditing(playerRow.originalIndex, f.cIdx)">
+                    <input v-model="editingValue" type="text" class="acu-inline-edit" @blur="confirmEdit" @keydown="onEditKeydown" autofocus />
+                  </template>
+                  <template v-else-if="isInvalidValue(f.value)">
+                    <span class="acu-invalid-placeholder" @dblclick="startEdit(playerRow.originalIndex, f.cIdx)">{{ f.value || '-' }}</span>
+                  </template>
+                  <template v-else>
+                    <span @dblclick="startEdit(playerRow.originalIndex, f.cIdx)">{{ f.value }}</span>
+                  </template>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div v-for="g in playerAttrGroups" :key="g.title" class="acu-profile-section">
+            <div class="acu-profile-section-title">
+              <i :class="g.title.includes('基础') ? 'fa-solid fa-chart-bar' : g.title.includes('特有') ? 'fa-solid fa-star' : 'fa-solid fa-swords'"></i>
+              {{ g.title }}
+            </div>
+            <div class="acu-profile-attrs">
+              <div v-for="a in g.attrs" :key="a.name" class="acu-profile-attr-item">
+                <span class="acu-attr-name">{{ a.name }}</span>
+                <span class="acu-attr-value" :class="getCellClass(playerRow.originalIndex, g.cIdx)" @dblclick="startEdit(playerRow.originalIndex, g.cIdx)">
+                  {{ a.value }}
+                </span>
+                <i class="fa-solid fa-dice-d20 acu-dice-icon" @click="handleDiceClick(a.name, a.value)"></i>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="playerResourceFields.items.length > 0 || playerResourceFields.points.length > 0" class="acu-profile-section">
+            <div class="acu-profile-section-title"><i class="fa-solid fa-coins"></i> 资源</div>
+            <div v-if="playerResourceFields.items.length > 0" class="acu-profile-attrs">
+              <div v-for="r in playerResourceFields.items" :key="r.name" class="acu-profile-attr-item resource">
+                <span class="acu-attr-name">{{ r.name }}</span>
+                <span class="acu-attr-value" @dblclick="startEdit(playerRow.originalIndex, r.cIdx)">{{ r.value }}</span>
+              </div>
+            </div>
+            <div v-if="playerResourceFields.points.length > 0" class="acu-profile-points">
+              <div v-for="p in playerResourceFields.points" :key="p.key" class="acu-profile-point-item">
+                <span class="acu-point-label">{{ p.key }}</span>
+                <span class="acu-point-value" :class="getCellClass(playerRow.originalIndex, p.cIdx)" @dblclick="startEdit(playerRow.originalIndex, p.cIdx)">
+                  {{ p.value || 0 }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- ====== 卡片视图 ====== -->
-        <template v-else>
+        <template v-if="!isPlayerTable">
           <div v-if="isVerticalLayout" class="acu-vertical-list">
             <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-vertical-card" :class="getRowHighlightClass(rowItem.originalIndex)">
               <div class="acu-card-header">
@@ -753,6 +905,201 @@ function goToPage(page: number) {
 }
 
 .acu-cell-display {
+  cursor: pointer;
+}
+
+/* ====== 角色档案视图 ====== */
+.acu-profile-view {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.acu-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--acu-accent), color-mix(in srgb, var(--acu-accent) 70%, black));
+  border-radius: 10px;
+  color: white;
+}
+
+.acu-profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.acu-profile-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.acu-profile-name {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.acu-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.acu-profile-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+
+.acu-profile-section {
+  background: var(--acu-card-bg);
+  border: 1px solid var(--acu-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.acu-profile-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--acu-accent);
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid var(--acu-border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  i { font-size: 10px; opacity: 0.7; }
+}
+
+.acu-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1px;
+  padding: 6px;
+}
+
+.acu-profile-field {
+  padding: 6px 8px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &:hover { background: var(--acu-table-hover); }
+}
+
+.acu-profile-field-label {
+  font-size: 9px;
+  color: var(--acu-text-sub);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.acu-profile-field-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-text-main);
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.acu-profile-attrs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 4px;
+  padding: 8px;
+}
+
+.acu-profile-attr-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-table-head);
+  transition: all 0.15s;
+
+  &:hover { border-color: var(--acu-accent); }
+
+  .acu-attr-name {
+    font-size: 10px;
+    color: var(--acu-text-sub);
+    font-weight: 500;
+  }
+
+  .acu-attr-value {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--acu-accent);
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+  }
+
+  .acu-dice-icon {
+    cursor: pointer;
+    color: var(--acu-accent);
+    opacity: 0.5;
+    font-size: 9px;
+    margin-left: auto;
+    transition: opacity 0.2s;
+    &:hover { opacity: 1; }
+  }
+
+  &.resource .acu-attr-value {
+    color: var(--acu-success);
+  }
+}
+
+.acu-profile-points {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px dashed var(--acu-border);
+}
+
+.acu-profile-point-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 6px;
+  background: var(--acu-table-head);
+  border: 1px solid var(--acu-border);
+}
+
+.acu-point-label {
+  font-size: 9px;
+  color: var(--acu-text-sub);
+  font-weight: 500;
+}
+
+.acu-point-value {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--acu-accent);
+  font-family: 'Courier New', monospace;
   cursor: pointer;
 }
 

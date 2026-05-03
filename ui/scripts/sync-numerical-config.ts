@@ -31,19 +31,153 @@ interface Economy { taskRewards: TaskRewards; promotionCosts: Record<string, num
 interface TaskRewards { itemRarityRules: Record<string, string>; attrPointRewards: Record<string, Record<string, { min: number; max: number }>>; exchangePointRewards: Record<string, Record<string, number>> }
 interface ExchangePrices { equipment: Record<string, Record<string, number>>; skills: Record<string, Record<string, number>>; services: Record<string, string> }
 
-function loadYaml(relativePath: string): Record<string, unknown> {
+// ============================================================
+// Schema 校验层
+// ============================================================
+
+type SchemaLeaf = string[]
+type SchemaBranch = Record<string, SchemaBranch | SchemaLeaf>
+type SchemaDef = SchemaBranch
+
+function validateSchema(yamlObj: unknown, schema: SchemaDef, yamlFile: string, basePath = ''): void {
+  if (typeof yamlObj !== 'object' || yamlObj === null) {
+    throw new Error(`[sync-config] YAML 结构错误: ${yamlFile}${basePath ? ' → ' + basePath : ''}\n  期望: 对象\n  实际: ${typeof yamlObj}`)
+  }
+
+  const obj = yamlObj as Record<string, unknown>
+  const existingKeys = Object.keys(obj)
+
+  for (const [key, subSchema] of Object.entries(schema)) {
+    const fullPath = basePath ? `${basePath} → ${key}` : key
+
+    if (!(key in obj)) {
+      throw new Error(
+        `[sync-config] YAML 字段缺失:\n  文件: ${yamlFile}\n  路径: ${fullPath}\n  期望字段: ${Array.isArray(subSchema) ? subSchema.join(', ') : Object.keys(subSchema).join(', ')}\n  当前顶层字段: ${existingKeys.join(', ')}`,
+      )
+    }
+
+    if (Array.isArray(subSchema)) {
+      if (typeof obj[key] !== 'object' || obj[key] === null) {
+        throw new Error(`[sync-config] YAML 结构错误: ${yamlFile}\n  路径: ${fullPath}\n  期望: 对象\n  实际: ${typeof obj[key]}`)
+      }
+      const nestedObj = obj[key] as Record<string, unknown>
+      const nestedKeys = Object.keys(nestedObj)
+      const missingKeys = subSchema.filter(k => !(k in nestedObj))
+
+      if (missingKeys.length > 0) {
+        throw new Error(
+          `[sync-config] YAML 字段缺失:\n  文件: ${yamlFile}\n  路径: ${fullPath}\n  期望字段: ${subSchema.join(', ')}\n  实际字段: ${nestedKeys.join(', ')}\n  缺失: ${missingKeys.join(', ')}`,
+        )
+      }
+    } else {
+      validateSchema(obj[key], subSchema, yamlFile, fullPath)
+    }
+  }
+}
+
+// ============================================================
+// Schema 定义 — 每个 YAML 文件的期望字段结构
+// ============================================================
+
+const DC_TABLE_SCHEMA: SchemaDef = {
+  'DC表': { '基础DC': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'] },
+}
+
+const HP_BASE_SCHEMA: SchemaDef = {
+  'HP基础值': { '各等级HP基础值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+}
+
+const MASTERY_SCHEMA: SchemaDef = {
+  '掌握加成表': { '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+}
+
+const LEVEL_SYSTEM_SCHEMA: SchemaDef = {
+  '人物等级体系': {
+    '等级划分': { '对照表': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+    '单项属性上限': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+  },
+}
+
+const SPV_SCHEMA: SchemaDef = {
+  'SPV体系': { '等级阶位与SPV对照': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+}
+
+const ATTR_MODIFIER_SCHEMA: SchemaDef = {
+  '属性加成表': { '对照表': ['381+'] },
+}
+
+const ACTIVE_SKILL_SCHEMA: SchemaDef = {
+  '主动技能数值': { '伤害与治疗数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'] },
+}
+
+const PASSIVE_SKILL_SCHEMA: SchemaDef = {
+  '被动技能数值': { '属性加成数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'] },
+}
+
+const WEAPON_SCHEMA: SchemaDef = {
+  '武器数值': {
+    '攻击装备数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '词条数量': ['F级', 'E级', 'D级', 'C级', 'B级及以上'],
+  },
+}
+
+const ARMOR_SCHEMA: SchemaDef = {
+  '防具数值': {
+    '防御装备数值': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '词条数量': ['F级', 'E级', 'D级', 'C级', 'B级及以上'],
+  },
+}
+
+const STATUS_RULES_SCHEMA: SchemaDef = {
+  '状态规则': {
+    '叠加规则': ['同类型负面', '同类型正面', '正负抵消', '持续时间'],
+    '状态强度等级': ['弱效', '中效', '强效'],
+  },
+}
+
+const TASK_REWARD_SCHEMA: SchemaDef = {
+  '任务奖励': {
+    '物品奖励': ['主线任务', '支线任务品级投掷规则', '隐藏任务品级投掷规则'],
+    '属性点奖励': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '兑换点奖励': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级'],
+  },
+}
+
+const PROMOTION_SCHEMA: SchemaDef = {
+  '晋级消耗': ['晋升E级', '晋升D级', '晋升C级', '晋升B级', '晋升A级', '晋升S级', '晋升SS级', '晋升SSS级'],
+}
+
+const EXCHANGE_PRICE_SCHEMA: SchemaDef = {
+  '兑换价格': {
+    '装备价格': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '技能价格': ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级'],
+    '服务价格': ['技能升级', '装备强化', '沉淀点释放'],
+  },
+}
+
+// ============================================================
+// YAML 加载 + 校验
+// ============================================================
+
+function loadAndValidate(relativePath: string, schema: SchemaDef): Record<string, unknown> {
   const fullPath = path.resolve(aidmDir, relativePath)
   const content = fs.readFileSync(fullPath, 'utf-8')
   const cleaned = content.replace(/^---\n/, '').replace(/\n---$/, '')
-  return yaml.load(cleaned) as Record<string, unknown>
+  const loaded = yaml.load(cleaned) as Record<string, unknown>
+  validateSchema(loaded, schema, relativePath)
+  return loaded
 }
 
+// ============================================================
+// 解析函数
+// ============================================================
+
 function parseLevelConfigs(): Record<string, LevelConfig> {
-  const dcTable = loadYaml('04-检定系统/DC表.yaml') as { 'DC表': { '基础DC': Record<string, number> } }
-  const hpBase = loadYaml('01-数值参考/战斗数值/HP基础值.yaml') as { 'HP基础值': { '各等级HP基础值': Record<string, number> } }
-  const masteryTable = loadYaml('00-核心定义/掌握加成表.yaml') as { '掌握加成表': { '对照表': Record<string, string> } }
-  const levelSystem = loadYaml('00-核心定义/等级体系.yaml') as { '人物等级体系': { '单项属性上限': Record<string, number>; '等级划分': { '对照表': Record<string, string> } } }
-  const spvSystem = loadYaml('00-核心定义/SPV体系.yaml') as { 'SPV体系': { '等级阶位与SPV对照': Record<string, number> } }
+  const dcTable = loadAndValidate('04-检定系统/DC表.yaml', DC_TABLE_SCHEMA) as { 'DC表': { '基础DC': Record<string, number> } }
+  const hpBase = loadAndValidate('01-数值参考/战斗数值/HP基础值.yaml', HP_BASE_SCHEMA) as { 'HP基础值': { '各等级HP基础值': Record<string, number> } }
+  const masteryTable = loadAndValidate('00-核心定义/掌握加成表.yaml', MASTERY_SCHEMA) as { '掌握加成表': { '对照表': Record<string, string> } }
+  const levelSystem = loadAndValidate('00-核心定义/等级体系.yaml', LEVEL_SYSTEM_SCHEMA) as { '人物等级体系': { '单项属性上限': Record<string, number>; '等级划分': { '对照表': Record<string, string> } } }
+  const spvSystem = loadAndValidate('00-核心定义/SPV体系.yaml', SPV_SCHEMA) as { 'SPV体系': { '等级阶位与SPV对照': Record<string, number> } }
 
   const levels: Record<string, LevelConfig> = {}
   const levelOrder = ['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级']
@@ -66,7 +200,7 @@ function parseLevelConfigs(): Record<string, LevelConfig> {
 }
 
 function parseAttributeModifiers(): AttributeModifierEntry[] {
-  const attrTable = loadYaml('00-核心定义/属性加成表.yaml') as { '属性加成表': { '对照表': Record<string, string> } }
+  const attrTable = loadAndValidate('00-核心定义/属性加成表.yaml', ATTR_MODIFIER_SCHEMA) as { '属性加成表': { '对照表': Record<string, string> } }
   const entries: AttributeModifierEntry[] = []
   for (const [key, value] of Object.entries(attrTable['属性加成表']['对照表'])) {
     if (key === '381+') {
@@ -92,8 +226,8 @@ function parseDamageReduction(): DamageReductionEntry[] {
 }
 
 function parseSkillRules(): SkillRules {
-  const activeYaml = loadYaml('01-数值参考/技能数值/主动技能.yaml') as { '主动技能数值': { '说明': string; '伤害与治疗数值': Record<string, Record<string, string>>; '冷却时间': string; '消耗': string } }
-  const passiveYaml = loadYaml('01-数值参考/技能数值/被动技能.yaml') as { '被动技能数值': { '说明': string; '属性加成数值': Record<string, Record<string, string>> } }
+  const activeYaml = loadAndValidate('01-数值参考/技能数值/主动技能.yaml', ACTIVE_SKILL_SCHEMA) as { '主动技能数值': { '伤害与治疗数值': Record<string, Record<string, string>> } }
+  const passiveYaml = loadAndValidate('01-数值参考/技能数值/被动技能.yaml', PASSIVE_SKILL_SCHEMA) as { '被动技能数值': { '属性加成数值': Record<string, Record<string, string>> } }
 
   const activeTable: Record<string, Record<string, number>> = {}
   for (const [level, vals] of Object.entries(activeYaml['主动技能数值']['伤害与治疗数值'])) {
@@ -126,28 +260,38 @@ function parseSkillRules(): SkillRules {
   }
 }
 
+function getLevelOrGroupKey(obj: Record<string, unknown>, level: string): string | number | undefined {
+  if (level in obj) return obj[level] as string | number | undefined
+  for (const [key, val] of Object.entries(obj)) {
+    if (key.includes('及以上') && level.localeCompare(key.replace('及以上', ''), 'zh') >= 0) {
+      return val as string | number | undefined
+    }
+  }
+  return undefined
+}
+
 function parseEquipmentRules(): EquipmentRules {
-  const weaponYaml = loadYaml('01-数值参考/装备数值/武器数值.yaml') as { '武器数值': { '说明': string; '攻击装备数值': Record<string, Record<string, string>>; '词条数量': Record<string, string> } }
-  const armorYaml = loadYaml('01-数值参考/装备数值/防具数值.yaml') as { '防具数值': { '说明': string; '防御装备数值': Record<string, Record<string, string>>; '词条数量': Record<string, string> } }
+  const weaponYaml = loadAndValidate('01-数值参考/装备数值/武器数值.yaml', WEAPON_SCHEMA) as { '武器数值': { '攻击装备数值': Record<string, Record<string, string>>; '词条数量': Record<string, string> } }
+  const armorYaml = loadAndValidate('01-数值参考/装备数值/防具数值.yaml', ARMOR_SCHEMA) as { '防具数值': { '防御装备数值': Record<string, Record<string, string>>; '词条数量': Record<string, string> } }
 
   const weaponTable: Record<string, Record<string, number>> = {}
   for (const [level, vals] of Object.entries(weaponYaml['武器数值']['攻击装备数值'])) {
-    const wc = weaponYaml['武器数值']['词条数量'][level] || '1项'
+    const wc = getLevelOrGroupKey(weaponYaml['武器数值']['词条数量'], level) || '1项'
     weaponTable[level] = {
       statBonus: parseInt(String(vals['属性加成']).replace(/[+]/g, ''), 10) || 0,
       physMagicDamage: parseInt(String(vals['物伤法伤']).replace(/[+]/g, ''), 10) || 0,
-      wordCount: parseInt(wc.replace(/项/, ''), 10) || 1,
+      wordCount: parseInt(String(wc).replace(/项/, ''), 10) || 1,
     }
   }
 
   const armorTable: Record<string, Record<string, number>> = {}
   for (const [level, vals] of Object.entries(armorYaml['防具数值']['防御装备数值'])) {
-    const wc = armorYaml['防具数值']['词条数量'][level] || '1项'
+    const wc = getLevelOrGroupKey(armorYaml['防具数值']['词条数量'], level) || '1项'
     armorTable[level] = {
       statBonus: parseInt(String(vals['属性加成']).replace(/[+]/g, ''), 10) || 0,
       physMagicDefense: parseInt(String(vals['物防法防']).replace(/[+]/g, ''), 10) || 0,
       hpBonus: parseInt(String(vals['HP加成']).replace(/[+]/g, ''), 10) || 0,
-      wordCount: parseInt(wc.replace(/项/, ''), 10) || 1,
+      wordCount: parseInt(String(wc).replace(/项/, ''), 10) || 1,
     }
   }
 
@@ -162,7 +306,7 @@ function parseEquipmentRules(): EquipmentRules {
 }
 
 function parseStatusEffectRules(): StatusEffectRules {
-  const statusYaml = loadYaml('03-战斗系统/状态效果/状态规则.yaml') as { '状态规则': { '叠加规则': Record<string, string>; '状态强度等级': Record<string, Record<string, string>> } }
+  const statusYaml = loadAndValidate('03-战斗系统/状态效果/状态规则.yaml', STATUS_RULES_SCHEMA) as { '状态规则': { '叠加规则': Record<string, string>; '状态强度等级': Record<string, Record<string, string>> } }
 
   const stacking: string[] = []
   for (const [, v] of Object.entries(statusYaml['状态规则']['叠加规则'])) {
@@ -192,9 +336,10 @@ function parseStatusEffectRules(): StatusEffectRules {
 }
 
 function parseEconomy(): Economy {
-  const rewardYaml = loadYaml('01-数值参考/经济数值/任务奖励.yaml') as { '任务奖励': { '物品奖励': Record<string, string>; '属性点奖励': Record<string, Record<string, string>>; '兑换点奖励': Record<string, Record<string, number>> } }
-  const promoYaml = (loadYaml('01-数值参考/经济数值/晋级消耗.yaml') as Record<string, unknown>)['晋级消耗'] as Record<string, number>
-  const priceYaml = loadYaml('01-数值参考/经济数值/兑换价格.yaml') as { '兑换价格': { '装备价格': Record<string, Record<string, number>>; '技能价格': Record<string, Record<string, number>>; '服务价格': Record<string, string> } }
+  const rewardYaml = loadAndValidate('01-数值参考/经济数值/任务奖励.yaml', TASK_REWARD_SCHEMA) as { '任务奖励': { '物品奖励': Record<string, string>; '属性点奖励': Record<string, Record<string, string>>; '兑换点奖励': Record<string, Record<string, number>> } }
+  const promoYamlRaw = loadAndValidate('01-数值参考/经济数值/晋级消耗.yaml', PROMOTION_SCHEMA)
+  const promoYaml = promoYamlRaw['晋级消耗'] as Record<string, number>
+  const priceYaml = loadAndValidate('01-数值参考/经济数值/兑换价格.yaml', EXCHANGE_PRICE_SCHEMA) as { '兑换价格': { '装备价格': Record<string, Record<string, number>>; '技能价格': Record<string, Record<string, number>>; '服务价格': Record<string, string> } }
 
   const questKeyMap: Record<string, string> = { '主线任务': 'mainQuest', '支线任务': 'sideQuest', '隐藏任务': 'hiddenQuest' }
 

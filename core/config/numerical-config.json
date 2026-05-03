@@ -386,7 +386,7 @@
       "B级": {
         "statBonus": 5,
         "physMagicDamage": 15,
-        "wordCount": 1
+        "wordCount": 5
       },
       "A级": {
         "statBonus": 7,
@@ -396,7 +396,7 @@
       "S级": {
         "statBonus": 10,
         "physMagicDamage": 30,
-        "wordCount": 1
+        "wordCount": 5
       }
     },
     "armorTable": {
@@ -428,7 +428,7 @@
         "statBonus": 5,
         "physMagicDefense": 15,
         "hpBonus": 25,
-        "wordCount": 1
+        "wordCount": 5
       },
       "A级": {
         "statBonus": 7,
@@ -440,7 +440,7 @@
         "statBonus": 10,
         "physMagicDefense": 30,
         "hpBonus": 50,
-        "wordCount": 1
+        "wordCount": 5
       }
     },
     "accessoryTable": [
