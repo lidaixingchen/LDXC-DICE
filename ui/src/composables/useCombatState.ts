@@ -19,9 +19,12 @@ const initiatorName = ref<string>('');
 const worldLevel = ref<string>('F级');
 const equipment = ref<EquipmentSlot>({
   name: '空装备',
-  attackBonus: 0,
-  defenseBonus: 0,
+  physDmg: 0,
+  magicDmg: 0,
+  physDef: 0,
+  magicDef: 0,
   hpBonus: 0,
+  dodgeBonus: 0,
 });
 
 export function useCombatState() {

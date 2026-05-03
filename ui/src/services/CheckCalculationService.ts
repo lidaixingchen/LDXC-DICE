@@ -1,6 +1,10 @@
-import { CombatCalculationService } from './CombatCalculationService';
-import { WorldConfigService } from './WorldConfigService';
-import type { CheckResult } from '../types';
+import { CombatCalculationService } from './CombatCalculationService'
+import { WorldConfigService } from './WorldConfigService'
+import type { CheckResult } from '../types'
+
+function checkRules() {
+  return WorldConfigService.getCheckRules()
+}
 
 export interface StandardCheckParams {
   rollTotal: number;
@@ -86,8 +90,9 @@ export class CheckCalculationService {
 
     const finalValue = params.rollTotal + attrMod + masteryBonus + params.modifier;
 
-    const isCritSuccess = params.rollTotal === 20;
-    const isCritFailure = params.rollTotal === 1;
+    const rules = checkRules()
+    const isCritSuccess = params.rollTotal === rules.critSuccessRoll
+    const isCritFailure = params.rollTotal === rules.critFailureRoll
     let isSuccess = finalValue >= target;
     let isCritHit = false;
     let outcomeText = '';
@@ -107,7 +112,7 @@ export class CheckCalculationService {
     }
 
     let hpPenalty = 0;
-    const triggerPenalty = !isSuccess && !isCritFailure && Math.random() < 0.5;
+    const triggerPenalty = !isSuccess && !isCritFailure && Math.random() < rules.penaltyTriggerChance
     if (triggerPenalty) {
       hpPenalty = CombatCalculationService.computeHPPenalty(target, finalValue);
     }
@@ -167,13 +172,14 @@ ${critText}
     const myMasteryBonus = WorldConfigService.getMasteryBonus(params.level);
 
     const attrDiff = myAttrMod - oppAttrMod;
-    const attrAdvDice = attrDiff > 0 ? Math.min(3, attrDiff) : 0;
+    const rules = checkRules()
+    const attrAdvDice = attrDiff > 0 ? Math.min(rules.attrAdvantageCap, attrDiff) : 0;
     const totalAdv = attrAdvDice + params.envAdvantage + params.statusAdvantage;
     const totalDis = params.envDisadvantage + params.statusDisadvantage;
     const netAdv = totalAdv - totalDis;
 
-    const isCritSuccess = params.rollTotal === 20;
-    const isCritFailure = params.rollTotal === 1;
+    const isCritSuccess = params.rollTotal === rules.critSuccessRoll;
+    const isCritFailure = params.rollTotal === rules.critFailureRoll;
 
     const myTotal = params.rollTotal + myAttrMod + myMasteryBonus;
     const oppTotal = params.oppRollTotal + oppAttrMod;
@@ -217,7 +223,8 @@ ${critText}
     const oppAttrMod = CombatCalculationService.computeAttributeModifier(params.oppAttrValue);
     const myMasteryBonus = WorldConfigService.getMasteryBonus(params.level);
     const attrDiff = myAttrMod - oppAttrMod;
-    const attrAdvDice = attrDiff > 0 ? Math.min(3, attrDiff) : 0;
+    const rules = checkRules()
+    const attrAdvDice = attrDiff > 0 ? Math.min(rules.attrAdvantageCap, attrDiff) : 0
     const totalAdv = attrAdvDice + params.envAdvantage + params.statusAdvantage;
     const totalDis = params.envDisadvantage + params.statusDisadvantage;
     const netAdv = totalAdv - totalDis;
@@ -455,25 +462,26 @@ ${result.total > result.target ? '✅ 先手行动权！' : (result.total < resu
     const myAgiMod = CombatCalculationService.computeAttributeModifier(params.agilityValue);
     const masteryBonus = WorldConfigService.getMasteryBonus(params.level);
 
+    const rules = checkRules()
     let escapeDC: number;
     let dcDescription: string;
 
     switch (params.escapeType) {
       case 'solo': {
-        escapeDC = 10;
-        dcDescription = '单对单逃跑，DC=10（基础）';
+        escapeDC = rules.escapeBaseDC
+        dcDescription = `单对单逃跑，DC=${escapeDC}（基础）`
         break;
       }
       case 'surrounded': {
         const enemyAgiMod = CombatCalculationService.computeAttributeModifier(params.escapeEnemyAgility);
-        escapeDC = 10 + enemyAgiMod + params.escapeEnemyCount * 2;
-        dcDescription = `被包围逃跑，DC=10+敌方敏捷(${enemyAgiMod})+敌人数量×2(${params.escapeEnemyCount * 2})=${escapeDC}`;
+        escapeDC = rules.escapeBaseDC + enemyAgiMod + params.escapeEnemyCount * rules.escapeSurroundPerEnemy
+        dcDescription = `被包围逃跑，DC=${rules.escapeBaseDC}+敌方敏捷(${enemyAgiMod})+敌人数量×${rules.escapeSurroundPerEnemy}(${params.escapeEnemyCount * rules.escapeSurroundPerEnemy})=${escapeDC}`
         break;
       }
       case 'obstacle': {
         const enemyAgiMod = CombatCalculationService.computeAttributeModifier(params.escapeEnemyAgility);
-        escapeDC = 10 + enemyAgiMod + params.escapeObstacleMod;
-        dcDescription = `有障碍物掩护逃跑，DC=10+敌方敏捷(${enemyAgiMod})+环境修正(${params.escapeObstacleMod})=${escapeDC}`;
+        escapeDC = rules.escapeBaseDC + enemyAgiMod + params.escapeObstacleMod
+        dcDescription = `有障碍物掩护逃跑，DC=${rules.escapeBaseDC}+敌方敏捷(${enemyAgiMod})+环境修正(${params.escapeObstacleMod})=${escapeDC}`
         break;
       }
     }

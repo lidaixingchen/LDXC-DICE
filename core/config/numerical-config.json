@@ -1,0 +1,746 @@
+{
+  "difficultyMod": {
+    "normal": 0,
+    "hard": 3,
+    "extreme": 6
+  },
+  "levels": {
+    "F级": {
+      "spv": 5,
+      "baseDC": 10,
+      "masteryBonus": 0,
+      "hpBase": 15,
+      "singleAttrMax": 30,
+      "totalAttrMin": 30,
+      "totalAttrMax": 119
+    },
+    "E级": {
+      "spv": 10,
+      "baseDC": 13,
+      "masteryBonus": 1,
+      "hpBase": 30,
+      "singleAttrMax": 45,
+      "totalAttrMin": 120,
+      "totalAttrMax": 209
+    },
+    "D级": {
+      "spv": 15,
+      "baseDC": 16,
+      "masteryBonus": 2,
+      "hpBase": 45,
+      "singleAttrMax": 60,
+      "totalAttrMin": 210,
+      "totalAttrMax": 329
+    },
+    "C级": {
+      "spv": 20,
+      "baseDC": 19,
+      "masteryBonus": 3,
+      "hpBase": 60,
+      "singleAttrMax": 80,
+      "totalAttrMin": 330,
+      "totalAttrMax": 479
+    },
+    "B级": {
+      "spv": 25,
+      "baseDC": 22,
+      "masteryBonus": 4,
+      "hpBase": 75,
+      "singleAttrMax": 100,
+      "totalAttrMin": 480,
+      "totalAttrMax": 659
+    },
+    "A级": {
+      "spv": 35,
+      "baseDC": 25,
+      "masteryBonus": 5,
+      "hpBase": 105,
+      "singleAttrMax": 125,
+      "totalAttrMin": 660,
+      "totalAttrMax": 869
+    },
+    "S级": {
+      "spv": 50,
+      "baseDC": 28,
+      "masteryBonus": 6,
+      "hpBase": 150,
+      "singleAttrMax": 150,
+      "totalAttrMin": 870,
+      "totalAttrMax": 1109
+    },
+    "SS级": {
+      "spv": 70,
+      "baseDC": 0,
+      "masteryBonus": 7,
+      "hpBase": 210,
+      "singleAttrMax": 180,
+      "totalAttrMin": 1110,
+      "totalAttrMax": 1379
+    },
+    "SSS级": {
+      "spv": 95,
+      "baseDC": 0,
+      "masteryBonus": 8,
+      "hpBase": 285,
+      "singleAttrMax": 30,
+      "totalAttrMin": 1380,
+      "totalAttrMax": null
+    }
+  },
+  "attributeModifiers": [
+    {
+      "rangeMin": 1,
+      "rangeMax": 15,
+      "modifier": 0
+    },
+    {
+      "rangeMin": 16,
+      "rangeMax": 25,
+      "modifier": 1
+    },
+    {
+      "rangeMin": 26,
+      "rangeMax": 35,
+      "modifier": 2
+    },
+    {
+      "rangeMin": 36,
+      "rangeMax": 45,
+      "modifier": 3
+    },
+    {
+      "rangeMin": 46,
+      "rangeMax": 55,
+      "modifier": 4
+    },
+    {
+      "rangeMin": 56,
+      "rangeMax": 65,
+      "modifier": 5
+    },
+    {
+      "rangeMin": 66,
+      "rangeMax": 75,
+      "modifier": 6
+    },
+    {
+      "rangeMin": 76,
+      "rangeMax": 85,
+      "modifier": 7
+    },
+    {
+      "rangeMin": 86,
+      "rangeMax": 95,
+      "modifier": 8
+    },
+    {
+      "rangeMin": 96,
+      "rangeMax": 105,
+      "modifier": 9
+    },
+    {
+      "rangeMin": 106,
+      "rangeMax": 120,
+      "modifier": 10
+    },
+    {
+      "rangeMin": 121,
+      "rangeMax": 140,
+      "modifier": 11
+    },
+    {
+      "rangeMin": 141,
+      "rangeMax": 160,
+      "modifier": 12
+    },
+    {
+      "rangeMin": 161,
+      "rangeMax": 185,
+      "modifier": 13
+    },
+    {
+      "rangeMin": 186,
+      "rangeMax": 210,
+      "modifier": 14
+    },
+    {
+      "rangeMin": 211,
+      "rangeMax": 240,
+      "modifier": 15
+    },
+    {
+      "rangeMin": 241,
+      "rangeMax": 270,
+      "modifier": 16
+    },
+    {
+      "rangeMin": 271,
+      "rangeMax": 305,
+      "modifier": 17
+    },
+    {
+      "rangeMin": 306,
+      "rangeMax": 340,
+      "modifier": 18
+    },
+    {
+      "rangeMin": 341,
+      "rangeMax": 380,
+      "modifier": 19
+    },
+    {
+      "rangeMin": 381,
+      "rangeMax": null,
+      "modifier": 19,
+      "fallbackIncrement": 1,
+      "fallbackStep": 40
+    }
+  ],
+  "damageReduction": [
+    {
+      "ratioMin": 0,
+      "ratioMax": 0.5,
+      "reduction": 0
+    },
+    {
+      "ratioMin": 0.5,
+      "ratioMax": 0.8,
+      "reduction": 0.2
+    },
+    {
+      "ratioMin": 0.8,
+      "ratioMax": 1,
+      "reduction": 0.4
+    },
+    {
+      "ratioMin": 1,
+      "ratioMax": 1.5,
+      "reduction": 0.6
+    },
+    {
+      "ratioMin": 1.5,
+      "ratioMax": null,
+      "reduction": 0.8
+    }
+  ],
+  "checkRules": {
+    "critSuccessRoll": 20,
+    "critFailureRoll": 1,
+    "penaltyTriggerChance": 0.5,
+    "attrAdvantageCap": 3,
+    "escapeBaseDC": 10,
+    "escapeSurroundPerEnemy": 2
+  },
+  "combatRules": {
+    "hpEnduranceMultiplier": 5,
+    "ddcBase": 10,
+    "critDamageMultiplier": 2,
+    "critRateBase": 5,
+    "critRateCharismaDivisor": 2,
+    "critRateCap": 50,
+    "erosionDamageRatio": 0.05,
+    "hpPenaltyMax": 10,
+    "hpPenaltyMin": 1,
+    "critHitDivisor": 5,
+    "minDamage": 1
+  },
+  "skillRules": {
+    "spvMultiplierActive": 2,
+    "spvMultiplierPassive": 0.4,
+    "cooldownMin": 1,
+    "cooldownMax": 3,
+    "activeSkillTable": {
+      "F级": {
+        "physMagicDamage": 10,
+        "enduranceHeal": 20,
+        "intelligenceHeal": 23,
+        "lifesteal": 4,
+        "shield": 20
+      },
+      "E级": {
+        "physMagicDamage": 20,
+        "enduranceHeal": 40,
+        "intelligenceHeal": 46,
+        "lifesteal": 8,
+        "shield": 40
+      },
+      "D级": {
+        "physMagicDamage": 30,
+        "enduranceHeal": 60,
+        "intelligenceHeal": 69,
+        "lifesteal": 12,
+        "shield": 60
+      },
+      "C级": {
+        "physMagicDamage": 40,
+        "enduranceHeal": 80,
+        "intelligenceHeal": 92,
+        "lifesteal": 16,
+        "shield": 80
+      },
+      "B级": {
+        "physMagicDamage": 50,
+        "enduranceHeal": 100,
+        "intelligenceHeal": 115,
+        "lifesteal": 20,
+        "shield": 100
+      },
+      "A级": {
+        "physMagicDamage": 70,
+        "enduranceHeal": 140,
+        "intelligenceHeal": 161,
+        "lifesteal": 28,
+        "shield": 140
+      },
+      "S级": {
+        "physMagicDamage": 100,
+        "enduranceHeal": 200,
+        "intelligenceHeal": 230,
+        "lifesteal": 40,
+        "shield": 200
+      },
+      "SS级": {
+        "physMagicDamage": 140,
+        "enduranceHeal": 280,
+        "intelligenceHeal": 322,
+        "lifesteal": 56,
+        "shield": 280
+      },
+      "SSS级": {
+        "physMagicDamage": 190,
+        "enduranceHeal": 380,
+        "intelligenceHeal": 437,
+        "lifesteal": 76,
+        "shield": 380
+      }
+    },
+    "passiveSkillTable": {
+      "F级": {
+        "statBonus": 1,
+        "physMagicDamage": 2,
+        "physMagicDefense": 2,
+        "hpBonus": 5
+      },
+      "E级": {
+        "statBonus": 2,
+        "physMagicDamage": 4,
+        "physMagicDefense": 4,
+        "hpBonus": 10
+      },
+      "D级": {
+        "statBonus": 3,
+        "physMagicDamage": 6,
+        "physMagicDefense": 6,
+        "hpBonus": 15
+      },
+      "C级": {
+        "statBonus": 4,
+        "physMagicDamage": 8,
+        "physMagicDefense": 8,
+        "hpBonus": 20
+      },
+      "B级": {
+        "statBonus": 5,
+        "physMagicDamage": 10,
+        "physMagicDefense": 10,
+        "hpBonus": 25
+      },
+      "A级": {
+        "statBonus": 7,
+        "physMagicDamage": 14,
+        "physMagicDefense": 14,
+        "hpBonus": 35
+      },
+      "S级": {
+        "statBonus": 10,
+        "physMagicDamage": 20,
+        "physMagicDefense": 20,
+        "hpBonus": 50
+      }
+    }
+  },
+  "equipmentRules": {
+    "spvMultiplierWeapon": 0.6,
+    "spvMultiplierArmor": 0.6,
+    "weaponTable": {
+      "F级": {
+        "statBonus": 1,
+        "physMagicDamage": 3,
+        "wordCount": 1
+      },
+      "E级": {
+        "statBonus": 2,
+        "physMagicDamage": 6,
+        "wordCount": 2
+      },
+      "D级": {
+        "statBonus": 3,
+        "physMagicDamage": 9,
+        "wordCount": 3
+      },
+      "C级": {
+        "statBonus": 4,
+        "physMagicDamage": 12,
+        "wordCount": 4
+      },
+      "B级": {
+        "statBonus": 5,
+        "physMagicDamage": 15,
+        "wordCount": 1
+      },
+      "A级": {
+        "statBonus": 7,
+        "physMagicDamage": 21,
+        "wordCount": 1
+      },
+      "S级": {
+        "statBonus": 10,
+        "physMagicDamage": 30,
+        "wordCount": 1
+      }
+    },
+    "armorTable": {
+      "F级": {
+        "statBonus": 1,
+        "physMagicDefense": 3,
+        "hpBonus": 5,
+        "wordCount": 1
+      },
+      "E级": {
+        "statBonus": 2,
+        "physMagicDefense": 6,
+        "hpBonus": 10,
+        "wordCount": 2
+      },
+      "D级": {
+        "statBonus": 3,
+        "physMagicDefense": 9,
+        "hpBonus": 15,
+        "wordCount": 3
+      },
+      "C级": {
+        "statBonus": 4,
+        "physMagicDefense": 12,
+        "hpBonus": 20,
+        "wordCount": 4
+      },
+      "B级": {
+        "statBonus": 5,
+        "physMagicDefense": 15,
+        "hpBonus": 25,
+        "wordCount": 1
+      },
+      "A级": {
+        "statBonus": 7,
+        "physMagicDefense": 21,
+        "hpBonus": 35,
+        "wordCount": 1
+      },
+      "S级": {
+        "statBonus": 10,
+        "physMagicDefense": 30,
+        "hpBonus": 50,
+        "wordCount": 1
+      }
+    },
+    "accessoryTable": [
+      {
+        "name": "力量戒指",
+        "level": "F级",
+        "price": 50,
+        "description": "力量+1"
+      },
+      {
+        "name": "敏捷护符",
+        "level": "E级",
+        "price": 100,
+        "description": "敏捷+2"
+      },
+      {
+        "name": "世界锚点",
+        "level": "B级",
+        "price": 400,
+        "description": "死亡时保留进度并满血复活（一次性）"
+      },
+      {
+        "name": "替身人偶",
+        "level": "C级",
+        "price": 275,
+        "description": "死亡时代替承受惩罚，无惩罚脱离（一次性）"
+      }
+    ]
+  },
+  "statusEffectRules": {
+    "stackingRules": "不叠加，取最高效果；可叠加，但同类护盾不叠加（取最高值）；同时有+5伤害和-5伤害时，效果抵消；独立计算，新状态不刷新旧状态持续时间",
+    "intensities": {
+      "weak": {
+        "dotHpPercent": 3,
+        "shieldHpPercent": 15,
+        "statBuffPercent": 20,
+        "damageDealtModPercent": 20,
+        "damageTakenModPercent": -20
+      },
+      "medium": {
+        "dotHpPercent": 4,
+        "shieldHpPercent": 20,
+        "statBuffPercent": 25,
+        "damageDealtModPercent": 30,
+        "damageTakenModPercent": -30
+      },
+      "strong": {
+        "dotHpPercent": 5,
+        "shieldHpPercent": 30,
+        "statBuffPercent": 30,
+        "damageDealtModPercent": 50,
+        "damageTakenModPercent": -40
+      }
+    }
+  },
+  "economy": {
+    "taskRewards": {
+      "itemRarityRules": {
+        "mainQuest": "当前世界阶位物品（100%固定）",
+        "sideQuest": "投掷d100决定品级：\n1-30: 当前阶位 (30%)\n31-70: 低1级（最低F级）(40%)\n71-100: 低2级（最低F级）(30%)\n",
+        "hiddenQuest": "投掷d100决定品级：\n1-75: 当前阶位 (75%)\n76-100: 高1级 (25%)\n"
+      },
+      "attrPointRewards": {
+        "F级": {
+          "mainQuest": {
+            "min": 3,
+            "max": 5
+          },
+          "sideQuest": {
+            "min": 1,
+            "max": 2
+          },
+          "hiddenQuest": {
+            "min": 5,
+            "max": 8
+          }
+        },
+        "E级": {
+          "mainQuest": {
+            "min": 5,
+            "max": 8
+          },
+          "sideQuest": {
+            "min": 2,
+            "max": 4
+          },
+          "hiddenQuest": {
+            "min": 8,
+            "max": 12
+          }
+        },
+        "D级": {
+          "mainQuest": {
+            "min": 8,
+            "max": 12
+          },
+          "sideQuest": {
+            "min": 4,
+            "max": 6
+          },
+          "hiddenQuest": {
+            "min": 12,
+            "max": 18
+          }
+        },
+        "C级": {
+          "mainQuest": {
+            "min": 12,
+            "max": 18
+          },
+          "sideQuest": {
+            "min": 6,
+            "max": 9
+          },
+          "hiddenQuest": {
+            "min": 18,
+            "max": 25
+          }
+        },
+        "B级": {
+          "mainQuest": {
+            "min": 18,
+            "max": 25
+          },
+          "sideQuest": {
+            "min": 9,
+            "max": 13
+          },
+          "hiddenQuest": {
+            "min": 25,
+            "max": 35
+          }
+        },
+        "A级": {
+          "mainQuest": {
+            "min": 25,
+            "max": 35
+          },
+          "sideQuest": {
+            "min": 13,
+            "max": 18
+          },
+          "hiddenQuest": {
+            "min": 35,
+            "max": 50
+          }
+        },
+        "S级": {
+          "mainQuest": {
+            "min": 35,
+            "max": 50
+          },
+          "sideQuest": {
+            "min": 18,
+            "max": 25
+          },
+          "hiddenQuest": {
+            "min": 50,
+            "max": 70
+          }
+        }
+      },
+      "exchangePointRewards": {
+        "F级": {
+          "mainQuest": 75,
+          "sideQuest": 35,
+          "hiddenQuest": 100
+        },
+        "E级": {
+          "mainQuest": 125,
+          "sideQuest": 60,
+          "hiddenQuest": 175
+        },
+        "D级": {
+          "mainQuest": 200,
+          "sideQuest": 100,
+          "hiddenQuest": 275
+        },
+        "C级": {
+          "mainQuest": 300,
+          "sideQuest": 150,
+          "hiddenQuest": 400
+        },
+        "B级": {
+          "mainQuest": 450,
+          "sideQuest": 225,
+          "hiddenQuest": 600
+        },
+        "A级": {
+          "mainQuest": 650,
+          "sideQuest": 325,
+          "hiddenQuest": 850
+        },
+        "S级": {
+          "mainQuest": 900,
+          "sideQuest": 450,
+          "hiddenQuest": 1200
+        },
+        "SS级": {
+          "mainQuest": 1200,
+          "sideQuest": 600,
+          "hiddenQuest": 1600
+        },
+        "SSS级": {
+          "mainQuest": 1600,
+          "sideQuest": 800,
+          "hiddenQuest": 2200
+        }
+      }
+    },
+    "promotionCosts": {
+      "晋升E级": 0,
+      "晋升D级": 0,
+      "晋升C级": 0,
+      "晋升B级": 0,
+      "晋升A级": 0,
+      "晋升S级": 0,
+      "晋升SS级": 0,
+      "晋升SSS级": 0
+    },
+    "exchangePrices": {
+      "equipment": {
+        "F级": {
+          "attackGear": 100,
+          "defenseGear": 100,
+          "otherGear": 50,
+          "consumable": 50
+        },
+        "E级": {
+          "attackGear": 200,
+          "defenseGear": 200,
+          "otherGear": 100,
+          "consumable": 100
+        },
+        "D级": {
+          "attackGear": 350,
+          "defenseGear": 350,
+          "otherGear": 175,
+          "consumable": 175
+        },
+        "C级": {
+          "attackGear": 550,
+          "defenseGear": 550,
+          "otherGear": 275,
+          "consumable": 275
+        },
+        "B级": {
+          "attackGear": 800,
+          "defenseGear": 800,
+          "otherGear": 400,
+          "consumable": 400
+        },
+        "A级": {
+          "attackGear": 1100,
+          "defenseGear": 1100,
+          "otherGear": 550,
+          "consumable": 550
+        },
+        "S级": {
+          "attackGear": 1500,
+          "defenseGear": 1500,
+          "otherGear": 750,
+          "consumable": 750
+        }
+      },
+      "skills": {
+        "F级": {
+          "activeSkill": 150,
+          "passiveSkill": 150
+        },
+        "E级": {
+          "activeSkill": 300,
+          "passiveSkill": 300
+        },
+        "D级": {
+          "activeSkill": 525,
+          "passiveSkill": 525
+        },
+        "C级": {
+          "activeSkill": 825,
+          "passiveSkill": 825
+        },
+        "B级": {
+          "activeSkill": 1200,
+          "passiveSkill": 1200
+        },
+        "A级": {
+          "activeSkill": 1650,
+          "passiveSkill": 1650
+        },
+        "S级": {
+          "activeSkill": 2250,
+          "passiveSkill": 2250
+        }
+      },
+      "services": {
+        "skillUpgrade": "差价+20%",
+        "equipmentEnhance": "100×等级",
+        "releaseAccumulatedPoints": "免费"
+      }
+    }
+  }
+}

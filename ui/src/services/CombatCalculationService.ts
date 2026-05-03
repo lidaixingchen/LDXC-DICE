@@ -1,74 +1,56 @@
-import { WorldConfigService } from './WorldConfigService';
+import { WorldConfigService } from './WorldConfigService'
 
 export class CombatCalculationService {
   static computeAttributeModifier(attr: number): number {
-    if (attr <= 15) return 0;
-    if (attr <= 25) return 1;
-    if (attr <= 35) return 2;
-    if (attr <= 45) return 3;
-    if (attr <= 55) return 4;
-    if (attr <= 65) return 5;
-    if (attr <= 75) return 6;
-    if (attr <= 85) return 7;
-    if (attr <= 95) return 8;
-    if (attr <= 105) return 9;
-    if (attr <= 120) return 10;
-    if (attr <= 140) return 11;
-    if (attr <= 160) return 12;
-    if (attr <= 185) return 13;
-    if (attr <= 210) return 14;
-    if (attr <= 240) return 15;
-    if (attr <= 270) return 16;
-    if (attr <= 305) return 17;
-    if (attr <= 340) return 18;
-    if (attr <= 380) return 19;
-    return 19 + Math.floor((attr - 381) / 40);
+    return WorldConfigService.getAttributeModifier(attr)
   }
 
   static computeDamageReduction(defense: number, attackPower: number): number {
-    if (attackPower <= 0) return 0;
-    const ratio = defense / attackPower;
-    if (ratio < 0.5) return 0;
-    if (ratio < 0.8) return 0.2;
-    if (ratio < 1) return 0.4;
-    if (ratio < 1.5) return 0.6;
-    return 0.8;
+    return WorldConfigService.getDamageReduction(defense, attackPower)
   }
 
   static computeBaseDamage(attackPower: number, defense: number): number {
-    const reduction = CombatCalculationService.computeDamageReduction(defense, attackPower);
-    return Math.max(1, Math.floor(attackPower * (1 - reduction)));
+    const rules = WorldConfigService.getCombatRules()
+    const reduction = CombatCalculationService.computeDamageReduction(defense, attackPower)
+    return Math.max(rules.minDamage, Math.floor(attackPower * (1 - reduction)))
   }
 
   static computeCritDamage(baseDamage: number): number {
-    return baseDamage * 2;
+    const rules = WorldConfigService.getCombatRules()
+    return baseDamage * rules.critDamageMultiplier
   }
 
   static computeCritRate(charisma: number): number {
-    return Math.min(50, 5 + Math.floor(charisma / 2));
+    const rules = WorldConfigService.getCombatRules()
+    return Math.min(rules.critRateCap, rules.critRateBase + Math.floor(charisma / rules.critRateCharismaDivisor))
   }
 
   static isCritHit(rollValue: number, critRatePercent: number, didHit: boolean): boolean {
-    if (!didHit) return false;
-    const threshold = Math.floor(critRatePercent / 5);
-    return rollValue <= threshold;
+    if (!didHit) return false
+    const rules = WorldConfigService.getCombatRules()
+    const threshold = Math.floor(critRatePercent / rules.critHitDivisor)
+    return rollValue <= threshold
   }
 
   static computeDDC(agiMod: number, dodgeBonus: number): number {
-    return 10 + agiMod + dodgeBonus;
+    const rules = WorldConfigService.getCombatRules()
+    return rules.ddcBase + agiMod + dodgeBonus
   }
 
   static computeMaxHP(endurance: number, level: string, hpBonus: number): number {
-    const hpBase = WorldConfigService.getHpBase(level);
-    return Math.max(1, endurance * 5 + hpBase + hpBonus);
+    const rules = WorldConfigService.getCombatRules()
+    const hpBase = WorldConfigService.getHpBase(level)
+    return Math.max(1, endurance * rules.hpEnduranceMultiplier + hpBase + hpBonus)
   }
 
   static computeErosionDamage(maxHP: number): number {
-    return Math.max(1, Math.floor(maxHP * 0.05));
+    const rules = WorldConfigService.getCombatRules()
+    return Math.max(1, Math.floor(maxHP * rules.erosionDamageRatio))
   }
 
   static computeHPPenalty(target: number, finalValue: number): number {
-    return Math.max(1, Math.min(10, target - finalValue));
+    const rules = WorldConfigService.getCombatRules()
+    return Math.max(rules.hpPenaltyMin, Math.min(rules.hpPenaltyMax, target - finalValue))
   }
 
   static readonly ATTR_MAPPING: Record<string, string[]> = {
@@ -80,13 +62,13 @@ export class CombatCalculationService {
     charisma: ['魅力', 'CHA', 'Cha', 'cha', '魅力值', '魅力属性', 'CHR', 'Chr', '暴击率'],
     attackPower: ['攻击力', '攻击', 'ATK', 'Atk', 'atk', '物攻', '物理攻击', '法攻', '法术攻击'],
     defense: ['防御力', '防御', 'DEF', 'Def', 'def', '物防', '物理防御', '法防', '法术防御', '护甲', '防御值'],
-  };
+  }
 
   static findAttrValue(attrs: Record<string, number>, keys: string[]): number | null {
     for (const key of keys) {
-      if (attrs[key] !== undefined) return attrs[key];
+      if (attrs[key] !== undefined) return attrs[key]
     }
-    return null;
+    return null
   }
 
   static deriveCombatStats(
@@ -94,12 +76,12 @@ export class CombatCalculationService {
     level: string,
     equipment: { physDmg: number; magicDmg: number; physDef: number; magicDef: number; hpBonus: number; dodgeBonus: number },
   ): { physAtk: number; magicAtk: number; physDef: number; magicDef: number; hp: number; ddc: number; critRate: number } {
-    const str = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.strength) || 0;
-    const agi = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.agility) || 0;
-    const end = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.endurance) || 0;
-    const intVal = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.intelligence) || 0;
-    const per = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.perception) || 0;
-    const cha = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.charisma) || 0;
+    const str = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.strength) || 0
+    const agi = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.agility) || 0
+    const end = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.endurance) || 0
+    const intVal = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.intelligence) || 0
+    const per = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.perception) || 0
+    const cha = CombatCalculationService.findAttrValue(attrs, CombatCalculationService.ATTR_MAPPING.charisma) || 0
 
     return {
       physAtk: str + equipment.physDmg,
@@ -112,6 +94,6 @@ export class CombatCalculationService {
         equipment.dodgeBonus,
       ),
       critRate: CombatCalculationService.computeCritRate(cha),
-    };
+    }
   }
 }

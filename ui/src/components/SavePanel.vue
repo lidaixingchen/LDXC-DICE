@@ -44,7 +44,7 @@ interface SaveData {
 const { initiatorName, worldLevel, combat } = useCombatState();
 const { equipment } = useEquipment();
 const { activeStatuses } = useStatusEffects();
-const { currentCharacter } = useCharacterData();
+const { currentCharacter, characters } = useCharacterData();
 
 const saveSlots = ref<SaveSlot[]>([]);
 const exportText = ref('');
@@ -76,10 +76,13 @@ function saveGame(slotId: number): void {
     if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return;
   }
 
-  const char = currentCharacter;
+  const charName = currentCharacter.value;
   const attrs: Record<string, number> = {};
-  if (char?.value) {
-    Object.entries(char.value.attributes as Record<string, number>).forEach(([k, v]) => { attrs[k] = v; });
+  if (charName) {
+    const charObj = characters.value.find(c => c.name === charName);
+    if (charObj) {
+      Object.entries(charObj.attributes).forEach(([k, v]) => { attrs[k] = v; });
+    }
   }
 
   const combatData = combat?.value || { active: false, round: 1, enemyName: '', enemyMaxHP: 0, enemyCurrentHP: 0, playerMaxHP: 0, playerCurrentHP: 0, playerShield: 0 };
@@ -129,8 +132,10 @@ function loadGame(slotId: number): boolean {
 
 function exportSave(): void {
   const eq = equipment?.value || { physDmg: 0, magicDmg: 0, physDef: 0, magicDef: 0, hpBonus: 0, dodgeBonus: 0 };
-  const stats = currentCharacter?.value
-    ? CombatCalculationService.deriveCombatStats(currentCharacter.value.attributes, worldLevel?.value || 'F级', eq)
+  const charName = currentCharacter.value;
+  const charObj = characters.value.find(c => c.name === charName);
+  const stats = charObj
+    ? CombatCalculationService.deriveCombatStats(charObj.attributes, worldLevel?.value || 'F级', eq)
     : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 0 };
 
   const spv = WorldConfigService.getSPV(worldLevel?.value || 'F级');

@@ -5,7 +5,7 @@ export { CharacterDataService } from './CharacterDataService';
 export { SaveService } from './SaveService';
 export { WorldGenerationService } from './WorldGenerationService';
 
-export type { WorldLevelConfig } from './WorldConfigService';
+export type { LevelConfig } from './WorldConfigService';
 export type {
   StandardCheckParams,
   ContestCheckParams,

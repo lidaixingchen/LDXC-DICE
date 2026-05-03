@@ -463,7 +463,7 @@ onUnmounted(() => {
       ]"
       @click="isCollapsed = false"
     >
-      <i class="fa-solid fa-table"></i><span>数据库助手 ({{ tables.length }})</span>
+      <i class="fa-solid fa-table"></i><span>骰子系统助手 ({{ tables.length }})</span>
     </div>
     <!-- 4. 导航栏 (包含动作栏位置控制) -->
     <div v-else class="acu-nav-container" :class="{ 'acu-pos-top': legacySettings.actionsPosition === 'top' }">

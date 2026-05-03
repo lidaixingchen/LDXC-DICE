@@ -38,7 +38,7 @@ export function getNativeTextareaValueSetter(): ((v: string) => void) | null {
   if (cachedNativeSetter !== undefined) return cachedNativeSetter;
   try {
     const desc = Object.getOwnPropertyDescriptor(
-      getTopWindow().HTMLTextAreaElement.prototype, 'value',
+      (getTopWindow() as any).HTMLTextAreaElement.prototype, 'value',
     );
     cachedNativeSetter = (desc?.set as ((v: string) => void)) ?? null;
   } catch {
