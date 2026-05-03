@@ -293,7 +293,42 @@ export class SaveService {
     const c = state.combat
     const e = state.equipment
 
-    let text = `═════════════════════════════════
+    const displayHP = c.active
+      ? `HP：${c.playerCurrentHP}/${c.playerMaxHP}`
+      : `HP：${derivedStats.hp}`
+    const combatLine = c.active ? `\n【战斗中】第${c.round}回合 | 敌人:${c.enemyName} HP:${c.enemyCurrentHP}/${c.enemyMaxHP}\n` : ''
+
+    const blocks: string[] = []
+
+    if (state.statuses.length > 0) {
+      blocks.push(`【状态效果】\n${state.statuses.map(s => `  ${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}`)
+    }
+    if (state.activeSkills.length > 0) {
+      blocks.push(`【战斗技能】\n${state.activeSkills.map(s => `  ${s.name}(${s.type}) ${s.value} CD:${s.cooldown}`).join('\n')}`)
+    }
+    if (state.dashboard.npcs.length > 0) {
+      const inScene = state.dashboard.npcs.filter(n => n.inScene)
+      if (inScene.length > 0) {
+        blocks.push(`【在场NPC】\n${inScene.map(n => `  ${n.name} ${n.status} @${n.position}`).join('\n')}`)
+      }
+    }
+    if (state.dashboard.quests.length > 0) {
+      const activeQuests = state.dashboard.quests.filter(q => q.status.includes('进行') || q.status.toLowerCase().includes('active'))
+      if (activeQuests.length > 0) {
+        blocks.push(`【进行中任务】\n${activeQuests.map(q => `  ${q.name} [${q.type}] ${q.progress}`).join('\n')}`)
+      }
+    }
+    if (state.dashboard.currentLocation) {
+      blocks.push(`【当前位置】\n  ${state.dashboard.currentLocation}`)
+    }
+
+    const extraSections = blocks.length > 0 ? '\n' + blocks.join('\n\n') + '\n' : ''
+
+    const resources = state.dashboard.playerResources.length > 0
+      ? state.dashboard.playerResources.map(r => `  ${r.name}: ${r.value}`).join('\n')
+      : '  无'
+
+    return `═════════════════════════════════
 【轮回者存档】
 ═════════════════════════════════
 
@@ -310,33 +345,17 @@ ${state.characters.map(ch => {
 }).join('\n')}
 
 【战斗属性】
-HP：${c.playerCurrentHP}/${c.playerMaxHP}
+${displayHP}
 护盾：${c.playerShield}
 物攻：${derivedStats.physAtk + e.physDmg} | 法攻：${derivedStats.magicAtk + e.magicDmg}
 物防：${derivedStats.physDef + e.physDef} | 法防：${derivedStats.magicDef + e.magicDef}
 DDC：${derivedStats.ddc} | 暴击率：${derivedStats.critRate}%
 
 【装备】
-${e.name ? `  ${e.name} | 物伤+${e.physDmg} 法伤+${e.magicDmg} 物防+${e.physDef} 法防+${e.magicDef} HP+${e.hpBonus} 闪避+${e.dodgeBonus}` : '  无装备'}
-
-${state.statuses.length > 0 ? `【状态效果】\n${state.statuses.map(s => `  ${s.name}(${s.type}) ${s.intensity} 剩余${s.remainingRounds}回合`).join('\n')}` : ''}
-
-${state.activeSkills.length > 0 ? `【战斗技能】\n${state.activeSkills.map(s => `  ${s.name}(${s.type}) ${s.value} CD:${s.cooldown}`).join('\n')}` : ''}
-
-${state.dashboard.npcs.length > 0 ? `【在场NPC】\n${state.dashboard.npcs.filter(n => n.inScene).map(n => `  ${n.name} ${n.status} @${n.position}`).join('\n')}` : ''}
-
-${state.dashboard.quests.length > 0 ? `【进行中任务】\n${state.dashboard.quests.filter(q => q.status.includes('进行') || q.status.toLowerCase().includes('active')).map(q => `  ${q.name} [${q.type}] ${q.progress}`).join('\n')}` : ''}
-
-${state.dashboard.currentLocation ? `【当前位置】\n  ${state.dashboard.currentLocation}` : ''}
-
-${c.active ? `【战斗中】第${c.round}回合 | 敌人:${c.enemyName} HP:${c.enemyCurrentHP}/${c.enemyMaxHP}` : ''}
-
-【经济】
-${state.dashboard.playerResources.length > 0 ? state.dashboard.playerResources.map(r => `  ${r.name}: ${r.value}`).join('\n') : '  无'}
+${e.name ? `  ${e.name} | 物伤+${e.physDmg} 法伤+${e.magicDmg} 物防+${e.physDef} 法防+${e.magicDef} HP+${e.hpBonus} 闪避+${e.dodgeBonus}` : '  无装备'}${extraSections}${combatLine}【经济】
+${resources}
 ═════════════════════════════════
 [SERIALIZED:${btoa(encodeURIComponent(JSON.stringify(state)))}]`
-
-    return text
   }
 
   static parseImportText(text: string): GameStateOutput | null {

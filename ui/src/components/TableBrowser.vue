@@ -173,7 +173,7 @@ function parseAttributeList(str: string): { name: string; value: string }[] {
   const result: { name: string; value: string }[] = [];
   const parts = str.split(/[;；,，\n]/);
   for (const part of parts) {
-    const match = part.trim().match(/^(.+?)[：:＝=\s]*(.+)$/);
+    const match = part.trim().match(/^(.+?)\s*[：:＝=]\s*(.+)$/);
     if (match) result.push({ name: match[1].trim(), value: match[2].trim() });
   }
   return result;

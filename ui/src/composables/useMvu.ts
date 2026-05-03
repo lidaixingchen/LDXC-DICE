@@ -55,19 +55,46 @@ function saveState(): void {
   }
 }
 
+const MVU_CTX = { type: 'message', message_id: 'latest' };
+
 function getMvuDataFromWindow(): MvuData | null {
   const win = window as any;
   const topWin = getTopWindow() as any;
-  const api = getDatabaseApi();
 
   console.log('[MVU] 尝试获取变量数据...');
-  console.log('[MVU] API 可用:', !!api);
+
+  const mvuApi = topWin.Mvu || win.Mvu;
+  if (mvuApi && typeof mvuApi.getMvuData === 'function') {
+    try {
+      const allVars = mvuApi.getMvuData(MVU_CTX);
+      if (allVars && allVars.stat_data) {
+        console.log('[MVU] 从 window.Mvu.getMvuData 获取成功');
+        return {
+          _source: 'mvu',
+          stat_data: allVars.stat_data,
+          delta_data: allVars.delta_data || {},
+          display_data: allVars.display_data || {},
+          schema: allVars.schema || null,
+        };
+      }
+      if (allVars) {
+        console.log('[MVU] window.Mvu.getMvuData 返回数据但无 stat_data');
+      }
+    } catch (e) {
+      console.warn('[MVU] window.Mvu.getMvuData 调用失败:', e);
+    }
+  }
+
+  const api = getDatabaseApi();
+  console.log('[MVU] AutoCardUpdaterAPI 可用:', !!api);
   console.log('[MVU] API 方法:', api ? Object.keys(api) : 'N/A');
 
   if (api) {
     if (typeof api.getMvuData === 'function') {
       try {
-        const raw = api.getMvuData();
+        const raw = (() => {
+          try { return api.getMvuData(MVU_CTX); } catch { return api.getMvuData(); }
+        })();
         if (raw) {
           console.log('[MVU] 从 API.getMvuData 获取成功');
           const hasStatData = raw.stat_data !== undefined;
@@ -84,7 +111,9 @@ function getMvuDataFromWindow(): MvuData | null {
 
     if (typeof api.getVariables === 'function') {
       try {
-        const raw = api.getVariables();
+        const raw = (() => {
+          try { return api.getVariables(MVU_CTX); } catch { return api.getVariables(); }
+        })();
         if (raw) {
           console.log('[MVU] 从 API.getVariables 获取成功');
           const hasStatData = raw.stat_data !== undefined;
@@ -172,6 +201,43 @@ function getMvuDataFromWindow(): MvuData | null {
   }
 
   console.log('[MVU] 未找到变量数据源');
+  return null;
+}
+
+async function waitForMvuApi(timeoutMs = 3000): Promise<boolean> {
+  const win = window as any;
+  const topWin = getTopWindow() as any;
+  const mvuApi = topWin.Mvu || win.Mvu;
+  if (mvuApi && typeof mvuApi.getMvuData === 'function') return true;
+
+  const startTime = Date.now();
+  while (Date.now() - startTime < timeoutMs) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const api = topWin.Mvu || win.Mvu;
+    if (api && typeof api.getMvuData === 'function') return true;
+  }
+  return false;
+}
+
+async function getMvuDataWithRetry(maxRetries = 3, retryDelay = 500): Promise<MvuData | null> {
+  const mvuAvailable = await waitForMvuApi();
+  if (mvuAvailable) {
+    const data = getMvuDataFromWindow();
+    if (data) return data;
+  }
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    if (attempt > 1) {
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
+    const data = getMvuDataFromWindow();
+    if (data) {
+      console.log(`[MVU] 第 ${attempt} 次重试获取成功`);
+      return data;
+    }
+    console.log(`[MVU] 第 ${attempt} 次重试未获取到数据`);
+  }
+
   return null;
 }
 
@@ -315,7 +381,7 @@ async function refresh(): Promise<void> {
   error.value = null;
 
   try {
-    const data = getMvuDataFromWindow();
+    const data = await getMvuDataWithRetry();
     if (data) {
       mvuData.value = data;
       console.log('[MVU] 变量数据刷新成功，共', variableCount.value, '个变量');

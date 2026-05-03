@@ -64,7 +64,7 @@ function collectGameState(): GameStateInput {
   })) || []
 
   return {
-    playerName: initiatorName?.value || '冒险者',
+    playerName: initiatorName?.value || charName || '冒险者',
     level: worldLevel?.value || 'F级',
     currentCharacter: charName,
     characters: charSnapshot,

@@ -16,6 +16,8 @@ export interface MvuData {
   _source?: 'mvu' | 'era' | 'lwb';
   stat_data: Record<string, unknown>;
   delta_data?: Record<string, { old: unknown; new: unknown }>;
+  display_data?: Record<string, unknown>;
+  schema?: Record<string, unknown> | null;
 }
 
 export interface MvuPanelState {

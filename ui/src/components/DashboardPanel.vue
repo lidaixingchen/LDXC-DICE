@@ -118,20 +118,24 @@ interface SkillEntry {
   source: 'skill_table' | 'special_attr';
 }
 
-const TIER_CONFIG: Record<string, { label: string; cssClass: string; color: string }> = {
-  novice:   { label: '入门', cssClass: 'tier-novice',   color: '#6c7086' },
-  skilled:  { label: '熟练', cssClass: 'tier-skilled',  color: '#89b4fa' },
-  master:   { label: '精通', cssClass: 'tier-master',   color: '#cba6f7' },
-  grandmaster: { label: '大师', cssClass: 'tier-grandmaster', color: '#f9e2af' },
-  legendary: { label: '传说', cssClass: 'tier-legendary', color: '#f38ba8' },
-};
+interface TierEntry {
+  label: string;
+  cssClass: string;
+  color: string;
+  max: number;
+}
 
-function getTier(value: number) {
-  if (value <= 25) return TIER_CONFIG.novice;
-  if (value <= 50) return TIER_CONFIG.skilled;
-  if (value <= 75) return TIER_CONFIG.master;
-  if (value <= 95) return TIER_CONFIG.grandmaster;
-  return TIER_CONFIG.legendary;
+const TIER_LEVELS: TierEntry[] = [
+  { label: '入门', cssClass: 'tier-novice',   color: '#6c7086', max: 25 },
+  { label: '熟练', cssClass: 'tier-skilled',  color: '#89b4fa', max: 50 },
+  { label: '精通', cssClass: 'tier-master',   color: '#cba6f7', max: 75 },
+  { label: '大师', cssClass: 'tier-grandmaster', color: '#f9e2af', max: 95 },
+  { label: '传说', cssClass: 'tier-legendary', color: '#f38ba8', max: 100 },
+];
+
+function getTier(value: number): TierEntry {
+  const normalized = Math.max(0, Math.min(100, value));
+  return TIER_LEVELS.find(t => normalized <= t.max) ?? TIER_LEVELS[TIER_LEVELS.length - 1];
 }
 
 const data = computed(() => {
