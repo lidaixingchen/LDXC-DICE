@@ -44,6 +44,7 @@ export interface ContestOptions {
 
 export interface CheckResult {
   success: boolean;
+  barelySuccess?: boolean;
   roll: number;
   total: number;
   target: number;

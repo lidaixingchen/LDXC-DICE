@@ -283,7 +283,8 @@ function parseDamageReduction(): DamageReductionEntry[] {
     { ratioMin: 0.5, ratioMax: 0.8, reduction: 0.2 },
     { ratioMin: 0.8, ratioMax: 1, reduction: 0.4 },
     { ratioMin: 1, ratioMax: 1.5, reduction: 0.6 },
-    { ratioMin: 1.5, ratioMax: null, reduction: 0.8 },
+    { ratioMin: 1.5, ratioMax: 2, reduction: 0.75 },
+    { ratioMin: 2, ratioMax: null, reduction: 0.9 },
   ]
 }
 

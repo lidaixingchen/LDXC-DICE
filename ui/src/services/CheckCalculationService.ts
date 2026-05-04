@@ -93,22 +93,35 @@ export class CheckCalculationService {
     const rules = checkRules()
     const isCritSuccess = params.rollTotal === rules.critSuccessRoll
     const isCritFailure = params.rollTotal === rules.critFailureRoll
-    let isSuccess = finalValue >= target;
-    let isCritHit = false;
-    let outcomeText = '';
+    const margin = finalValue - target
 
-    if (isCritSuccess) {
-      outcomeText = '大成功！';
-      isSuccess = true;
-    } else if (isCritFailure) {
-      outcomeText = '大失败！';
-      isSuccess = false;
-    } else if (isSuccess) {
-      const critChance = CombatCalculationService.computeCritRate(params.charisma);
-      isCritHit = Math.random() * 100 < critChance;
-      outcomeText = isCritHit ? '暴击成功！' : '成功';
+    let isSuccess = false
+    let isBarelySuccess = false
+    let isCritHit = false
+    let outcomeText = ''
+
+    if (isCritSuccess || margin >= 10) {
+      isSuccess = true
+      isBarelySuccess = false
+      outcomeText = '大成功！'
+    } else if (isCritFailure || margin <= -10) {
+      isSuccess = false
+      isBarelySuccess = false
+      outcomeText = '大失败！'
+    } else if (margin >= 0) {
+      isSuccess = true
+      isBarelySuccess = false
+      const critChance = CombatCalculationService.computeCritRate(params.charisma)
+      isCritHit = Math.random() * 100 < critChance
+      outcomeText = isCritHit ? '暴击成功！' : '成功'
+    } else if (margin >= -2) {
+      isSuccess = true
+      isBarelySuccess = true
+      outcomeText = '勉强成功'
     } else {
-      outcomeText = '失败';
+      isSuccess = false
+      isBarelySuccess = false
+      outcomeText = '失败'
     }
 
     let hpPenalty = 0;
@@ -119,10 +132,11 @@ export class CheckCalculationService {
 
     return {
       success: isSuccess,
+      barelySuccess: isBarelySuccess,
       roll: params.rollTotal,
       total: finalValue,
       target,
-      margin: finalValue - target,
+      margin,
       criticalSuccess: isCritSuccess,
       criticalFailure: isCritFailure,
       criticalHit: isCritHit,
@@ -143,11 +157,13 @@ export class CheckCalculationService {
       ? '✨ 大成功！'
       : result.criticalFailure
         ? '💀 大失败！'
-        : result.criticalHit
-          ? '💥 暴击成功！'
-          : result.success
-            ? '✅ 成功！'
-            : `❌ 失败${result.triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${result.hpPenalty}% HP）` : ''}`;
+        : result.barelySuccess
+          ? '⚠️ 勉强成功（效果打折）'
+          : result.criticalHit
+            ? '💥 暴击成功！'
+            : result.success
+              ? '✅ 成功！'
+              : `❌ 失败${result.triggerPenalty ? `（⚠️ 触发失败惩罚，扣除 ${result.hpPenalty}% HP）` : ''}`;
 
     return `<meta:检定结果>
 【AIDM标准检定】
@@ -183,23 +199,31 @@ ${critText}
 
     const myTotal = params.rollTotal + myAttrMod + myMasteryBonus;
     const oppTotal = params.oppRollTotal + oppAttrMod;
+    const margin = myTotal - oppTotal
 
     let isSuccess = myTotal > oppTotal;
     let outcomeText = '';
 
-    if (isCritSuccess) {
-      outcomeText = '大成功获胜！';
+    if (isCritSuccess || margin >= 10) {
+      outcomeText = '碾压胜利！';
       isSuccess = true;
-    } else if (isCritFailure) {
-      outcomeText = '大失败落败！';
+    } else if (isCritFailure || margin <= -10) {
+      outcomeText = '惨败！';
       isSuccess = false;
-    } else if (myTotal > oppTotal) {
-      outcomeText = '获胜！';
-    } else if (myTotal < oppTotal) {
-      outcomeText = '落败！';
+    } else if (margin >= 5) {
+      outcomeText = '明显胜利！';
+      isSuccess = true;
+    } else if (margin >= 1) {
+      outcomeText = '险胜！';
+      isSuccess = true;
+    } else if (margin === 0) {
+      outcomeText = '僵持！';
+      isSuccess = false;
+    } else if (margin >= -4) {
+      outcomeText = '惜败！';
       isSuccess = false;
     } else {
-      outcomeText = '平局！';
+      outcomeText = '明显落败！';
       isSuccess = false;
     }
 
@@ -208,7 +232,7 @@ ${critText}
       roll: params.rollTotal,
       total: myTotal,
       target: oppTotal,
-      margin: myTotal - oppTotal,
+      margin,
       criticalSuccess: isCritSuccess,
       criticalFailure: isCritFailure,
       outcome: outcomeText,
@@ -247,7 +271,7 @@ ${critText}
 ・己方：${params.rollBreakdown} + 属性(${myAttrMod}) + 掌握(${myMasteryBonus}) = ${result.total}
 ・对方：D20(${params.oppRollTotal}) + 属性(${oppAttrMod}) = ${result.target}
 
-${result.criticalSuccess ? '✨ 大成功！' : (result.criticalFailure ? '💀 大失败！' : (result.total > result.target ? '✅ 获胜！' : (result.total < result.target ? '❌ 落败！' : '⚖️ 平局！')))}
+${result.criticalSuccess ? '✨ 碾压胜利！' : (result.criticalFailure ? '💀 惨败！' : result.outcome)}
 </meta:检定结果>`;
   }
 
