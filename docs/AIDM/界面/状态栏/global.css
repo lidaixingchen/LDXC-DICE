@@ -1,3 +1,12 @@
+:root {
+  --c-granite: #3c494f;
+  --c-celadon: #8fb2a7;
+  --c-mint-cream: #f5f9f7;
+  --c-ash-grey: #b2beb5;
+  --c-grey-olive: #7d7d6a;
+  --font-archive: 'Archive', sans-serif;
+}
+
 .card {
   width: 100%;
   max-width: 720px;

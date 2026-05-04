@@ -1,36 +1,36 @@
 export const Schema = z.object({
   // ==================== 玩家基础属性 ====================
   玩家: z.object({
-    名称: z.string().default('冒险者'),
+    名称: z.string().prefault('冒险者'),
 
     // 六维基础属性 (60点自由分配, 单项5-15)
     基础属性: z.object({
-      力量: z.coerce.number().min(5).max(30).default(10), // 物理伤害、物理防御
-      敏捷: z.coerce.number().min(5).max(30).default(10), // 先攻、DDC
-      体质: z.coerce.number().min(5).max(30).default(10), // HP
-      智力: z.coerce.number().min(5).max(30).default(10), // 法术伤害、法术防御
-      感知: z.coerce.number().min(5).max(30).default(10), // DDC、察觉检定
-      魅力: z.coerce.number().min(5).max(30).default(10), // 暴击率、社交检定
-    }),
+      力量: z.coerce.number().min(5).max(30).prefault(10), // 物理伤害、物理防御
+      敏捷: z.coerce.number().min(5).max(30).prefault(10), // 先攻、DDC
+      体质: z.coerce.number().min(5).max(30).prefault(10), // HP
+      智力: z.coerce.number().min(5).max(30).prefault(10), // 法术伤害、法术防御
+      感知: z.coerce.number().min(5).max(30).prefault(10), // DDC、察觉检定
+      魅力: z.coerce.number().min(5).max(30).prefault(10), // 暴击率、社交检定
+    }).prefault({}),
 
     // 等级与沉淀点
-    等级: z.enum(['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级']).default('F级'),
-    沉淀点: z.coerce.number().min(0).default(0), // 溢出属性转化的沉淀点
+    等级: z.enum(['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级', 'SS级', 'SSS级']).prefault('F级'),
+    沉淀点: z.coerce.number().min(0).prefault(0), // 溢出属性转化的沉淀点
 
     // 战斗属性 (根据基础属性计算)
     战斗属性: z.object({
       HP: z.object({
-        当前: z.coerce.number().default(50),
-        最大: z.coerce.number().default(50),
-      }),
-      护盾: z.coerce.number().min(0).default(0),
-      物理攻击: z.coerce.number().default(10),
-      法术攻击: z.coerce.number().default(10),
-      物理防御: z.coerce.number().default(10),
-      法术防御: z.coerce.number().default(10),
-      DDC: z.coerce.number().default(10), // 动态防御等级 = 10 + 敏捷/感知取高
-      暴击率: z.coerce.number().min(0).max(50).default(10), // 5% + 魅力/2
-    }),
+        当前: z.coerce.number().prefault(50),
+        最大: z.coerce.number().prefault(50),
+      }).prefault({}),
+      护盾: z.coerce.number().min(0).prefault(0),
+      物理攻击: z.coerce.number().prefault(10),
+      法术攻击: z.coerce.number().prefault(10),
+      物理防御: z.coerce.number().prefault(10),
+      法术防御: z.coerce.number().prefault(10),
+      DDC: z.coerce.number().prefault(10), // 动态防御等级 = 10 + 敏捷/感知取高
+      暴击率: z.coerce.number().min(0).max(50).prefault(10), // 5% + 魅力/2
+    }).prefault({}),
 
     // 状态效果
     状态: z
@@ -38,14 +38,14 @@ export const Schema = z.object({
         z.object({
           名称: z.string(),
           效果: z.string(),
-          剩余回合: z.coerce.number().min(0).default(1),
+          剩余回合: z.coerce.number().min(0).prefault(1),
         }),
       )
-      .default([]),
+      .prefault([]),
 
     // 种族与血脉
-    种族: z.string().default('人类'),
-    血脉: z.string().default('无'),
+    种族: z.string().prefault('人类'),
+    血脉: z.string().prefault('无'),
 
     // 性格特征 (1个被动)
     性格特征: z
@@ -55,43 +55,43 @@ export const Schema = z.object({
           效果: z.string(),
         }),
       )
-      .default([]),
+      .prefault([]),
 
     // 技能列表
     技能: z
       .array(
         z.object({
           名称: z.string(),
-          等级: z.enum(['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).default('F级'),
-          类型: z.enum(['主动', '被动', '其他']).default('主动'),
-          冷却: z.coerce.number().min(0).default(0),
-          当前冷却: z.coerce.number().min(0).default(0),
+          等级: z.enum(['F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).prefault('F级'),
+          类型: z.enum(['主动', '被动', '其他']).prefault('主动'),
+          冷却: z.coerce.number().min(0).prefault(0),
+          当前冷却: z.coerce.number().min(0).prefault(0),
           效果: z.string(),
-          词条: z.array(z.string()).default([]),
+          词条: z.array(z.string()).prefault([]),
         }),
       )
-      .default([]),
+      .prefault([]),
 
     // 装备
     装备: z
       .object({
         武器: z
           .object({
-            名称: z.string().default(''),
-            等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).default(''),
-            物伤加成: z.coerce.number().default(0),
-            法伤加成: z.coerce.number().default(0),
+            名称: z.string().prefault(''),
+            等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).prefault(''),
+            物伤加成: z.coerce.number().prefault(0),
+            法伤加成: z.coerce.number().prefault(0),
           })
-          .default({}),
+          .prefault({}),
         防具: z
           .object({
-            名称: z.string().default(''),
-            等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).default(''),
-            物防加成: z.coerce.number().default(0),
-            法防加成: z.coerce.number().default(0),
-            HP加成: z.coerce.number().default(0),
+            名称: z.string().prefault(''),
+            等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).prefault(''),
+            物防加成: z.coerce.number().prefault(0),
+            法防加成: z.coerce.number().prefault(0),
+            HP加成: z.coerce.number().prefault(0),
           })
-          .default({}),
+          .prefault({}),
         饰品: z
           .array(
             z.object({
@@ -99,9 +99,9 @@ export const Schema = z.object({
               效果: z.string(),
             }),
           )
-          .default([]),
+          .prefault([]),
       })
-      .default({}),
+      .prefault({}),
 
     // 物品栏
     物品栏: z
@@ -109,62 +109,62 @@ export const Schema = z.object({
         z.string().describe('物品名'),
         z.object({
           描述: z.string(),
-          数量: z.coerce.number().min(0).default(1),
-          类型: z.enum(['消耗品', '材料', '任务道具', '特殊']).default('消耗品'),
+          数量: z.coerce.number().min(0).prefault(1),
+          类型: z.enum(['消耗品', '材料', '任务道具', '特殊']).prefault('消耗品'),
         }),
       )
-      .default({}),
+      .prefault({}),
 
     // 兑换点 (货币)
-    兑换点: z.coerce.number().min(0).default(100),
+    兑换点: z.coerce.number().min(0).prefault(100),
 
     // 当前位置
-    位置: z.string().default('乾坤界'),
-  }),
+    位置: z.string().prefault('乾坤界'),
+  }).prefault({}),
 
   // ==================== 任务系统 ====================
   任务: z.object({
     主线: z
       .object({
-        名称: z.string().default(''),
-        完成度: z.coerce.number().min(0).max(100).default(0),
-        描述: z.string().default(''),
+        名称: z.string().prefault(''),
+        完成度: z.coerce.number().min(0).max(100).prefault(0),
+        描述: z.string().prefault(''),
       })
-      .default({}),
+      .prefault({}),
     支线: z
       .array(
         z.object({
           名称: z.string(),
-          完成度: z.coerce.number().min(0).max(100).default(0),
+          完成度: z.coerce.number().min(0).max(100).prefault(0),
           描述: z.string(),
         }),
       )
-      .default([]),
-  }),
+      .prefault([]),
+  }).prefault({}),
 
   // ==================== 世界状态 ====================
   世界: z.object({
-    当前场景: z.string().default('乾坤界'),
+    当前场景: z.string().prefault('乾坤界'),
     当前世界: z
       .object({
-        名称: z.string().default(''),
-        等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).default(''),
-        类型: z.enum(['', '恐怖', '科幻', '奇幻', '武侠', '仙侠', '末世', '其他']).default(''),
+        名称: z.string().prefault(''),
+        等级: z.enum(['', 'F级', 'E级', 'D级', 'C级', 'B级', 'A级', 'S级']).prefault(''),
+        类型: z.enum(['', '恐怖', '科幻', '奇幻', '武侠', '仙侠', '末世', '其他']).prefault(''),
       })
-      .default({}),
+      .prefault({}),
     关键NPC: z
       .array(
         z.object({
           名称: z.string(),
           关系: z.string(),
-          状态: z.string().default('存活'),
+          状态: z.string().prefault('存活'),
         }),
       )
-      .default([]),
-    战斗状态: z.boolean().default(false),
-    回合数: z.coerce.number().min(0).default(0),
-    环境侵蚀: z.boolean().default(false), // 第5回合后开启
-  }),
+      .prefault([]),
+    战斗状态: z.boolean().prefault(false),
+    回合数: z.coerce.number().min(0).prefault(0),
+    环境侵蚀: z.boolean().prefault(false), // 第5回合后开启
+  }).prefault({}),
 
   // ==================== 战斗记录 ====================
   战斗: z
@@ -176,24 +176,24 @@ export const Schema = z.object({
             HP: z.object({
               当前: z.coerce.number(),
               最大: z.coerce.number(),
-            }),
-            状态: z.array(z.string()).default([]),
+            }).prefault({}),
+            状态: z.array(z.string()).prefault([]),
           }),
         )
-        .default([]),
-      战斗日志: z.array(z.string()).default([]),
+        .prefault([]),
+      战斗日志: z.array(z.string()).prefault([]),
     })
-    .default({}),
+    .prefault({}),
 
   // ==================== 游戏进度 ====================
   进度: z
     .object({
-      完成世界数: z.coerce.number().min(0).default(0),
-      当前世界存活时间: z.coerce.number().default(0), // 小时
-      总游戏时间: z.coerce.number().default(0),
-      死亡次数: z.coerce.number().min(0).default(0),
+      完成世界数: z.coerce.number().min(0).prefault(0),
+      当前世界存活时间: z.coerce.number().prefault(0), // 小时
+      总游戏时间: z.coerce.number().prefault(0),
+      死亡次数: z.coerce.number().min(0).prefault(0),
     })
-    .default({}),
+    .prefault({}),
 });
 
 export type Schema = z.output<typeof Schema>;

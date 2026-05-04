@@ -10,8 +10,10 @@
     - the update commands works like the **JSON Patch (RFC 6902)** standard, must be a valid JSON array containing operation objects
     - don't update field names starts with `_` as they are readonly
     - 仅在必要时输出数据表，常规回合保持叙事流畅性
+    - 在每次回复的末尾，必须输出状态栏标签 `<StatusPlaceHolderImpl/>`
 
   format: |-
+    <StatusPlaceHolderImpl/>
     <UpdateVariable>
     <Analysis>$(IN ENGLISH, no more than 80 words)
     - ${calculate time passed: ...}
