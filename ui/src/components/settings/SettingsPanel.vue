@@ -653,6 +653,26 @@ onUnmounted(() => {
         <div v-if="activeSection === 'layout'" class="acu-config-group">
           <div class="acu-group-label">排列与吸附</div>
           <div class="acu-setting-row">
+            <label>位置模式</label>
+            <select
+              :value="settings.positionMode"
+              @change="updateLegacy({ positionMode: ($event.target as any).value })"
+            >
+              <option value="fixed">悬浮模式</option>
+              <option value="embedded">内嵌模式</option>
+            </select>
+          </div>
+          <div v-if="settings.positionMode === 'fixed'" class="acu-setting-row">
+            <label>垂直偏移 ({{ settings.bottomOffset }}px)</label>
+            <input
+              type="range"
+              min="0"
+              max="300"
+              :value="settings.bottomOffset"
+              @input="updateLegacy({ bottomOffset: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
             <label>布局模式</label>
             <select :value="settings.layout" @change="updateLegacy({ layout: ($event.target as any).value })">
               <option value="horizontal">横向滚动</option>
@@ -701,26 +721,6 @@ onUnmounted(() => {
               <option value="bottom">底部停靠</option>
               <option value="top">顶部停靠</option>
             </select>
-          </div>
-          <div class="acu-setting-row">
-            <label>位置模式</label>
-            <select
-              :value="settings.positionMode"
-              @change="updateLegacy({ positionMode: ($event.target as any).value })"
-            >
-              <option value="fixed">悬浮模式</option>
-              <option value="embedded">内嵌模式</option>
-            </select>
-          </div>
-          <div v-if="settings.positionMode === 'fixed'" class="acu-setting-row">
-            <label>垂直偏移 ({{ settings.bottomOffset }}px)</label>
-            <input
-              type="range"
-              min="0"
-              max="300"
-              :value="settings.bottomOffset"
-              @input="updateLegacy({ bottomOffset: parseInt(($event.target as any).value) })"
-            />
           </div>
           <div class="acu-setting-row">
             <label>面板弹出方向</label>
@@ -844,7 +844,7 @@ onUnmounted(() => {
             />
           </div>
           <div class="acu-setting-row checkbox">
-            <label>屏蔽神-数据库弹窗</label>
+            <label>屏蔽数据库弹窗</label>
             <input
               type="checkbox"
               :checked="settings.muteDatabaseToasts"

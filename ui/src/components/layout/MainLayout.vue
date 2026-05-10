@@ -508,7 +508,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 内嵌模式下通过order控制弹出方向 */
+/* 内嵌模式下通过order控制弹出方向（column-reverse 下 order 越大越靠上） */
 .acu-wrapper.acu-mode-embedded.acu-panel-expand-up .acu-data-display {
   order: 1;
 }
