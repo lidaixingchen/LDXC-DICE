@@ -32,7 +32,10 @@ const sortDirection = ref<'asc' | 'desc' | 'none'>('none');
 const perPageOptions = [10, 25, 50, 100];
 const selectedPerPage = ref(50);
 
-const legacySettings = computed(() => settingsManager.getLegacySettings());
+const legacySettings = ref(settingsManager.getLegacySettings());
+settingsManager.onChange(() => {
+  legacySettings.value = { ...settingsManager.getLegacySettings() };
+});
 const highlightNew = computed(() => legacySettings.value.highlightNew);
 const showHorizontalScrollbar = computed(() => legacySettings.value.showHorizontalScrollbar !== false);
 const tableReverseKeys = computed(() => legacySettings.value.tableReverseKeys || []);

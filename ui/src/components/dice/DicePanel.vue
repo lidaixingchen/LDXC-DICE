@@ -43,7 +43,10 @@ const emit = defineEmits<{
   (e: 'switchToOpposed'): void;
 }>();
 
-const legacySettings = computed(() => settingsManager.getLegacySettings());
+const legacySettings = ref(settingsManager.getLegacySettings());
+settingsManager.onChange(() => {
+  legacySettings.value = { ...settingsManager.getLegacySettings() };
+});
 const shouldHideResult = computed(() => legacySettings.value.hideDiceResultFromUser);
 
 const { initialize: initDiceSystem, roll } = useDiceSystem();

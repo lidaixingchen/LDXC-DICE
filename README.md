@@ -29,6 +29,7 @@ TypeScript + Vue 3 + Vite 5 + SCSS + Vitest + pnpm
 ├── map/                     # 地图系统
 ├── presets/                 # 预设管理
 ├── ui/                      # Vue 前端界面
+│   ├── public/              # 静态资源（test.html 开发测试环境）
 │   └── src/
 │       ├── types/           # 统一类型定义（core/check/dashboard/mvu）
 │       ├── services/        # 服务层
@@ -53,6 +54,7 @@ TypeScript + Vue 3 + Vite 5 + SCSS + Vitest + pnpm
 │       ├── styles/          # 模块化样式系统（13+ 主题）
 │       └── utils/           # 输入框智能填充、主题工具、Toast 管理
 └── docs/                    # 文档
+    └── demo/                # 产品展示页（docs/demo/index.html）
 ```
 
 ## 安装与使用
@@ -74,6 +76,8 @@ pnpm install
 ```bash
 pnpm dev          # watch 模式，输出 dist/nightly.js
 ```
+
+启动后访问 `http://localhost:5173/test.html` 打开开发测试环境，该页面模拟 SillyTavern 宿主环境，提供完整的宿主 API Mock、插件加载控制和实时日志面板。代码变更后插件会自动重载。
 
 ### 构建
 

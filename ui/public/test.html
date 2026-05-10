@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcuDice - 开发测试环境</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg-deep: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #1c2128;
+            --bg-header: #21262d;
+            --bg-hover: #292e36;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --text-main: #e6edf3;
+            --text-sub: #8b949e;
+            --text-dim: #484f58;
+            --border: #30363d;
+            --success: #3fb950;
+            --danger: #f85149;
+            --warning: #d29922;
+            --info: #58a6ff;
+            --font-sans: -apple-system, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-deep);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Top Bar ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 44px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-logo {
+            font-size: 18px;
+            color: var(--accent-light);
+        }
+
+        .topbar-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--danger);
+            transition: all 0.3s;
+        }
+
+        .status-badge.loaded {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .topbar-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 12px;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .topbar-btn:hover { background: var(--bg-hover); border-color: var(--text-dim); }
+        .topbar-btn:active { transform: scale(0.97); }
+
+        .topbar-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .topbar-btn.primary:hover { background: var(--accent-light); border-color: var(--accent-light); }
+
+        .topbar-btn.danger { border-color: rgba(248, 81, 73, 0.4); color: var(--danger); }
+        .topbar-btn.danger:hover { background: rgba(248, 81, 73, 0.1); }
+
+        .topbar-btn i { font-size: 11px; }
+
+        /* ── Main Layout ── */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-sub);
+            cursor: default;
+        }
+
+        .sidebar-item:hover { background: var(--bg-hover); color: var(--text-main); }
+        .sidebar-item i { width: 14px; text-align: center; font-size: 11px; }
+        .sidebar-item .badge {
+            margin-left: auto;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            background: var(--bg-header);
+            color: var(--text-dim);
+        }
+
+        .sidebar-item .badge.ok { background: rgba(63, 185, 80, 0.15); color: var(--success); }
+        .sidebar-item .badge.missing { background: rgba(248, 81, 73, 0.12); color: var(--danger); }
+
+        .sidebar-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 7px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-sub);
+            font-size: 11px;
+            font-weight: 500;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .sidebar-btn:hover { background: var(--bg-hover); color: var(--text-main); }
+        .sidebar-btn:active { transform: scale(0.97); }
+
+        /* ── Chat Area (SillyTavern simulation) ── */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+            overflow: hidden;
+        }
+
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mes {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            max-width: 85%;
+        }
+
+        .mes[is_user="true"] {
+            background: #1a2332;
+            border-color: #1e3a5f;
+            align-self: flex-end;
+        }
+
+        .mes_header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .name_text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-light);
+        }
+
+        .mes[is_user="true"] .name_text { color: #58a6ff; }
+
+        .mes_text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        .mes_block { margin-top: 8px; }
+
+        /* ── Send Area ── */
+        .send-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+        }
+
+        #send_textarea {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 13px;
+            font-family: var(--font-sans);
+            resize: none;
+            outline: none;
+            min-height: 36px;
+            max-height: 100px;
+        }
+
+        #send_textarea:focus { border-color: var(--accent); }
+
+        #send_but {
+            padding: 8px 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        #send_but:hover { background: var(--accent-light); }
+
+        /* ── Console Panel ── */
+        .console-panel {
+            height: 200px;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .console-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .console-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .console-header-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .console-filter {
+            display: flex;
+            gap: 2px;
+        }
+
+        .console-filter-btn {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .console-filter-btn:hover { color: var(--text-sub); background: var(--bg-hover); }
+        .console-filter-btn.active { color: var(--text-main); background: var(--bg-card); }
+        .console-filter-btn.log-count { color: var(--text-dim); font-weight: 400; cursor: default; }
+        .console-filter-btn.log-count:hover { background: transparent; color: var(--text-dim); }
+
+        .console-clear-btn {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 10px;
+            font-family: var(--font-sans);
+            cursor: pointer;
+        }
+
+        .console-clear-btn:hover { color: var(--text-sub); background: var(--bg-hover); }
+
+        #console-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            padding: 1px 12px;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .log-entry:hover { background: var(--bg-hover); }
+
+        .log-time { color: var(--text-dim); flex-shrink: 0; font-size: 10px; }
+        .log-tag { font-weight: 600; flex-shrink: 0; font-size: 10px; padding: 0 4px; border-radius: 3px; }
+        .log-tag.info { color: var(--info); }
+        .log-tag.warn { color: var(--warning); }
+        .log-tag.error { color: var(--danger); }
+        .log-tag.debug { color: var(--text-dim); }
+        .log-msg { color: var(--text-sub); word-break: break-all; }
+        .log-entry.error .log-msg { color: var(--danger); }
+        .log-entry.warn .log-msg { color: var(--warning); }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+        /* ── Plugin viewport ── */
+        #acu-plugin-viewport { position: relative; }
+
+        /* ── Animations ── */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .fade-in { animation: fadeIn 0.2s ease; }
+    </style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+    <div class="topbar-left">
+        <i class="fa-solid fa-dice-d20 topbar-logo"></i>
+        <span class="topbar-title">AcuDice 开发测试环境</span>
+    </div>
+    <div class="topbar-right">
+        <div class="status-badge" id="pluginStatus">
+            <span class="dot"></span>
+            <span id="pluginStatusText">未加载</span>
+        </div>
+        <button class="topbar-btn primary" id="btnLoad" onclick="loadPlugin()">
+            <i class="fa-solid fa-play"></i> 加载插件
+        </button>
+        <button class="topbar-btn" id="btnReload" onclick="reloadPlugin()" style="display:none">
+            <i class="fa-solid fa-rotate-right"></i> 重载
+        </button>
+        <button class="topbar-btn danger" id="btnUnload" onclick="unloadPlugin()" style="display:none">
+            <i class="fa-solid fa-stop"></i> 卸载
+        </button>
+        <button class="topbar-btn" onclick="clearStorage()" title="清除所有 acu_ 开头的 localStorage 数据">
+            <i class="fa-solid fa-trash-can"></i> 清缓存
+        </button>
+    </div>
+</div>
+
+<!-- ── Main Layout ── -->
+<div class="main-layout">
+
+    <!-- ── Sidebar ── -->
+    <div class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">宿主环境</div>
+            <div class="sidebar-item"><i class="fa-solid fa-database"></i> AutoCardUpdaterAPI <span class="badge ok" id="badgeApi">OK</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-handshake"></i> TavernHelper <span class="badge ok" id="badgeTh">OK</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-tower-broadcast"></i> SillyTavern <span class="badge ok" id="badgeSt">OK</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-cube"></i> Mvu <span class="badge ok" id="badgeMvu">OK</span></div>
+            <div class="sidebar-item"><i class="fa-brands fa-js"></i> jQuery <span class="badge ok" id="badgeJq">OK</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-bell"></i> toastr <span class="badge ok" id="badgeToast">OK</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-layer-group"></i> lodash <span class="badge ok" id="badgeLodash">OK</span></div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">模拟数据</div>
+            <div class="sidebar-item"><i class="fa-solid fa-earth-americas"></i> 全局数据 <span class="badge">sheet_0</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-user"></i> 主角信息 <span class="badge">sheet_1</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-users"></i> 重要角色 <span class="badge">sheet_2</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-list-check"></i> 任务表 <span class="badge">sheet_3</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-box-open"></i> 物品栏 <span class="badge">sheet_4</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-wand-magic-sparkles"></i> 技能表 <span class="badge">sheet_5</span></div>
+            <div class="sidebar-item"><i class="fa-solid fa-shield-halved"></i> 装备表 <span class="badge">sheet_6</span></div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">快速操作</div>
+            <button class="sidebar-btn" onclick="addTestMessage(false)">
+                <i class="fa-solid fa-robot"></i> 添加 AI 消息
+            </button>
+            <button class="sidebar-btn" style="margin-top:4px" onclick="addTestMessage(true)">
+                <i class="fa-solid fa-user"></i> 添加用户消息
+            </button>
+            <button class="sidebar-btn" style="margin-top:4px" onclick="dumpAcuStorage()">
+                <i class="fa-solid fa-database"></i> 导出 acu_ 存储
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Chat + Console ── -->
+    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="chat-area">
+            <div id="chat">
+                <div class="mes" is_user="false">
+                    <div class="mes_header"><span class="name_text">AI 助手</span></div>
+                    <div class="mes_text">
+                        欢迎来到 AcuDice 开发测试环境。<br><br>
+                        本页面模拟 SillyTavern 宿主环境，点击顶部 <strong>「加载插件」</strong> 按钮启动骰子系统。<br><br>
+                        <em style="color:var(--text-dim)">左侧边栏显示宿主环境模拟状态，底部控制台捕获所有日志输出。</em>
+                    </div>
+                </div>
+                <div class="mes" is_user="true">
+                    <div class="mes_header"><span class="name_text">用户</span></div>
+                    <div class="mes_text">好的，我准备开始测试骰子系统了。</div>
+                </div>
+                <div id="acu-plugin-viewport"></div>
+            </div>
+
+            <div class="send-area">
+                <textarea id="send_textarea" rows="1" placeholder="输入消息... (插件会拦截此输入框的 value)"></textarea>
+                <button id="send_but">发送</button>
+            </div>
+        </div>
+
+        <!-- ── Console ── -->
+        <div class="console-panel">
+            <div class="console-header">
+                <div class="console-header-left">
+                    <span class="console-header-title"><i class="fa-solid fa-terminal"></i> 控制台</span>
+                    <div class="console-filter">
+                        <button class="console-filter-btn active" data-level="all" onclick="setConsoleFilter('all', this)">全部</button>
+                        <button class="console-filter-btn" data-level="info" onclick="setConsoleFilter('info', this)">Info</button>
+                        <button class="console-filter-btn" data-level="warn" onclick="setConsoleFilter('warn', this)">Warn</button>
+                        <button class="console-filter-btn" data-level="error" onclick="setConsoleFilter('error', this)">Error</button>
+                        <button class="console-filter-btn log-count" id="logCount">0 条</button>
+                    </div>
+                </div>
+                <button class="console-clear-btn" onclick="clearConsole()"><i class="fa-solid fa-xmark"></i> 清除</button>
+            </div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ═══════════════════════════════════════════
+    //  宿主环境 Mock
+    // ═══════════════════════════════════════════
+
+    const _mockLogs = [];
+    let _consoleFilter = 'all';
+    let _logIdCounter = 0;
+
+    // 模拟数据库
+    window.acuDatabase = {
+        sheet_0: {
+            name: '全局数据',
+            content: [
+                ['项目', '值', '备注'],
+                ['详细地点', '王城-贵族区-伯爵府邸', '当前所在位置'],
+                ['次要地区', '王城', '大区域'],
+                ['当前时间', '黄昏', '时段'],
+                ['天气', '晴朗', '天气状况'],
+                ['世界状态', '和平', '整体局势'],
+                ['季节', '秋季', ''],
+                ['月相', '上弦月', ''],
+            ],
+        },
+        sheet_1: {
+            name: '主角信息',
+            content: [
+                ['属性', '数值', '状态'],
+                ['姓名', '艾瑞克', ''],
+                ['等级', '15', ''],
+                ['生命值', '120/150', '正常'],
+                ['魔力值', '80/100', '正常'],
+                ['力量', '18', '+4'],
+                ['敏捷', '16', '+3'],
+                ['智力', '14', '+2'],
+                ['体质', '12', '+1'],
+                ['魅力', '10', '+0'],
+                ['感知', '20', '+5'],
+                ['所在地点', '王城-贵族区-伯爵府邸', ''],
+                ['状态', '正常', '无异常'],
+                ['金币', '1250', ''],
+                ['经验值', '4500/6000', ''],
+            ],
+        },
+        sheet_2: {
+            name: '重要角色',
+            content: [
+                ['姓名', '属性', '关系', '所在地点', '状态'],
+                ['莉莉安', '力量:12 敏捷:14 智力:16', '朋友(好感:75)', '王城', '正常'],
+                ['马库斯', '力量:18 敏捷:10 智力:12', '盟友(信任:60)', '王城', '正常'],
+                ['艾琳娜', '力量:8 敏捷:16 智力:18', '中立(好感:30)', '学院', '正常'],
+                ['暗影刺客', '力量:14 敏捷:20 智力:14', '敌对(仇恨:80)', '未知', '敌对'],
+                ['老铁匠', '力量:22 敏捷:8 智力:10', '友善(好感:55)', '王城-工匠区', '正常'],
+            ],
+        },
+        sheet_3: {
+            name: '任务表',
+            content: [
+                ['名称', '类型', '进度', '状态', '奖励'],
+                ['调查伯爵府邸', '主线', '进行中', '活跃', '500金币'],
+                ['收集情报', '支线', '50%', '活跃', '100经验'],
+                ['击败暗影刺客', '紧急', '未开始', '待处理', '稀有装备'],
+                ['寻找失踪的学者', '支线', '未开始', '待处理', '魔法卷轴'],
+            ],
+        },
+        sheet_4: {
+            name: '物品栏',
+            content: [
+                ['物品名', '类型', '数量', '效果', '价值'],
+                ['治疗药水', '消耗品', '5', '恢复50HP', '25金币'],
+                ['魔法卷轴', '消耗品', '3', '释放火球术', '100金币'],
+                ['精钢长剑', '武器', '1', '攻击+15', '500金币'],
+                ['皮甲', '防具', '1', '防御+8', '200金币'],
+                ['解毒草', '消耗品', '2', '解除中毒', '10金币'],
+            ],
+        },
+        sheet_5: {
+            name: '技能表',
+            content: [
+                ['技能名', '类型', '等级', '效果', '消耗'],
+                ['剑术精通', '被动', '3', '剑类武器伤害+15%', '无'],
+                ['火球术', '主动', '2', '造成50点火焰伤害', '20MP'],
+                ['闪避', '被动', '2', '闪避率+10%', '无'],
+                ['治愈之手', '主动', '1', '恢复30HP', '15MP'],
+                ['侦查', '主动', '1', '发现隐藏物品/陷阱', '5MP'],
+            ],
+        },
+        sheet_6: {
+            name: '装备表',
+            content: [
+                ['部位', '装备名', '品质', '属性加成', '特殊效果'],
+                ['武器', '精钢长剑', '精良', '攻击+15', '无'],
+                ['防具', '皮甲', '普通', '防御+8', '无'],
+                ['饰品', '感知戒指', '稀有', '感知+3', '侦查检定+1'],
+                ['饰品', '空槽位', '', '', ''],
+            ],
+        },
+    };
+
+    // ── AutoCardUpdaterAPI (核心数据接口) ──
+    window.AutoCardUpdaterAPI = {
+        exportTableAsJson() {
+            logToConsole('info', '[API] exportTableAsJson() 被调用');
+            return JSON.parse(JSON.stringify(window.acuDatabase));
+        },
+        importTableAsJson(data) {
+            logToConsole('info', '[API] importTableAsJson() 被调用');
+            window.acuDatabase = data;
+        },
+        getTableLockState(sheetKey) {
+            return null; // 无锁定
+        },
+        getMvuData(ctx) {
+            logToConsole('info', '[API] getMvuData() 被调用');
+            return {
+                stat_data: { 力量: 18, 敏捷: 16, 智力: 14, 体质: 12, 感知: 20 },
+                delta_data: {},
+                display_data: {},
+                schema: {},
+            };
+        },
+        getVariables(ctx) {
+            logToConsole('info', '[API] getVariables() 被调用');
+            return this.getMvuData(ctx);
+        },
+    };
+
+    // ── TavernHelper ──
+    window.TavernHelper = {
+        createChatMessages(messages, opts) {
+            logToConsole('info', '[TavernHelper] createChatMessages: ' + JSON.stringify(messages).slice(0, 120));
+        },
+        triggerSlash(command) {
+            logToConsole('info', '[TavernHelper] triggerSlash: ' + command);
+        },
+    };
+
+    // ── SillyTavern ──
+    window.SillyTavern = {
+        name: 'SillyTavern',
+        version: '1.12.0',
+        getContext() {
+            return {
+                chatId: 'test-chat-001',
+                characters: { this_chid: '0' },
+                name1: '用户',
+                name2: 'AI助手',
+            };
+        },
+    };
+
+    // ── Mvu ──
+    window.Mvu = {
+        getMvuData(params) {
+            logToConsole('info', '[Mvu] getMvuData: ' + JSON.stringify(params));
+            return {
+                stat_data: { 力量: 18, 敏捷: 16, 智力: 14, 体质: 12, 感知: 20 },
+                delta_data: {},
+                display_data: {},
+                schema: {},
+            };
+        },
+    };
+
+    // ── jQuery (minimal mock) ──
+    window.jQuery = window.$ = function (selector) {
+        const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
+        const wrap = (e) => window.jQuery(e);
+        return {
+            length: el ? 1 : 0,
+            0: el,
+            find: (s) => wrap(el ? el.querySelector(s) : null),
+            closest: (s) => wrap(el ? el.closest(s) : null),
+            parent: () => wrap(el ? el.parentElement : null),
+            append: (html) => { if (el) el.insertAdjacentHTML('beforeend', html); return this; },
+            remove: () => { if (el) el.remove(); return this; },
+            on: (evt, fn) => { if (el) el.addEventListener(evt, fn); return this; },
+            val: (v) => { if (el) { if (v !== undefined) el.value = v; return el.value; } return ''; },
+            text: (t) => { if (el) { if (t !== undefined) el.textContent = t; return el.textContent; } return ''; },
+            html: (h) => { if (el) { if (h !== undefined) el.innerHTML = h; return el.innerHTML; } return ''; },
+            addClass: (c) => { if (el) el.classList.add(c); return this; },
+            removeClass: (c) => { if (el) el.classList.remove(c); return this; },
+            toggleClass: (c) => { if (el) el.classList.toggle(c); return this; },
+            attr: (k, v) => { if (el) { if (v !== undefined) el.setAttribute(k, v); return el.getAttribute(k); } return null; },
+            css: (p, v) => {
+                if (el) {
+                    if (typeof p === 'object') Object.entries(p).forEach(([k, val]) => el.style[k] = val);
+                    else if (v !== undefined) el.style[p] = v;
+                }
+                return this;
+            },
+            show: () => { if (el) el.style.display = ''; return this; },
+            hide: () => { if (el) el.style.display = 'none'; return this; },
+            each: (fn) => { if (el) fn.call(el, 0, el); return this; },
+            trigger: (evt) => { if (el) el.dispatchEvent(new Event(evt)); return this; },
+        };
+    };
+
+    // ── toastr ──
+    window.toastr = {
+        success: (msg) => logToConsole('info', '[Toast:success] ' + msg),
+        error: (msg) => logToConsole('error', '[Toast:error] ' + msg),
+        warning: (msg) => logToConsole('warn', '[Toast:warning] ' + msg),
+        info: (msg) => logToConsole('info', '[Toast:info] ' + msg),
+        options: {},
+    };
+
+    // ── lodash ──
+    window._ = {
+        debounce: (fn, delay) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), delay); }; },
+        throttle: (fn, limit) => { let f; return (...a) => { if (!f) { fn(...a); f = true; setTimeout(() => f = false, limit); } }; },
+        cloneDeep: (obj) => JSON.parse(JSON.stringify(obj)),
+        merge: (t, ...s) => Object.assign(t, ...s),
+        get: (obj, path, def) => { let r = obj; for (const k of path.split('.')) { r = r?.[k]; if (r === undefined) return def; } return r; },
+        set: (obj, path, val) => { const keys = path.split('.'); let r = obj; for (let i = 0; i < keys.length - 1; i++) { r = r[keys[i]] ??= {}; } r[keys.at(-1)] = val; return obj; },
+    };
+
+
+    // ═══════════════════════════════════════════
+    //  控制台
+    // ═══════════════════════════════════════════
+
+    function logToConsole(level, msg) {
+        const id = ++_logIdCounter;
+        const now = new Date();
+        const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
+            .map(n => String(n).padStart(2, '0')).join(':') + '.' + String(now.getMilliseconds()).padStart(3, '0');
+
+        _mockLogs.push({ id, level, msg, time });
+        if (_mockLogs.length > 500) _mockLogs.shift();
+
+        const output = document.getElementById('console-output');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry ' + level + ' fade-in';
+        entry.dataset.level = level;
+        entry.dataset.id = id;
+        entry.innerHTML =
+            '<span class="log-time">' + time + '</span>' +
+            '<span class="log-tag ' + level + '">' + level.toUpperCase() + '</span>' +
+            '<span class="log-msg">' + escapeHtml(msg) + '</span>';
+
+        if (_consoleFilter !== 'all' && level !== _consoleFilter) entry.style.display = 'none';
+
+        output.appendChild(entry);
+        output.scrollTop = output.scrollHeight;
+        updateLogCount();
+    }
+
+    function setConsoleFilter(filter, btn) {
+        _consoleFilter = filter;
+        document.querySelectorAll('.console-filter-btn[data-level]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('#console-output .log-entry').forEach(e => {
+            e.style.display = (filter === 'all' || e.dataset.level === filter) ? '' : 'none';
+        });
+    }
+
+    function clearConsole() {
+        _mockLogs.length = 0;
+        document.getElementById('console-output').innerHTML = '';
+        updateLogCount();
+    }
+
+    function updateLogCount() {
+        const count = _consoleFilter === 'all'
+            ? _mockLogs.length
+            : _mockLogs.filter(l => l.level === _consoleFilter).length;
+        document.getElementById('logCount').textContent = count + ' 条';
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    // 拦截原生 console 输出
+    ['log', 'info', 'warn', 'error'].forEach(method => {
+        const original = console[method].bind(console);
+        console[method] = (...args) => {
+            original(...args);
+            const levelMap = { log: 'debug', info: 'info', warn: 'warn', error: 'error' };
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
+            logToConsole(levelMap[method], msg);
+        };
+    });
+
+
+    // ═══════════════════════════════════════════
+    //  插件加载 / 卸载
+    // ═══════════════════════════════════════════
+
+    let _pluginLoaded = false;
+    let _pluginScript = null;
+    const isViteDev = location.port !== '' && location.hostname !== '';
+
+    function setStatus(text, loaded) {
+        const badge = document.getElementById('pluginStatus');
+        const textEl = document.getElementById('pluginStatusText');
+        badge.className = 'status-badge' + (loaded ? ' loaded' : '');
+        textEl.textContent = text;
+    }
+
+    function updateButtons() {
+        document.getElementById('btnLoad').style.display = _pluginLoaded ? 'none' : '';
+        document.getElementById('btnReload').style.display = _pluginLoaded ? '' : 'none';
+        document.getElementById('btnUnload').style.display = _pluginLoaded ? '' : 'none';
+    }
+
+    function loadPlugin() {
+        if (_pluginLoaded) return;
+        setStatus('加载中...', false);
+        logToConsole('info', '正在加载插件...');
+
+        const script = document.createElement('script');
+        script.src = isViteDev ? '/dist/stable.js' : '../dist/stable.js';
+        script.onload = () => {
+            logToConsole('info', '插件脚本加载完成');
+            if (window.AcuDiceInit) {
+                window.AcuDiceInit();
+                logToConsole('info', 'AcuDiceInit() 已调用');
+            }
+            setTimeout(() => {
+                const el = document.getElementById('acu-main-layout');
+                if (el) {
+                    _pluginLoaded = true;
+                    _pluginScript = script;
+                    setStatus('已加载', true);
+                    updateButtons();
+                    logToConsole('info', '插件挂载成功 (#acu-main-layout 已找到)');
+                } else if (window.AcuDice?.init) {
+                    window.AcuDice.init();
+                    setTimeout(() => {
+                        _pluginLoaded = !!document.getElementById('acu-main-layout');
+                        if (_pluginLoaded) {
+                            _pluginScript = script;
+                            setStatus('已加载', true);
+                            updateButtons();
+                            logToConsole('info', '插件手动初始化成功');
+                        } else {
+                            setStatus('加载失败', false);
+                            logToConsole('error', '插件挂载失败: 未找到 #acu-main-layout');
+                        }
+                    }, 300);
+                } else {
+                    setStatus('加载失败', false);
+                    logToConsole('error', '插件挂载失败: AcuDiceInit / AcuDice.init 均不可用');
+                }
+            }, 200);
+        };
+        script.onerror = () => {
+            setStatus('加载失败', false);
+            logToConsole('error', '无法加载插件脚本 — 请先运行 pnpm build 或 pnpm dev');
+        };
+        document.head.appendChild(script);
+    }
+
+    function unloadPlugin() {
+        if (!_pluginLoaded) return;
+        logToConsole('info', '正在卸载插件...');
+
+        const el = document.getElementById('acu-main-layout');
+        if (el) el.remove();
+
+        const style = document.getElementById('acu-dice-styles');
+        if (style) style.remove();
+
+        if (window.AcuDice) delete window.AcuDice;
+
+        _pluginLoaded = false;
+        _pluginScript = null;
+        setStatus('未加载', false);
+        updateButtons();
+        logToConsole('info', '插件已卸载');
+    }
+
+    function reloadPlugin() {
+        unloadPlugin();
+        setTimeout(loadPlugin, 100);
+    }
+
+
+    // ═══════════════════════════════════════════
+    //  工具函数
+    // ═══════════════════════════════════════════
+
+    const _testMessages = [
+        { user: false, name: 'AI 助手', text: '你来到了一座古老的地下城入口，阴冷的气息从黑暗的通道中传来。前方有两条路：左边是一条狭窄的石阶，向下延伸；右边是一条宽阔的走廊，尽头似乎有微弱的光芒。' },
+        { user: false, name: 'AI 助手', text: '请进行一次感知检定（DC 15），看看你能否发现更多细节。' },
+        { user: false, name: 'AI 助手', text: '突然，一只哥布林从阴影中跳了出来！它手持生锈的短刀，朝你扑来。请进行先攻检定。' },
+        { user: false, name: 'AI 助手', text: '你成功说服了守卫放你进城。你的社交检定非常成功，守卫对你产生了敬畏之情。' },
+        { user: true, name: '用户', text: '我想仔细观察走廊尽头的光芒，看看是什么。' },
+        { user: true, name: '用户', text: '我拔出长剑，准备迎战哥布林。' },
+    ];
+    let _msgIndex = 0;
+
+    function addTestMessage(isUser) {
+        const chat = document.getElementById('chat');
+        const viewport = document.getElementById('acu-plugin-viewport');
+
+        const candidates = _testMessages.filter(m => m.user === isUser);
+        const msg = candidates[_msgIndex % candidates.length];
+        _msgIndex++;
+
+        const div = document.createElement('div');
+        div.className = 'mes fade-in';
+        div.setAttribute('is_user', String(isUser));
+        div.innerHTML =
+            '<div class="mes_header"><span class="name_text">' + escapeHtml(msg.name) + '</span></div>' +
+            '<div class="mes_text">' + escapeHtml(msg.text) + '</div>';
+
+        chat.insertBefore(div, viewport);
+        chat.scrollTop = chat.scrollHeight;
+        logToConsole('debug', '添加' + (isUser ? '用户' : 'AI') + '消息: ' + msg.text.slice(0, 40) + '...');
+    }
+
+    function clearStorage() {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('acu_'));
+        keys.forEach(k => localStorage.removeItem(k));
+        logToConsole('info', '已清除 ' + keys.length + ' 条 acu_ 缓存: ' + keys.join(', '));
+    }
+
+    function dumpAcuStorage() {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('acu_'));
+        if (keys.length === 0) {
+            logToConsole('info', '无 acu_ 缓存数据');
+            return;
+        }
+        keys.forEach(k => {
+            const val = localStorage.getItem(k);
+            const preview = val.length > 200 ? val.slice(0, 200) + '...' : val;
+            logToConsole('info', k + ' (' + val.length + ' chars): ' + preview);
+        });
+    }
+
+    // Send button handler
+    document.getElementById('send_but').addEventListener('click', () => {
+        const textarea = document.getElementById('send_textarea');
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        const chat = document.getElementById('chat');
+        const viewport = document.getElementById('acu-plugin-viewport');
+        const div = document.createElement('div');
+        div.className = 'mes fade-in';
+        div.setAttribute('is_user', 'true');
+        div.innerHTML =
+            '<div class="mes_header"><span class="name_text">用户</span></div>' +
+            '<div class="mes_text">' + escapeHtml(text) + '</div>';
+        chat.insertBefore(div, viewport);
+        chat.scrollTop = chat.scrollHeight;
+
+        logToConsole('info', '[发送] ' + text);
+        textarea.value = '';
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // 初始日志
+    logToConsole('info', '测试环境就绪 — 点击「加载插件」开始');
+    if (isViteDev) {
+        logToConsole('info', '检测到 Vite dev server — 自动刷新已启用');
+        // 监听 Vite HMR 事件，插件更新后自动重载
+        const hmrUrl = location.origin + '/__vite_hmr';
+        const es = new EventSource(hmrUrl);
+        es.onmessage = (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.type === 'update' || data.type === 'full-reload') {
+                    logToConsole('info', '检测到代码更新，自动重载插件...');
+                    if (_pluginLoaded) reloadPlugin();
+                    else loadPlugin();
+                }
+            } catch { /* ignore non-JSON messages */ }
+        };
+        es.onerror = () => { /* silent — will auto-reconnect */ };
+    } else {
+        logToConsole('info', '确保已运行 pnpm build 或 pnpm dev 生成 dist/stable.js');
+    }
+</script>
+</body>
+</html>

@@ -66,6 +66,25 @@ function inlineCssAndInitPlugin(): Plugin {
   };
 }
 
+function serveDistPlugin(): Plugin {
+  const distDir = resolve(__dirname, '../dist');
+  return {
+    name: 'serve-dist',
+    configureServer(server) {
+      server.middlewares.use('/dist', (req, res, next) => {
+        const url = req.url?.split('?')[0] || '/';
+        const filePath = resolve(distDir, '.' + url);
+        if (!filePath.startsWith(distDir) || !fs.existsSync(filePath)) return next();
+        const ext = filePath.split('.').pop();
+        const mimeMap: Record<string, string> = { js: 'application/javascript', json: 'application/json', map: 'application/json' };
+        res.setHeader('Content-Type', mimeMap[ext || ''] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        fs.createReadStream(filePath).pipe(res);
+      });
+    },
+  };
+}
+
 function generateJsonPlugin(): Plugin {
   let isWatchMode = false
 
@@ -118,7 +137,10 @@ function generateJsonPlugin(): Plugin {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [vue(), inlineCssAndInitPlugin(), generateJsonPlugin()],
+  plugins: [vue(), inlineCssAndInitPlugin(), generateJsonPlugin(), serveDistPlugin()],
+  server: {
+    fs: { allow: [resolve(__dirname, '..')] },
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

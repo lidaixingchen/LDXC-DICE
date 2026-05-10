@@ -68,8 +68,11 @@ const showPresetManager = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
-const legacySettings = computed<LegacySettings>(() => settingsManager.getLegacySettings());
-let tableRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const legacySettings = ref<LegacySettings>(settingsManager.getLegacySettings());
+settingsManager.onChange(() => {
+  legacySettings.value = { ...settingsManager.getLegacySettings() };
+});
+let tableRefreshTimer: number | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
 
 const SPECIAL_NAV_ITEMS = [
