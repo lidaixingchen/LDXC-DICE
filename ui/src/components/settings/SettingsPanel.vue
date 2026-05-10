@@ -142,18 +142,23 @@ function clearSystemCache() {
 }
 
 const themeOptions = [
-  { value: 'transparent', label: '透明 (Transparent)' },
-  { value: 'retro', label: '复古羊皮 (Retro)' },
-  { value: 'dark', label: '极夜深空 (Dark)' },
-  { value: 'modern', label: '现代清爽 (Modern)' },
-  { value: 'sakura', label: '暖粉手账 (Warm Pink)' },
-  { value: 'aurora', label: '极光幻境 (Aurora)' },
-  { value: 'chouten', label: '幻夜霓虹 (Chouten)' },
-  { value: 'nightowl', label: '深蓝磨砂 (Night Owl)' },
-  { value: 'wechat', label: '绿色泡泡 (Wechat)' },
-  { value: 'cyber', label: '赛博霓虹 (Cyber)' },
-  { value: 'minepink', label: '量产地雷 (Mine Pink)' },
+  { value: 'transparent', label: '透明', labelEn: 'Transparent', bg: 'transparent', accent: '#89b4fa', text: '#fff', textSub: 'rgba(255,255,255,0.7)', border: 'rgba(255,255,255,0.12)', navBg: 'rgba(255,255,255,0.06)', bgCard: 'rgba(255,255,255,0.1)', mode: 'dark' as const },
+  { value: 'retro', label: '复古羊皮', labelEn: 'Retro', bg: '#e6e2d3', accent: '#7a695f', text: '#5e4b35', textSub: '#999', border: '#c5bfae', navBg: '#d6d0bf', bgCard: '#fffef9', mode: 'light' as const },
+  { value: 'dark', label: '极夜深空', labelEn: 'Dark', bg: '#252525', accent: '#9b8cd9', text: '#eee', textSub: '#aaa', border: '#3a3a3a', navBg: '#1e1e1e', bgCard: '#2d3035', mode: 'dark' as const },
+  { value: 'modern', label: '现代清爽', labelEn: 'Modern', bg: '#f8f9fa', accent: '#007bff', text: '#333', textSub: '#666', border: '#dee2e6', navBg: '#e9ecef', bgCard: '#ffffff', mode: 'light' as const },
+  { value: 'sakura', label: '暖粉手账', labelEn: 'Warm Pink', bg: '#F9F0EF', accent: '#C08D8D', text: '#6B5552', textSub: '#C08D8D', border: '#e0ccc9', navBg: '#f0e0de', bgCard: '#ffffff', mode: 'light' as const },
+  { value: 'aurora', label: '极光幻境', labelEn: 'Aurora', bg: '#1a1a2e', accent: '#8b5cf6', text: '#e0e7ff', textSub: '#a5b4fc', border: 'rgba(139,92,246,0.25)', navBg: '#12121f', bgCard: 'rgba(139,92,246,0.15)', mode: 'dark' as const },
+  { value: 'chouten', label: '幻夜霓虹', labelEn: 'Chouten', bg: '#12121a', accent: '#ff0080', text: '#ff69b4', textSub: '#ff1493', border: 'rgba(255,0,128,0.25)', navBg: '#0a0a12', bgCard: 'rgba(255,0,128,0.15)', mode: 'dark' as const },
+  { value: 'nightowl', label: '深蓝磨砂', labelEn: 'Night Owl', bg: '#011627', accent: '#7fdbca', text: '#e0e6f2', textSub: '#a6b8cc', border: 'rgba(130,170,255,0.2)', navBg: '#010e1a', bgCard: '#0a2133', mode: 'dark' as const },
+  { value: 'wechat', label: '绿色泡泡', labelEn: 'Wechat', bg: '#F7F7F7', accent: '#09B83E', text: '#333', textSub: '#666', border: '#e0e0e0', navBg: '#eee', bgCard: '#ffffff', mode: 'light' as const },
+  { value: 'cyber', label: '赛博霓虹', labelEn: 'Cyber', bg: '#0a0a0a', accent: '#00ffcc', text: '#00ffcc', textSub: '#ff00ff', border: 'rgba(0,255,204,0.2)', navBg: '#050505', bgCard: '#050505', mode: 'dark' as const },
+  { value: 'minepink', label: '量产地雷', labelEn: 'Mine Pink', bg: '#1a1a1a', accent: '#ff80c1', text: '#ffb3d9', textSub: '#ff80c1', border: 'rgba(255,128,193,0.2)', navBg: '#111', bgCard: '#222222', mode: 'dark' as const },
 ];
+
+const previewTheme = ref<string>(settings.value.theme);
+const activePreviewTheme = computed(() => {
+  return themeOptions.find(t => t.value === previewTheme.value) || themeOptions[0];
+});
 
 const fontOptions = [
   { value: 'default', label: '系统默认' },
@@ -549,16 +554,59 @@ onUnmounted(() => {
         <!-- 1. 外观 -->
         <div v-if="activeSection === 'appearance'" class="acu-config-group">
           <div class="acu-group-label">配色主题</div>
-          <div class="acu-theme-grid">
-            <div
-              v-for="t in themeOptions"
-              :key="t.value"
-              class="acu-theme-item"
-              :class="{ active: settings.theme === t.value }"
-              @click="updateLegacy({ theme: t.value })"
-            >
-              <div class="preview" :data-theme="t.value"></div>
-              <span>{{ t.label }}</span>
+          <div class="acu-theme-split">
+            <div class="acu-theme-list">
+              <div
+                v-for="t in themeOptions"
+                :key="t.value"
+                class="acu-theme-option"
+                :class="{ active: settings.theme === t.value }"
+                @mouseenter="previewTheme = t.value"
+                @mouseleave="previewTheme = settings.theme"
+                @click="updateLegacy({ theme: t.value })"
+              >
+                <div class="acu-theme-swatch">
+                  <div class="swatch-bg" :style="{ background: t.bg === 'transparent' ? 'repeating-conic-gradient(#555 0% 25%, #333 0% 50%) 50%/6px 6px' : t.bg }"></div>
+                  <div class="swatch-accent" :style="{ background: t.accent }"></div>
+                </div>
+                <div class="acu-theme-opt-info">
+                  <span class="acu-theme-opt-name">{{ t.label }}</span>
+                  <span class="acu-theme-opt-sub">{{ t.labelEn }}</span>
+                </div>
+                <i class="fa-solid fa-check acu-theme-check"></i>
+              </div>
+            </div>
+            <div class="acu-theme-preview" :style="{ background: activePreviewTheme.bg, borderColor: activePreviewTheme.border }">
+              <div class="acu-theme-pv-header" :style="{ background: activePreviewTheme.navBg, borderColor: activePreviewTheme.border }">
+                <span class="acu-theme-pv-title" :style="{ color: activePreviewTheme.accent }">
+                  <i class="fa-solid fa-dice-d20"></i> AcuDice
+                </span>
+                <i class="fa-solid fa-times" :style="{ color: activePreviewTheme.textSub, fontSize: '8px' }"></i>
+              </div>
+              <div class="acu-theme-pv-body" :style="{ background: activePreviewTheme.bg }">
+                <div class="acu-theme-pv-label" :style="{ color: activePreviewTheme.accent, borderColor: activePreviewTheme.border }">设置项</div>
+                <div class="acu-theme-pv-row">
+                  <span :style="{ color: activePreviewTheme.text }">选项 A</span>
+                  <div class="acu-theme-pv-input" :style="{ background: activePreviewTheme.bgCard, borderColor: activePreviewTheme.border }"></div>
+                </div>
+                <div class="acu-theme-pv-row">
+                  <span :style="{ color: activePreviewTheme.text }">开关</span>
+                  <div class="acu-theme-pv-toggle" :style="{ background: activePreviewTheme.accent }"></div>
+                </div>
+                <div class="acu-theme-pv-row">
+                  <span :style="{ color: activePreviewTheme.text }">选项 B</span>
+                  <div class="acu-theme-pv-input" :style="{ background: activePreviewTheme.bgCard, borderColor: activePreviewTheme.border }"></div>
+                </div>
+                <div class="acu-theme-pv-btns">
+                  <div class="acu-theme-pv-btn primary" :style="{ background: activePreviewTheme.accent, color: activePreviewTheme.mode === 'light' ? '#fff' : activePreviewTheme.bg }">确认</div>
+                  <div class="acu-theme-pv-btn" :style="{ borderColor: activePreviewTheme.border, color: activePreviewTheme.textSub }">取消</div>
+                </div>
+              </div>
+              <div class="acu-theme-pv-nav" :style="{ background: activePreviewTheme.navBg, borderColor: activePreviewTheme.border }">
+                <div class="acu-theme-pv-navbtn active" :style="{ background: activePreviewTheme.accent, color: activePreviewTheme.mode === 'light' ? '#fff' : activePreviewTheme.bg }">外观</div>
+                <div class="acu-theme-pv-navbtn" :style="{ background: activePreviewTheme.bgCard, borderColor: activePreviewTheme.border, color: activePreviewTheme.textSub }">布局</div>
+                <div class="acu-theme-pv-navbtn" :style="{ background: activePreviewTheme.bgCard, borderColor: activePreviewTheme.border, color: activePreviewTheme.textSub }">交互</div>
+              </div>
             </div>
           </div>
           <div class="acu-setting-row">
@@ -1534,40 +1582,196 @@ onUnmounted(() => {
   }
 }
 
-.acu-theme-grid {
+.acu-theme-split {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  .acu-theme-item {
-    padding: 4px;
-    border: 1px solid var(--acu-border);
-    border-radius: 6px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s;
-    &:hover {
-      border-color: var(--acu-accent);
-      transform: translateY(-2px);
-    }
-    .preview {
-      height: 24px;
-      border-radius: 4px;
-      margin-bottom: 4px;
-      pointer-events: none;
-    }
-    span {
-      font-size: 10px;
-      color: var(--acu-text-sub);
-      pointer-events: none;
-    }
-    &.active {
-      border-color: var(--acu-accent);
-      background: var(--acu-accent-light);
-      span {
-        color: var(--acu-accent);
-      }
-    }
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-height: 220px;
+}
+
+.acu-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: 260px;
+  padding-right: 2px;
+}
+
+.acu-theme-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  &:hover { background: var(--acu-bg-header); }
+  &.active {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
   }
+}
+
+.acu-theme-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--acu-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.swatch-bg { flex: 2; }
+.swatch-accent { flex: 1; }
+
+.acu-theme-opt-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.acu-theme-opt-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--acu-text-main);
+  line-height: 1.2;
+}
+
+.acu-theme-opt-sub {
+  font-size: 9px;
+  color: var(--acu-text-dim);
+}
+
+.acu-theme-check {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--acu-accent);
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.acu-theme-option.active .acu-theme-check { opacity: 1; }
+
+.acu-theme-preview {
+  border: 1px solid var(--acu-border);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-header {
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-title {
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.3s;
+}
+
+.acu-theme-pv-body {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-label {
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 3px;
+  border-bottom: 1px solid;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8px;
+  transition: color 0.3s;
+}
+
+.acu-theme-pv-input {
+  width: 44px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-toggle {
+  width: 22px;
+  height: 11px;
+  border-radius: 6px;
+  position: relative;
+  transition: all 0.3s;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+}
+
+.acu-theme-pv-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.acu-theme-pv-btn {
+  flex: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 7px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-nav {
+  display: flex;
+  gap: 2px;
+  padding: 5px 8px;
+  border-top: 1px solid;
+  transition: all 0.3s;
+}
+
+.acu-theme-pv-navbtn {
+  flex: 1;
+  height: 14px;
+  border-radius: 3px;
+  font-size: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: all 0.3s;
 }
 
 .acu-btn-group {
@@ -1932,52 +2136,6 @@ onUnmounted(() => {
   color: var(--acu-text-sub);
   opacity: 0.6;
   padding: 4px 0;
-}
-
-/* 预览块颜色对齐 */
-.preview[data-theme='dark'] {
-  background: #1e1e2e;
-}
-.preview[data-theme='retro'] {
-  background: #f5ecd9;
-}
-.preview[data-theme='modern'] {
-  background: #ffffff;
-  border: 1px solid #ddd;
-}
-.preview[data-theme='sakura'] {
-  background: #fff0f5;
-}
-.preview[data-theme='cyber'] {
-  background: #000;
-  border: 1px solid #0ff;
-}
-.preview[data-theme='chouten'] {
-  background: #1a0a2e;
-  border: 1px solid #ff6b9d;
-}
-.preview[data-theme='transparent'] {
-  background:
-    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%),
-    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%);
-  background-size: 10px 10px;
-  background-position:
-    0 0,
-    5px 5px;
-}
-.preview[data-theme='aurora'] {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-.preview[data-theme='nightowl'] {
-  background: #011627;
-  border: 1px solid #82aaff;
-}
-.preview[data-theme='wechat'] {
-  background: #07c160;
-}
-.preview[data-theme='minepink'] {
-  background: #ff69b4;
-  border: 1px solid #fff;
 }
 
 /* 验证结果样式 */
