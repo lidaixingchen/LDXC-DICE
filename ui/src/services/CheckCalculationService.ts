@@ -100,11 +100,15 @@ export class CheckCalculationService {
     let isCritHit = false
     let outcomeText = ''
 
-    if (isCritSuccess || margin >= 10) {
+    if (isCritFailure) {
+      isSuccess = false
+      isBarelySuccess = false
+      outcomeText = '大失败！'
+    } else if (isCritSuccess || margin >= 10) {
       isSuccess = true
       isBarelySuccess = false
       outcomeText = '大成功！'
-    } else if (isCritFailure || margin <= -10) {
+    } else if (margin <= -10) {
       isSuccess = false
       isBarelySuccess = false
       outcomeText = '大失败！'
@@ -204,10 +208,13 @@ ${critText}
     let isSuccess = myTotal > oppTotal;
     let outcomeText = '';
 
-    if (isCritSuccess || margin >= 10) {
+    if (isCritFailure) {
+      outcomeText = '惨败！';
+      isSuccess = false;
+    } else if (isCritSuccess || margin >= 10) {
       outcomeText = '碾压胜利！';
       isSuccess = true;
-    } else if (isCritFailure || margin <= -10) {
+    } else if (margin <= -10) {
       outcomeText = '惨败！';
       isSuccess = false;
     } else if (margin >= 5) {
