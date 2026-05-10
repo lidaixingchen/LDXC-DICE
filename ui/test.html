@@ -823,7 +823,6 @@
 
     let _pluginLoaded = false;
     let _pluginScript = null;
-    const isViteDev = location.port !== '' && location.hostname !== '';
 
     function setStatus(text, loaded) {
         const badge = document.getElementById('pluginStatus');
@@ -844,7 +843,7 @@
         logToConsole('info', '正在加载插件...');
 
         const script = document.createElement('script');
-        script.src = isViteDev ? '/dist/stable.js' : '../dist/stable.js';
+        script.src = '../dist/stable.js';
         script.onload = () => {
             logToConsole('info', '插件脚本加载完成');
             if (window.AcuDiceInit) {
@@ -881,7 +880,7 @@
         };
         script.onerror = () => {
             setStatus('加载失败', false);
-            logToConsole('error', '无法加载插件脚本 — 请先运行 pnpm build 或 pnpm dev');
+            logToConsole('error', '无法加载 ../dist/stable.js — 请先运行 pnpm build 或 pnpm dev');
         };
         document.head.appendChild(script);
     }
@@ -988,25 +987,8 @@
 
     // 初始日志
     logToConsole('info', '测试环境就绪 — 点击「加载插件」开始');
-    if (isViteDev) {
-        logToConsole('info', '检测到 Vite dev server — 自动刷新已启用');
-        // 监听 Vite HMR 事件，插件更新后自动重载
-        const hmrUrl = location.origin + '/__vite_hmr';
-        const es = new EventSource(hmrUrl);
-        es.onmessage = (e) => {
-            try {
-                const data = JSON.parse(e.data);
-                if (data.type === 'update' || data.type === 'full-reload') {
-                    logToConsole('info', '检测到代码更新，自动重载插件...');
-                    if (_pluginLoaded) reloadPlugin();
-                    else loadPlugin();
-                }
-            } catch { /* ignore non-JSON messages */ }
-        };
-        es.onerror = () => { /* silent — will auto-reconnect */ };
-    } else {
-        logToConsole('info', '确保已运行 pnpm build 或 pnpm dev 生成 dist/stable.js');
-    }
+    logToConsole('info', '确保已运行 pnpm build 或 pnpm dev 生成 dist/stable.js');
+    logToConsole('info', '代码变更后点击「重载」按钮刷新插件');
 </script>
 </body>
 </html>

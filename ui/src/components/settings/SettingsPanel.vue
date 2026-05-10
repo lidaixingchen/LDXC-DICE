@@ -627,10 +627,10 @@ onUnmounted(() => {
             </label>
           </div>
           <div class="acu-setting-row">
-            <label>面板宽度 ({{ settings.cardWidth }}px)</label>
+            <label>弹出面板宽度 ({{ settings.cardWidth }}px)</label>
             <input
               type="range"
-              min="200"
+              min="300"
               max="800"
               :value="settings.cardWidth"
               @input="updateLegacy({ cardWidth: parseInt(($event.target as any).value) })"

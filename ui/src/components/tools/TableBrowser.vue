@@ -768,7 +768,7 @@ function goToPage(page: number) {
   background: var(--acu-bg-panel);
   border-radius: 6px;
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--acu-font-size, 12px);
 
   thead {
     background: var(--acu-table-head);
@@ -779,7 +779,7 @@ function goToPage(page: number) {
     padding: 8px 10px;
     text-align: left;
     font-weight: 700;
-    font-size: 11px;
+    font-size: calc(var(--acu-font-size, 12px) - 1px);
     color: var(--acu-accent);
     white-space: nowrap;
     position: sticky;
@@ -790,7 +790,7 @@ function goToPage(page: number) {
 
   td {
     padding: 6px 10px;
-    font-size: 12px;
+    font-size: var(--acu-font-size, 12px);
     color: var(--acu-text-main);
     border-bottom: 1px solid var(--acu-border);
     max-width: 200px;
@@ -1143,11 +1143,11 @@ function goToPage(page: number) {
   }
 
   .acu-field-label {
-    font-size: 10px;
+    font-size: calc(var(--acu-font-size, 12px) - 2px);
   }
 
   .acu-field-value {
-    font-size: 12px;
+    font-size: var(--acu-font-size, 12px);
     text-align: right;
   }
 }
@@ -1419,7 +1419,7 @@ function goToPage(page: number) {
 
   .acu-card-title {
     font-weight: 700;
-    font-size: 12px;
+    font-size: var(--acu-font-size, 12px);
     color: var(--acu-accent);
     white-space: nowrap;
     overflow: hidden;

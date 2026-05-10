@@ -5,6 +5,8 @@
   "scripts": {
     "presync": "pnpm sync-config",
     "dev": "pnpm presync && vite build --watch --mode development",
+    "dev:serve": "pnpm presync && concurrently -n build,serve -c cyan,green \"vite build --watch --force --mode development\" \"browser-sync start --server .. --files ../dist/*.js --no-notify --port 3000 --startPath ui/test.html\"",
+    "rebuild": "vite build --mode development",
     "build": "pnpm presync && vite build",
     "build:prod": "pnpm presync && vite build --mode production",
     "preview": "vite preview",
@@ -24,6 +26,8 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
     "@vue/tsconfig": "^0.5.0",
+    "browser-sync": "^3.0.4",
+    "concurrently": "^9.2.1",
     "happy-dom": "^13.0.0",
     "js-yaml": "^4.1.1",
     "sass": "^1.69.0",

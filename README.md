@@ -75,9 +75,10 @@ pnpm install
 
 ```bash
 pnpm dev          # watch 模式，输出 dist/nightly.js
+pnpm dev:serve    # watch + browser-sync，自动打开测试页面并监听变化刷新
 ```
 
-启动后访问 `http://localhost:5173/test.html` 打开开发测试环境，该页面模拟 SillyTavern 宿主环境，提供完整的宿主 API Mock、插件加载控制和实时日志面板。代码变更后插件会自动重载。
+`dev:serve` 启动后自动打开 `http://localhost:3000/test.html`，代码变更时浏览器自动刷新。也可用 `pnpm dev` 后手动打开 `ui/test.html`（file:// 协议）进入开发测试环境。页面提供完整的宿主 API Mock、插件加载控制和实时日志面板。
 
 ### 构建
 
