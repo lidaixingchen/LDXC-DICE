@@ -20,22 +20,39 @@ TypeScript + Vue 3 + Vite 5 + SCSS + Vitest + pnpm
 
 ## 项目结构
 
-```
+```text
 骰子系统/
-├── core/              # 纯逻辑层（骰子掷出、效果引擎、属性管理、验证规则）
-├── data/              # 数据持久化层（预设/规则/设置管理器）
-├── adapters/          # DatabaseAdapter 接口 + 实现
-├── utils/             # 横切关注点（日志、缓存、宿主环境检测）
-├── map/               # 地图系统
-├── presets/           # 预设管理
-├── ui/                # Vue 前端界面
+├── core/                    # 纯逻辑层（骰子掷出、效果引擎、属性管理、验证规则）
+├── data/                    # 数据持久化层（预设/规则/设置管理器）
+├── adapters/                # DatabaseAdapter 接口 + 实现
+├── utils/                   # 横切关注点（日志、缓存、宿主环境检测）
+├── map/                     # 地图系统
+├── presets/                 # 预设管理
+├── ui/                      # Vue 前端界面
 │   └── src/
-│       ├── services/      # 服务层（检定计算、战斗计算、host-bridge）
-│       ├── composables/   # Vue 组合式函数
-│       ├── components/    # Vue 组件（42 个）
-│       ├── styles/        # 模块化样式系统（13+ 主题）
-│       └── utils/         # 输入框智能填充
-└── docs/              # 文档
+│       ├── types/           # 统一类型定义（core/check/dashboard/mvu）
+│       ├── services/        # 服务层
+│       │   ├── HostBridgeService.ts      # 宿主桥接（DOM、消息、样式注入）
+│       │   ├── CheckCalculationService.ts
+│       │   └── CombatCalculationService.ts
+│       ├── composables/     # Vue 组合式函数
+│       │   ├── core/        # 核心系统（useDiceSystem、usePanelState、usePresets）
+│       │   ├── check/       # 六种检定模式
+│       │   ├── state/       # 状态管理（战斗、状态效果、装备）
+│       │   └── data/        # 数据交互（角色、仪表盘、MVU、书签）
+│       ├── components/      # Vue 组件
+│       │   ├── layout/      # 布局（MainLayout、BottomNav）
+│       │   ├── dice/        # 骰子检定（DicePanel + 6 种检定子面板）
+│       │   ├── combat/      # 战斗系统
+│       │   ├── data/        # 数据展示（仪表盘、MVU、变更记录）
+│       │   ├── character/   # 角色相关
+│       │   ├── presets/     # 预设管理
+│       │   ├── settings/    # 设置配置
+│       │   ├── tools/       # 工具组件
+│       │   └── dev/         # 开发调试
+│       ├── styles/          # 模块化样式系统（13+ 主题）
+│       └── utils/           # 输入框智能填充、主题工具、Toast 管理
+└── docs/                    # 文档
 ```
 
 ## 安装与使用
@@ -85,7 +102,7 @@ pnpm typecheck
 项目通过两层抽象与 SillyTavern 宿主交互：
 
 - **`utils/host-environment.ts`** — 跨域窗口解析（带缓存）+ 全局变量访问（AutoCardUpdaterAPI、TavernHelper）
-- **`ui/src/services/host-bridge.ts`** — DOM 操作抽象（原生 DOM）、输入框操作、消息发送（三层降级策略）
+- **`ui/src/services/HostBridgeService.ts`** — DOM 操作抽象（原生 DOM）、输入框操作、消息发送（三层降级策略）
 
 ### 检定模式
 
