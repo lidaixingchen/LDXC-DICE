@@ -1,5 +1,5 @@
 import { CombatCalculationService } from './CombatCalculationService';
-import { getDatabaseApi } from './host-bridge';
+import { getDatabaseApi } from './HostBridgeService';
 
 export interface SkillData {
   name: string;

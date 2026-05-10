@@ -3,8 +3,8 @@ import { createApp, type App as VueApp } from 'vue';
 import { initAcuDice } from './api';
 import { interceptTextareaValue, installSendRestoreHook } from './utils/input-injector';
 import { getTopWindow } from '@utils/host-environment';
-import { findLatestMessageContainer, injectStyles } from './services/host-bridge';
-import MainLayout from './components/MainLayout.vue';
+import { findLatestMessageContainer, injectStyles } from './services/HostBridgeService';
+import MainLayout from './components/layout/MainLayout.vue';
 import './styles/themes.scss';
 import './styles/global.scss';
 

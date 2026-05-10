@@ -32,4 +32,4 @@ export {
   getTavernHelper,
   getHostjQuery,
   getSillyTavern,
-} from './host-bridge';
+} from './HostBridgeService';

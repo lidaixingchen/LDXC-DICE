@@ -219,8 +219,13 @@
     },
     {
       "ratioMin": 1.5,
+      "ratioMax": 2,
+      "reduction": 0.75
+    },
+    {
+      "ratioMin": 2,
       "ratioMax": null,
-      "reduction": 0.8
+      "reduction": 0.9
     }
   ],
   "checkRules": {

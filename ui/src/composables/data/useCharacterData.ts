@@ -1,0 +1,282 @@
+import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { getDatabaseApi } from '../../services/HostBridgeService';
+
+export interface Character {
+  name: string;
+  attributes: Record<string, number>;
+}
+
+export interface AttributeButton {
+  name: string;
+  value: number;
+}
+
+function isNpcTableName(name: string): boolean {
+  const n = name.toLowerCase();
+  return n.includes('npc') || n.includes('角色') || n.includes('人物') || n.includes('npc表') || n.includes('角色表');
+}
+
+function isPlayerTableName(name: string): boolean {
+  const n = name.toLowerCase();
+  return n.includes('主角') || n.includes('玩家') || n.includes('player');
+}
+
+function parseAttributeString(str: string): Array<{ name: string; value: number }> {
+  if (!str) return [];
+  const result: Array<{ name: string; value: number }> = [];
+  const parts = str.split(/[;；,，\n]/);
+  for (const part of parts) {
+    const match = part.trim().match(/^(.+?)[：:＝=\s]*(\d+)$/);
+    if (match) {
+      result.push({
+        name: match[1].trim(),
+        value: parseInt(match[2], 10),
+      });
+    }
+  }
+  return result;
+}
+
+const characters = ref<Character[]>([]);
+const currentCharacter = ref<string>('');
+const attributeButtons = ref<AttributeButton[]>([]);
+
+export function useCharacterData() {
+
+  function loadCharacters(): void {
+    try {
+      const api = getDatabaseApi();
+      if (!api || typeof api.exportTableAsJson !== 'function') {
+        console.warn('[useCharacterData] API 不可用');
+        return;
+      }
+
+      const tableData = api.exportTableAsJson();
+      if (!tableData) {
+        console.warn('[useCharacterData] 无表格数据');
+        return;
+      }
+
+      const chars: Character[] = [];
+      const allAttrs: Record<string, number> = {};
+
+      for (const key in tableData) {
+        if (!key.startsWith('sheet_')) continue;
+        const sheet = tableData[key];
+        if (!sheet?.name || !sheet?.content) continue;
+
+        const headers = sheet.content[0] || [];
+        const rows = sheet.content.slice(1) || [];
+
+        if (isPlayerTableName(sheet.name) && rows.length > 0) {
+          const row = rows[0];
+          const attrs: Record<string, number> = {};
+
+          headers.forEach((h: string, idx: number) => {
+            if (!h) return;
+            const val = row[idx];
+            if (val === undefined || val === null) return;
+
+            const headerLower = h.toLowerCase();
+            if (headerLower.includes('属性') || headerLower.includes('能力')) {
+              const parsed = parseAttributeString(String(val));
+              for (const attr of parsed) {
+                attrs[attr.name] = attr.value;
+                allAttrs[attr.name] = attr.value;
+              }
+            } else if (typeof val === 'number') {
+              attrs[h] = val;
+              allAttrs[h] = val;
+            } else {
+              const num = parseInt(String(val), 10);
+              if (!isNaN(num)) {
+                attrs[h] = num;
+                allAttrs[h] = num;
+              }
+            }
+          });
+
+          const nameCol = headers.findIndex((h: string) => h && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
+          const charName = nameCol >= 0 ? String(row[nameCol] || '主角') : '主角';
+          chars.unshift({ name: charName, attributes: attrs });
+        }
+
+        if (isNpcTableName(sheet.name)) {
+          for (const row of rows) {
+            if (!row || !row.some((cell: any) => cell)) continue;
+            const nameCol = headers.findIndex((h: string) => h && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
+            const name = nameCol >= 0 ? String(row[nameCol] || '') : '';
+            if (!name) continue;
+
+            const attrs: Record<string, number> = {};
+            headers.forEach((h: string, idx: number) => {
+              if (!h) return;
+              const val = row[idx];
+              if (val === undefined || val === null) return;
+
+              const headerLower = h.toLowerCase();
+              if (headerLower.includes('属性') || headerLower.includes('能力')) {
+                const parsed = parseAttributeString(String(val));
+                for (const attr of parsed) {
+                  attrs[attr.name] = attr.value;
+                }
+              } else if (typeof val === 'number') {
+                attrs[h] = val;
+              } else {
+                const num = parseInt(String(val), 10);
+                if (!isNaN(num)) {
+                  attrs[h] = num;
+                }
+              }
+            });
+
+            chars.push({ name, attributes: attrs });
+          }
+        }
+      }
+
+      // 去重：同名角色只保留第一个（玩家角色优先）
+      const seen = new Set<string>();
+      characters.value = chars.filter(c => {
+        if (seen.has(c.name)) return false;
+        seen.add(c.name);
+        return true;
+      });
+      console.log('[useCharacterData] 加载角色:', characters.value.length, '个');
+
+      if (characters.value.length > 0) {
+        selectCharacter(characters.value[0].name);
+      } else {
+        attributeButtons.value = Object.entries(allAttrs).map(([name, value]) => ({ name, value }));
+      }
+    } catch (e) {
+      console.error('[useCharacterData] 加载失败:', e);
+    }
+  }
+
+  function selectCharacter(name: string): void {
+    currentCharacter.value = name;
+    const char = characters.value.find(c => c.name === name);
+    if (char) {
+      updateAttributeButtons(char.attributes);
+    }
+  }
+
+  function updateAttributeButtons(attrs: Record<string, number>): void {
+    const BASE_ATTRIBUTES = ['力量', '敏捷', '体质', '智力', '感知', '魅力'];
+    
+    const filteredAttrs = Object.entries(attrs)
+      .filter(([name]) => {
+        const nameLower = name.toLowerCase();
+        const excludedKeywords = ['年龄', 'age', 'hp', '生命', 'mp', '魔力', '地点', 'location', '位置', 
+          'pos', '金钱', 'money', '金币', '经验', 'exp', '等级', 'level', 'lv', 
+          '状态', 'status', '描述', 'desc', '备注', 'note', '备注', '性别', 'gender'];
+        
+        for (const keyword of excludedKeywords) {
+          if (nameLower.includes(keyword.toLowerCase())) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .sort(([nameA], [nameB]) => {
+        const idxA = BASE_ATTRIBUTES.findIndex(attr => nameA.includes(attr));
+        const idxB = BASE_ATTRIBUTES.findIndex(attr => nameB.includes(attr));
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+      });
+    
+    attributeButtons.value = filteredAttrs.map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }
+
+  function clearAttributeButtons(): void {
+    attributeButtons.value = [];
+  }
+
+  function getRandomAttribute(): AttributeButton | null {
+    if (attributeButtons.value.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * attributeButtons.value.length);
+    return attributeButtons.value[randomIndex];
+  }
+
+  function getAttributeValue(charName: string, attrName: string): number | null {
+    const char = characters.value.find(c => c.name === charName);
+    if (!char) return null;
+    return char.attributes[attrName] ?? null;
+  }
+
+  function setupListener(): void {
+    window.addEventListener('acu-data-updated', loadCharacters);
+  }
+
+  function cleanupListener(): void {
+    window.removeEventListener('acu-data-updated', loadCharacters);
+  }
+
+  onMounted(() => {
+    loadCharacters();
+    setupListener();
+  });
+
+  onUnmounted(() => {
+    cleanupListener();
+  });
+
+  return {
+    characters,
+    currentCharacter,
+    attributeButtons,
+    loadCharacters,
+    selectCharacter,
+    updateAttributeButtons,
+    clearAttributeButtons,
+    getRandomAttribute,
+    getAttributeValue,
+  };
+}
+
+export function useDropdownSuggestions<T extends { name: string }>() {
+  const isOpen = ref(false);
+  const suggestions = ref<T[]>([]);
+
+  function open(): void {
+    isOpen.value = true;
+  }
+
+  function close(): void {
+    isOpen.value = false;
+  }
+
+  function toggle(): void {
+    isOpen.value = !isOpen.value;
+  }
+
+  function update(items: T[]): void {
+    suggestions.value = items;
+    if (items.length > 0) {
+      open();
+    } else {
+      close();
+    }
+  }
+
+  function clear(): void {
+    suggestions.value = [];
+    close();
+  }
+
+  return {
+    isOpen,
+    suggestions,
+    open,
+    close,
+    toggle,
+    update,
+    clear,
+  };
+}

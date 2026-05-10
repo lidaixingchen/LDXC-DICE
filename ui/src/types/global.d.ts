@@ -2,7 +2,7 @@ declare global {
   interface Window {
     Vue: any;
     jQuery: JQueryStatic;
-    AcuDice: import('./types').AcuDiceAPI;
+    AcuDice: import('./core').AcuDiceAPI;
     SillyTavern?: {
       eventTypes: Record<string, string>;
       eventSource: EventTarget;
