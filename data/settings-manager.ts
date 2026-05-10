@@ -176,7 +176,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     fontFamily: 'default',
     theme: 'retro',
     cardWidth: 380,
-    fontSize: 13,
+    fontSize: 12,
     highlightNew: true,
     itemsPerPage: 50,
     actionsPosition: 'bottom',

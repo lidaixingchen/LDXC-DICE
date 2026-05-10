@@ -328,7 +328,10 @@ onUnmounted(() => {
       '--acu-table-font-size': legacySettings.tableFontSize + 'px',
       '--acu-chart-card-size': legacySettings.chartCardSize + 'px',
       '--acu-bottom-offset': legacySettings.bottomOffset + 'px',
+      '--acu-nav-btn-height': (legacySettings.navButtonHeight || 32) + 'px',
+      '--acu-nav-btn-icon-size': (legacySettings.navButtonIconSize || 16) + 'px',
       '--acu-font-family': getFontValue(legacySettings.fontFamily),
+      zoom: legacySettings.fontSize / 12,
     }"
   >
     <!-- 1. 数据展示区 (基于绝对定位弹出) -->
@@ -473,8 +476,7 @@ onUnmounted(() => {
   position: absolute;
   left: 0;
   right: 0;
-  width: 100%;
-  min-width: var(--acu-card-width, 380px);
+  width: var(--acu-card-width, 380px);
   max-width: min(95vw, 1200px);
   margin: 0 auto;
   border-radius: 12px;
@@ -604,7 +606,7 @@ onUnmounted(() => {
   font-size: 11px;
   cursor: pointer;
   i {
-    font-size: 16px;
+    font-size: var(--acu-nav-btn-icon-size, 16px);
   }
   &.active {
     background: var(--acu-accent);
@@ -709,7 +711,7 @@ onUnmounted(() => {
   .acu-nav-container .acu-nav-btn {
     width: fit-content !important;
     flex: 0 0 auto !important;
-    height: 32px !important;
+    height: var(--acu-nav-btn-height, 32px) !important;
     padding: 0 12px;
     font-size: 13px !important;
     min-width: auto !important;
@@ -752,8 +754,8 @@ onUnmounted(() => {
   }
 
   .acu-data-display {
-    width: fit-content !important;
-    min-width: var(--acu-card-width, 380px);
+    width: var(--acu-card-width, 380px) !important;
+    min-width: 0;
   }
 }
 </style>

@@ -30,7 +30,7 @@ const sortColumn = ref<number | null>(null);
 const sortDirection = ref<'asc' | 'desc' | 'none'>('none');
 
 const perPageOptions = [10, 25, 50, 100];
-const selectedPerPage = ref(50);
+const selectedPerPage = ref(settingsManager.getLegacySettings().itemsPerPage || 50);
 
 const legacySettings = ref(settingsManager.getLegacySettings());
 settingsManager.onChange(() => {
@@ -214,6 +214,10 @@ const processedRows = computed(() => {
 });
 
 const itemsPerPage = computed(() => selectedPerPage.value);
+
+watch(selectedPerPage, val => {
+  settingsManager.updateLegacySettings({ itemsPerPage: val });
+});
 
 const paginatedRows = computed(() => {
   const perPage = itemsPerPage.value;
