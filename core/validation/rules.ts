@@ -151,6 +151,28 @@ export const presetValidationRules: ValidationRule<AdvancedDicePreset>[] = [
     getMessage: (value: AdvancedDicePreset) => `版本号格式不规范: "${value.version}"`,
     getSuggestion: () => '建议使用语义化版本格式，如 "1.0.0"',
   },
+  {
+    id: 'checkTypes_valid',
+    name: '检定类型配置有效',
+    description: 'checkTypes 中的字段引用应存在于预设字段定义中',
+    severity: 'warning',
+    validate: (value: AdvancedDicePreset) => {
+      if (!value.checkTypes) return true;
+      const validFields = new Set(['attribute', 'dc', 'mod', 'skillMod', 'customField']);
+      if (value.customFields) {
+        for (const cf of value.customFields) validFields.add(`customField.${cf.id}`);
+      }
+      for (const [, config] of Object.entries(value.checkTypes)) {
+        for (const field of config.fields) {
+          const baseField = field.split('.')[0];
+          if (!validFields.has(baseField) && !validFields.has(field)) return false;
+        }
+      }
+      return true;
+    },
+    getMessage: () => 'checkTypes 中引用了不存在的字段',
+    getSuggestion: () => '确保 fields 数组中的字段名与预设的 attribute/dc/mod/skillMod/customFields 对应',
+  },
 ];
 
 export const outcomeValidationRules: ValidationRule<OutcomeLevel>[] = [

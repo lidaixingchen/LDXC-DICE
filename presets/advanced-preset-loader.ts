@@ -136,6 +136,9 @@ function migrateFromV1x(preset: Record<string, unknown>): AdvancedDicePreset {
   if (preset.order !== undefined) {
     migrated.order = Number(preset.order);
   }
+  if (preset.checkTypes) {
+    migrated.checkTypes = preset.checkTypes as AdvancedDicePreset['checkTypes'];
+  }
 
   return migrated;
 }

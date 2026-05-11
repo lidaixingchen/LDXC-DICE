@@ -7,6 +7,17 @@ let diceSystemInstance: ReturnType<typeof createDiceSystem> | null = null;
 
 const presets: Ref<AdvancedDicePreset[]> = ref([]);
 const currentPreset: Ref<AdvancedDicePreset | null> = ref(null);
+let listenerBound = false;
+
+function onPresetsUpdated(): void {
+  if (!diceSystemInstance) return;
+  presets.value = diceSystemInstance.getAllPresets();
+  currentPreset.value = diceSystemInstance.getCurrentPreset();
+}
+
+export function notifyPresetsUpdated(): void {
+  window.dispatchEvent(new CustomEvent('acu-presets-updated'));
+}
 
 export function usePresets(): {
   presets: Readonly<Ref<AdvancedDicePreset[]>>;
@@ -16,6 +27,11 @@ export function usePresets(): {
   getPresetById: (id: string) => AdvancedDicePreset | undefined;
 } {
   const { state: panelState } = usePanelState();
+
+  if (!listenerBound) {
+    window.addEventListener('acu-presets-updated', onPresetsUpdated);
+    listenerBound = true;
+  }
 
   function loadPresets(): void {
     if (!diceSystemInstance) {

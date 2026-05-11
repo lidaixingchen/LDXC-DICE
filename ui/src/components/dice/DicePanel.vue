@@ -23,6 +23,7 @@ import {
 import type { SkillData, ItemData, StatusEffect, CombatState, EquipmentSlot, SaveSlot } from '../../services';
 import type { AttributeButton } from '../../composables/data/useCharacterData';
 import type { CheckResult } from '../../types';
+import type { CheckTypeName, CheckTypeConfig, AdvancedDicePreset } from '@core/types';
 import { settingsManager } from '@data/settings-manager';
 
 import DicePanelHeader from './DicePanelHeader.vue';
@@ -138,6 +139,95 @@ const skillGenLevel = ref<string>('C级');
 
 const npcList = computed(() => {
   return characters.value.filter(c => c.name !== '主角' && c.name !== currentCharacter.value);
+});
+
+const diceMode = computed(() => behaviorSettings.value.diceMode);
+
+function setDiceMode(mode: 'aidm' | 'general'): void {
+  settingsManager.updateValue('behavior', 'diceMode', mode);
+}
+
+// --- 通用模式状态 ---
+const generalPresetId = ref('');
+const generalCheckType = ref<CheckTypeName>('standard');
+const generalFieldValues = ref<Record<string, number | string>>({});
+
+const currentGeneralPreset = computed<AdvancedDicePreset | undefined>(() => {
+  return presets.value.find(p => p.id === generalPresetId.value);
+});
+
+const availableCheckTypes = computed(() => {
+  const preset = currentGeneralPreset.value;
+  if (!preset?.checkTypes) {
+    return [{ key: 'standard' as CheckTypeName, label: '标准检定', config: { fields: ['attribute', 'dc', 'mod'] } as CheckTypeConfig }];
+  }
+  return Object.entries(preset.checkTypes).map(([key, config]) => ({
+    key: key as CheckTypeName,
+    label: config.label || key,
+    config,
+  }));
+});
+
+const currentCheckTypeConfig = computed<CheckTypeConfig | undefined>(() => {
+  return availableCheckTypes.value.find(ct => ct.key === generalCheckType.value)?.config;
+});
+
+const generalFields = computed(() => {
+  const config = currentCheckTypeConfig.value;
+  if (!config) return [];
+  const preset = currentGeneralPreset.value;
+  if (!preset) return [];
+
+  return config.fields.map(fieldId => {
+    const baseField = fieldId.split('.')[0];
+    let label = fieldId;
+    let defaultValue: number | string = 0;
+
+    if (baseField === 'attribute' && preset.attribute) {
+      label = preset.attribute.label || '属性值';
+      defaultValue = preset.attribute.defaultValue ?? 10;
+    } else if (baseField === 'dc' && preset.dc) {
+      label = preset.dc.label || 'DC';
+      defaultValue = preset.dc.defaultValue ?? 10;
+    } else if (baseField === 'mod' && preset.mod) {
+      label = preset.mod.label || '修正';
+      defaultValue = preset.mod.defaultValue ?? 0;
+    } else if (baseField === 'skillMod' && preset.skillMod) {
+      label = preset.skillMod.label || '技能修正';
+      defaultValue = preset.skillMod.defaultValue ?? 0;
+    } else if (baseField.startsWith('customField.') && preset.customFields) {
+      const cfId = fieldId.replace('customField.', '');
+      const cf = preset.customFields.find(f => f.id === cfId);
+      if (cf) {
+        label = cf.label || cfId;
+        defaultValue = typeof cf.defaultValue === 'boolean' ? (cf.defaultValue ? 1 : 0) : (cf.defaultValue ?? 0);
+      }
+    }
+
+    if (config.defaultValues?.[fieldId] !== undefined) {
+      defaultValue = config.defaultValues[fieldId];
+    }
+
+    return { id: fieldId, label, defaultValue };
+  });
+});
+
+function initGeneralFieldValues(): void {
+  const values: Record<string, number | string> = {};
+  for (const field of generalFields.value) {
+    values[field.id] = generalFieldValues.value[field.id] ?? field.defaultValue;
+  }
+  generalFieldValues.value = values;
+}
+
+watch([generalPresetId, generalCheckType], () => {
+  initGeneralFieldValues();
+});
+
+watch(diceMode, (mode) => {
+  if (mode === 'general' && presets.value.length > 0 && !generalPresetId.value) {
+    generalPresetId.value = presets.value[0].id!;
+  }
 });
 
 const QUICK_PRESETS = computed(() => {
@@ -310,6 +400,39 @@ async function handleRoll(): Promise<void> {
 
       const content = `<meta:检定结果>\n元叙事：${initiatorName.value || '<user>'}发起了自定义掷骰【${expr}】，掷出${total}${target !== null ? `，${judgeMode}${target}` : ''}，【${outcomeText}】\n</meta:检定结果>`;
       await sendToTextarea(content);
+      return;
+    }
+
+    // --- 通用模式：使用预设驱动的检定引擎 ---
+    if (diceMode.value === 'general') {
+      const { performCheck } = useDiceSystem();
+      const preset = currentGeneralPreset.value;
+      if (!preset) {
+        console.warn('[DicePanel] 通用模式：未选择预设');
+        return;
+      }
+
+      const fields = generalFieldValues.value;
+      const attrField = generalFields.value.find(f => f.id === 'attribute' || f.id.startsWith('attribute'));
+      const dcField = generalFields.value.find(f => f.id === 'dc' || f.id.startsWith('dc'));
+
+      const result = await performCheck({
+        presetId: preset.id,
+        attribute: attrField?.label,
+        attributeValue: attrField ? Number(fields[attrField.id] ?? 10) : 10,
+        dc: dcField ? Number(fields[dcField.id] ?? 10) : 10,
+        modifier: fields.mod !== undefined ? Number(fields.mod) : 0,
+        customFields: Object.fromEntries(
+          Object.entries(fields).filter(([k]) => !['attribute', 'dc', 'mod', 'skillMod'].includes(k.split('.')[0]))
+            .map(([k, v]) => [k, v])
+        ),
+      });
+
+      if (result) {
+        lastResult.value = result;
+        showResult.value = !shouldHideResult.value;
+        addCheckEntry(result);
+      }
       return;
     }
 
@@ -724,6 +847,24 @@ onUnmounted(() => {
     />
 
     <div class="acu-dice-panel-body">
+      <!-- 模式切换 -->
+      <div class="acu-dice-mode-toggle">
+        <button
+          :class="{ active: diceMode === 'aidm' }"
+          @click="setDiceMode('aidm')"
+        >
+          <i class="fa-solid fa-book"></i> AIDM
+        </button>
+        <button
+          :class="{ active: diceMode === 'general' }"
+          @click="setDiceMode('general')"
+        >
+          <i class="fa-solid fa-dice"></i> 通用
+        </button>
+      </div>
+
+      <!-- AIDM 模式 -->
+      <template v-if="diceMode === 'aidm'">
       <ModeSelector
         v-model:current-mode="checkMode"
       />
@@ -892,6 +1033,58 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+      </template>
+
+      <!-- 通用模式 -->
+      <template v-if="diceMode === 'general'">
+        <div class="acu-section-card">
+          <div class="acu-card-header">
+            <span class="acu-card-title"><i class="fa-solid fa-dice"></i> 通用检定</span>
+          </div>
+
+          <!-- 预设选择 -->
+          <div class="acu-dice-form-row">
+            <div>
+              <div class="acu-dice-form-label">预设</div>
+              <select v-model="generalPresetId" class="acu-dice-select">
+                <option v-for="p in presets" :key="p.id" :value="p.id">{{ p.name }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 检定类型切换 -->
+          <div v-if="availableCheckTypes.length > 1" class="acu-general-check-types">
+            <button
+              v-for="ct in availableCheckTypes"
+              :key="ct.key"
+              class="acu-general-check-type-btn"
+              :class="{ active: generalCheckType === ct.key }"
+              @click="generalCheckType = ct.key"
+            >
+              {{ ct.label }}
+            </button>
+          </div>
+
+          <!-- 动态字段 -->
+          <div class="acu-dice-form-row" :class="{ [`cols-${Math.min(generalFields.length, 3)}`]: generalFields.length > 1 }">
+            <div v-for="field in generalFields" :key="field.id">
+              <div class="acu-dice-form-label">{{ field.label }}</div>
+              <input
+                v-model="generalFieldValues[field.id]"
+                type="number"
+                class="acu-dice-input"
+                :placeholder="String(field.defaultValue)"
+              />
+            </div>
+          </div>
+
+          <!-- 骰子表达式显示 -->
+          <div v-if="currentGeneralPreset" class="acu-general-dice-expr">
+            <i class="fa-solid fa-dice-d20"></i>
+            {{ currentGeneralPreset.diceExpression }}
+          </div>
+        </div>
+      </template>
 
       <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
         <template v-if="showResult && lastResult">
@@ -1009,5 +1202,77 @@ onUnmounted(() => {
   width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
   display: flex; align-items: center; justify-content: center; margin-left: 8px;
   &:hover { background: rgba(255, 255, 255, 0.3); }
+}
+
+.acu-dice-mode-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--acu-bg-header);
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  button {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--acu-text-sub);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+    &.active {
+      background: var(--acu-accent);
+      color: white;
+    }
+    &:hover:not(.active) {
+      background: var(--acu-accent-light);
+    }
+  }
+}
+
+.acu-general-check-types {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.acu-general-check-type-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  &.active {
+    background: var(--acu-accent);
+    color: white;
+    border-color: var(--acu-accent);
+  }
+  &:hover:not(.active) {
+    background: var(--acu-accent-light);
+  }
+}
+
+.acu-general-dice-expr {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: var(--acu-bg-header);
+  font-size: 12px;
+  color: var(--acu-text-sub);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  i {
+    color: var(--acu-accent);
+  }
 }
 </style>

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import type { AdvancedDicePreset } from '@core/types';
 import { presetManager } from '@data/preset-manager';
+import { notifyPresetsUpdated } from '../../composables/core/usePresets';
 import PresetConflictDialog from './PresetConflictDialog.vue';
 
 type ViewMode = 'main' | 'dice-editor';
@@ -68,6 +69,7 @@ function resolveConflictOverwrite(): void {
   showConflictDialog.value = false;
   presetManager.registerPreset(conflictPresetData.value);
   loadAllPresets();
+  notifyPresetsUpdated();
   conflictPresetData.value = null;
 }
 
@@ -78,6 +80,7 @@ function resolveConflictRename(newName: string): void {
   conflictPresetData.value.id = `${conflictPresetData.value.id}_${Date.now()}`;
   presetManager.registerPreset(conflictPresetData.value);
   loadAllPresets();
+  notifyPresetsUpdated();
   conflictPresetData.value = null;
 }
 
@@ -95,6 +98,7 @@ function doImport(preset: AdvancedDicePreset): void {
   } else {
     presetManager.registerPreset(preset);
     loadAllPresets();
+    notifyPresetsUpdated();
   }
 }
 
@@ -144,6 +148,7 @@ function deleteDicePreset(preset: AdvancedDicePreset): void {
   if (confirm(`确定删除预设 "${preset.name}"？`)) {
     presetManager.unregisterPreset(preset.id);
     loadAllPresets();
+    notifyPresetsUpdated();
   }
 }
 
@@ -157,6 +162,7 @@ function saveDicePreset(): void {
     data.version = data.version || '1.0.0';
     presetManager.registerPreset(data);
     loadAllPresets();
+    notifyPresetsUpdated();
     viewMode.value = 'main';
   } catch (err) {
     jsonError.value = 'JSON 解析错误: ' + (err as Error).message;

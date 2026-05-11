@@ -80,6 +80,7 @@ export interface BehaviorSettings {
   historySize: number;
   autoHidePanel: boolean;
   autoHideDelay: number;
+  diceMode: 'aidm' | 'general';
 }
 
 export interface ValidationSettings {
@@ -244,6 +245,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     historySize: 50,
     autoHidePanel: false,
     autoHideDelay: 5000,
+    diceMode: 'aidm',
   },
   validation: {
     strictMode: false,

@@ -178,6 +178,14 @@ export interface FieldConfig {
   computeModifier?: string;
 }
 
+export type CheckTypeName = 'standard' | 'contest' | 'combat' | 'defense' | 'initiative' | 'escape';
+
+export interface CheckTypeConfig {
+  label?: string;
+  fields: string[];
+  defaultValues?: Record<string, number | string>;
+}
+
 export interface AdvancedDicePreset {
   kind: 'advanced';
   id: string;
@@ -219,6 +227,7 @@ export interface AdvancedDicePreset {
     undefinedVariable: 'zero' | 'error';
     parseError: 'fail' | 'warn';
   };
+  checkTypes?: Record<CheckTypeName, CheckTypeConfig>;
   visible?: boolean;
   order?: number;
 }
@@ -283,4 +292,4 @@ export interface DatabaseLockState {
   cells?: string[];
 }
 
-export const PRESET_FORMAT_VERSION = '2.0.0';
+export const PRESET_FORMAT_VERSION = '2.1.0';
