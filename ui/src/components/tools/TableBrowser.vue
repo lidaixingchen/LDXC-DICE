@@ -615,7 +615,7 @@ function goToPage(page: number) {
             <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-vertical-card" :class="getRowHighlightClass(rowItem.originalIndex)">
               <div class="acu-card-header">
                 <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
-                <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
+                <span class="acu-card-title">{{ rowItem.data[0] || rowItem.data[1] || '未命名' }}</span>
                 <button class="acu-card-delete-btn" title="删除行" @click.stop="deleteRow(rowItem.originalIndex)">
                   <i class="fa-solid fa-trash"></i>
                 </button>
@@ -668,7 +668,7 @@ function goToPage(page: number) {
             <div v-for="rowItem in paginatedRows" :key="rowItem.originalIndex" class="acu-horizontal-card" :class="getRowHighlightClass(rowItem.originalIndex)">
               <div class="acu-card-header">
                 <span class="acu-card-index">#{{ rowItem.originalIndex + 1 }}</span>
-                <span class="acu-card-title">{{ rowItem.data[1] || rowItem.data[0] || '未命名' }}</span>
+                <span class="acu-card-title">{{ rowItem.data[0] || rowItem.data[1] || '未命名' }}</span>
                 <button class="acu-card-delete-btn" title="删除行" @click.stop="deleteRow(rowItem.originalIndex)">
                   <i class="fa-solid fa-trash"></i>
                 </button>
