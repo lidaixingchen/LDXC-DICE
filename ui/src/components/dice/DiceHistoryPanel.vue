@@ -231,8 +231,8 @@ function handleClear() {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: var(--acu-bg-header, #252525);
-  border-bottom: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  background: var(--acu-bg-header);
+  border-bottom: 1px solid var(--acu-border);
 }
 
 .history-title {
@@ -241,7 +241,7 @@ function handleClear() {
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: var(--acu-accent, #e87e22);
+  color: var(--acu-accent);
 
   i { font-size: 16px; }
 }
@@ -250,9 +250,9 @@ function handleClear() {
   width: 26px;
   height: 26px;
   border-radius: 6px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: transparent;
-  color: var(--acu-text-sub, #888);
+  color: var(--acu-text-sub);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,7 +262,7 @@ function handleClear() {
 
   &:hover {
     background: rgba(255, 80, 80, 0.15);
-    color: var(--acu-error-text, #ff6b6b);
+    color: var(--acu-error-text);
     border-color: rgba(255, 80, 80, 0.3);
   }
 }
@@ -271,15 +271,15 @@ function handleClear() {
   display: flex;
   gap: 6px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--acu-border);
 }
 
 .history-filter {
   padding: 5px 8px;
   border-radius: 5px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
-  background: var(--acu-bg-header, #252525);
-  color: var(--acu-text-main, #ccc);
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
   font-size: 11px;
   cursor: pointer;
 }
@@ -288,25 +288,25 @@ function handleClear() {
   flex: 1;
   padding: 5px 10px;
   border-radius: 5px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: rgba(0, 0, 0, 0.2);
-  color: var(--acu-text-main, #ccc);
+  color: var(--acu-text-main);
   font-size: 11px;
 
-  &::placeholder { color: var(--acu-text-sub, #666); }
+  &::placeholder { color: var(--acu-text-sub); }
 }
 
 .history-clear-btn {
   padding: 5px 10px;
   border-radius: 5px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: transparent;
-  color: var(--acu-text-sub, #888);
+  color: var(--acu-text-sub);
   cursor: pointer;
   font-size: 12px;
 
   &:hover {
-    color: var(--acu-error-text, #e74c3c);
+    color: var(--acu-error-text);
     border-color: rgba(231, 76, 60, 0.3);
   }
 }
@@ -323,7 +323,7 @@ function handleClear() {
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  color: var(--acu-text-sub, #666);
+  color: var(--acu-text-sub);
   gap: 8px;
 
   i { font-size: 24px; opacity: 0.35; }
@@ -338,9 +338,9 @@ function handleClear() {
 
 .history-item {
   padding: 10px 12px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   border-radius: 10px;
-  background: var(--acu-bg-panel, #1e1e22);
+  background: var(--acu-bg-panel);
 }
 
 .history-item-header {
@@ -354,16 +354,16 @@ function handleClear() {
   font-size: 9px;
   padding: 1px 6px;
   border-radius: 999px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.15));
-  color: var(--acu-text-sub, #888);
+  border: 1px solid var(--acu-border);
+  color: var(--acu-text-sub);
 
-  &.check { border-color: rgba(52, 152, 219, 0.4); color: var(--acu-color-info, #5dade2); }
-  &.contest { border-color: rgba(155, 89, 182, 0.4); color: var(--acu-accent, #bb8fce); }
+  &.check { border-color: var(--acu-accent-light); color: var(--acu-accent); }
+  &.contest { border-color: var(--acu-accent-light); color: var(--acu-accent); }
 }
 
 .history-title-text {
   font-weight: 700;
-  color: var(--acu-text-main, #ddd);
+  color: var(--acu-text-main);
   font-size: 12px;
   flex: 1;
   overflow: hidden;
@@ -393,17 +393,17 @@ function handleClear() {
 
   .result-value {
     font-size: 11px;
-    color: var(--acu-text-sub, #888);
+    color: var(--acu-text-sub);
     font-family: monospace;
   }
 
-  &.success .result-text { color: var(--acu-success-text, #27ae60); }
-  &.fail .result-text { color: var(--acu-error-text, #e74c3c); }
+  &.success .result-text { color: var(--acu-success-text); }
+  &.fail .result-text { color: var(--acu-error-text); }
 }
 
 .history-time {
   font-size: 10px;
-  color: var(--acu-text-sub, #666);
+  color: var(--acu-text-sub);
 }
 
 .history-detail-section {
@@ -412,7 +412,7 @@ function handleClear() {
   gap: 6px;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px dashed var(--acu-border, rgba(255,255,255,0.08));
+  border-top: 1px dashed var(--acu-border);
 }
 
 .history-expand-btn {
@@ -421,50 +421,50 @@ function handleClear() {
   gap: 4px;
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: transparent;
-  color: var(--acu-text-sub, #888);
+  color: var(--acu-text-sub);
   font-size: 10px;
   cursor: pointer;
 
-  &:hover { color: var(--acu-accent, #e87e22); border-color: var(--acu-accent, #e87e22); }
+  &:hover { color: var(--acu-accent); border-color: var(--acu-accent); }
 }
 
 .history-copy-btn {
   padding: 4px 8px;
   border-radius: 4px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: transparent;
-  color: var(--acu-text-sub, #888);
+  color: var(--acu-text-sub);
   font-size: 10px;
   cursor: pointer;
 
-  &:hover { color: var(--acu-color-info, #5dade2); border-color: rgba(52, 152, 219, 0.4); }
+  &:hover { color: var(--acu-color-info); border-color: rgba(52, 152, 219, 0.4); }
 }
 
 .history-detail-content {
   margin-top: 8px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+  border: 1px solid var(--acu-border);
   background: rgba(0, 0, 0, 0.2);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 10px;
   line-height: 1.5;
-  color: var(--acu-text-sub, #999);
+  color: var(--acu-text-sub);
 }
 
 .detail-block {
   &:not(:last-child) {
     margin-bottom: 8px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--acu-border, rgba(255,255,255,0.08));
+    border-bottom: 1px solid var(--acu-border);
   }
 }
 
 .detail-label {
   font-weight: 700;
-  color: var(--acu-text-main, #ccc);
+  color: var(--acu-text-main);
   margin-bottom: 4px;
 }
 
