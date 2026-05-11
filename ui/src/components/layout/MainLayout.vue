@@ -127,6 +127,10 @@ function getIconForTableName(name: string): string {
   return 'fa-table';
 }
 
+function formatTableName(name: string): string {
+  return name.endsWith('表') ? name.slice(0, -1) : name;
+}
+
 function loadTables() {
   const rawData = getTableData();
   if (!rawData) return;
@@ -134,7 +138,7 @@ function loadTables() {
   for (const key in rawData) {
     if (key.startsWith('sheet_')) {
       const sheet = rawData[key];
-      if (sheet?.name) newTables.push({ key, name: sheet.name, icon: getIconForTableName(sheet.name) });
+      if (sheet?.name) newTables.push({ key, name: formatTableName(sheet.name), icon: getIconForTableName(sheet.name) });
     }
   }
   tables.value = newTables;
@@ -200,6 +204,17 @@ function handleActionClick(id: string) {
     import('../../services/HostBridgeService').then(m => m.getDatabaseApi()?.openVisualizer?.());
   } else if (id === 'acu-btn-relation') {
     relationGraphRef.value?.toggle();
+  } else if (id === 'acu-btn-refill') {
+    import('../../services/HostBridgeService').then(async m => {
+      const api = m.getDatabaseApi();
+      if (api && typeof api.manualUpdate === 'function') {
+        try {
+          await api.manualUpdate();
+        } catch (err) {
+          console.error('[AcuDice] 重新填表失败:', err);
+        }
+      }
+    });
   }
 }
 
@@ -306,6 +321,7 @@ const actionButtons: ActionButton[] = [
   { id: 'acu-btn-open-editor', icon: 'fa-database', title: '打开数据库' },
   { id: 'acu-btn-open-visualizer', icon: 'fa-table-columns', title: '可视化编辑' },
   { id: 'acu-btn-relation', icon: 'fa-project-diagram', title: '人物关系图' },
+  { id: 'acu-btn-refill', icon: 'fa-bolt', title: '重新填表' },
   { id: 'acu-btn-settings', icon: 'fa-cog', title: '设置' },
   { id: 'acu-btn-collapse', icon: 'fa-chevron-down', title: '收起' },
 ];

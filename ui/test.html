@@ -671,6 +671,12 @@
             logToConsole('info', '[API] importTableAsJson() 被调用');
             window.acuDatabase = data;
         },
+        async manualUpdate() {
+            logToConsole('info', '[API] manualUpdate() 被调用 - 触发 AI 重新填表');
+            // 模拟填表延迟
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            logToConsole('info', '[API] manualUpdate() 完成');
+        },
         getTableLockState(sheetKey) {
             return null; // 无锁定
         },
