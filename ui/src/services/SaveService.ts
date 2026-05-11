@@ -1,7 +1,7 @@
 import { safeLocalStorageGet, safeLocalStorageSet } from '../../../utils/safe-storage'
 
 const SAVE_KEY = 'aidm_save_slots'
-const CURRENT_VERSION = 1
+const CURRENT_VERSION = 2
 
 export interface StatusEffect {
   id: number
@@ -73,6 +73,7 @@ export interface DashboardQuestSnapshot {
   status: string
   priority: string
   progress: string
+  description?: string
 }
 
 export interface DashboardSnapshot {
@@ -80,6 +81,44 @@ export interface DashboardSnapshot {
   npcs: DashboardNpcSnapshot[]
   quests: DashboardQuestSnapshot[]
   currentLocation: string
+}
+
+export interface CharacterMeta {
+  race: string
+  bloodline: string
+  title: string
+}
+
+export interface EconomyData {
+  depositPoints: number
+  exchangePoints: number
+}
+
+export interface ProgressStats {
+  completedWorlds: number
+  survivalTime: number
+  totalPlayTime: number
+  deathCount: number
+}
+
+export interface WorldInfo {
+  name: string
+  level: string
+  type: string
+  scene: string
+}
+
+export interface EquipDetail {
+  weapon: { name: string; level: string; physDmg: number; magicDmg: number }
+  armor: { name: string; level: string; physDef: number; magicDef: number; hpBonus: number }
+  accessories: Array<{ name: string; description: string }>
+}
+
+export interface InventoryItem {
+  name: string
+  description: string
+  quantity: number
+  type: string
 }
 
 export interface SaveData {
@@ -98,6 +137,14 @@ export interface SaveData {
   worldName: string
   location: string
   savedAt: number
+  llmContext: string
+  characterMeta: CharacterMeta
+  economy: EconomyData
+  progress: ProgressStats
+  worldInfo: WorldInfo
+  quests: DashboardQuestSnapshot[]
+  equipDetail: EquipDetail
+  inventory: InventoryItem[]
 }
 
 export interface SaveSlot {
@@ -120,6 +167,13 @@ export interface GameStateInput {
   dashboard: DashboardSnapshot
   worldName: string
   location: string
+  characterMeta: CharacterMeta
+  economy: EconomyData
+  progress: ProgressStats
+  worldInfo: WorldInfo
+  quests: DashboardQuestSnapshot[]
+  equipDetail: EquipDetail
+  inventory: InventoryItem[]
 }
 
 export interface GameStateOutput extends GameStateInput {}
@@ -144,6 +198,22 @@ function migrate(data: Record<string, unknown>): SaveData {
     data.savedAt = data.savedAt || Date.now()
     data.version = 1
     delete (data as any).attrs
+  }
+
+  if (version < 2) {
+    data.llmContext = (data.llmContext as string) || ''
+    data.characterMeta = (data.characterMeta as CharacterMeta) || { race: '人类', bloodline: '无', title: '' }
+    data.economy = (data.economy as EconomyData) || { depositPoints: 0, exchangePoints: 100 }
+    data.progress = (data.progress as ProgressStats) || { completedWorlds: 0, survivalTime: 0, totalPlayTime: 0, deathCount: 0 }
+    data.worldInfo = (data.worldInfo as WorldInfo) || { name: '', level: '', type: '', scene: (data.location as string) || '' }
+    data.quests = (data.quests as DashboardQuestSnapshot[]) || ((data.dashboard as Record<string, unknown>)?.quests as DashboardQuestSnapshot[]) || []
+    data.equipDetail = (data.equipDetail as EquipDetail) || {
+      weapon: { name: '', level: '', physDmg: 0, magicDmg: 0 },
+      armor: { name: '', level: '', physDef: 0, magicDef: 0, hpBonus: 0 },
+      accessories: [],
+    }
+    data.inventory = (data.inventory as InventoryItem[]) || []
+    data.version = 2
   }
 
   return data as unknown as SaveData
@@ -213,6 +283,18 @@ export class SaveService {
       worldName: input.worldName,
       location: input.location,
       savedAt: Date.now(),
+      llmContext: '',
+      characterMeta: { ...input.characterMeta },
+      economy: { ...input.economy },
+      progress: { ...input.progress },
+      worldInfo: { ...input.worldInfo },
+      quests: input.quests.map(q => ({ ...q })),
+      equipDetail: {
+        weapon: { ...input.equipDetail.weapon },
+        armor: { ...input.equipDetail.armor },
+        accessories: input.equipDetail.accessories.map(a => ({ ...a })),
+      },
+      inventory: input.inventory.map(i => ({ ...i })),
     }
   }
 
@@ -262,6 +344,19 @@ export class SaveService {
       },
       worldName: data.worldName,
       location: data.location,
+      characterMeta: data.characterMeta ? { ...data.characterMeta } : { race: '人类', bloodline: '无', title: '' },
+      economy: data.economy ? { ...data.economy } : { depositPoints: 0, exchangePoints: 100 },
+      progress: data.progress ? { ...data.progress } : { completedWorlds: 0, survivalTime: 0, totalPlayTime: 0, deathCount: 0 },
+      worldInfo: data.worldInfo ? { ...data.worldInfo } : { name: '', level: '', type: '', scene: data.location || '' },
+      quests: data.quests?.map(q => ({ ...q })) || [],
+      equipDetail: data.equipDetail
+        ? {
+            weapon: { ...data.equipDetail.weapon },
+            armor: { ...data.equipDetail.armor },
+            accessories: data.equipDetail.accessories?.map(a => ({ ...a })) || [],
+          }
+        : { weapon: { name: '', level: '', physDmg: 0, magicDmg: 0 }, armor: { name: '', level: '', physDef: 0, magicDef: 0, hpBonus: 0 }, accessories: [] },
+      inventory: data.inventory?.map(i => ({ ...i })) || [],
     }
   }
 
@@ -292,6 +387,10 @@ export class SaveService {
   }): string {
     const c = state.combat
     const e = state.equipment
+    const cm = state.characterMeta
+    const eco = state.economy
+    const wi = state.worldInfo
+    const prog = state.progress
 
     const displayHP = c.active
       ? `HP：${c.playerCurrentHP}/${c.playerMaxHP}`
@@ -312,15 +411,27 @@ export class SaveService {
         blocks.push(`【在场NPC】\n${inScene.map(n => `  ${n.name} ${n.status} @${n.position}`).join('\n')}`)
       }
     }
-    if (state.dashboard.quests.length > 0) {
-      const activeQuests = state.dashboard.quests.filter(q => q.status.includes('进行') || q.status.toLowerCase().includes('active'))
+    const allQuests = state.quests.length > 0 ? state.quests : state.dashboard.quests
+    if (allQuests.length > 0) {
+      const activeQuests = allQuests.filter(q => q.status.includes('进行') || q.status.toLowerCase().includes('active'))
       if (activeQuests.length > 0) {
-        blocks.push(`【进行中任务】\n${activeQuests.map(q => `  ${q.name} [${q.type}] ${q.progress}`).join('\n')}`)
+        blocks.push(`【进行中任务】\n${activeQuests.map(q => `  ${q.name} [${q.type}] ${q.progress}${q.description ? ` - ${q.description}` : ''}`).join('\n')}`)
       }
     }
-    if (state.dashboard.currentLocation) {
-      blocks.push(`【当前位置】\n  ${state.dashboard.currentLocation}`)
-    }
+
+    const equipLines = [
+      e.name ? `  当前装备: ${e.name} | 物伤+${e.physDmg} 法伤+${e.magicDmg} 物防+${e.physDef} 法防+${e.magicDef} HP+${e.hpBonus} 闪避+${e.dodgeBonus}` : '  无装备',
+      state.equipDetail.weapon.name ? `  武器: ${state.equipDetail.weapon.name}` : '',
+      state.equipDetail.armor.name ? `  防具: ${state.equipDetail.armor.name}` : '',
+    ].filter(Boolean).join('\n')
+
+    const itemLines = state.usableItems.length > 0
+      ? state.usableItems.map(i => `  ${i.name} x${i.quantity}`).join('\n')
+      : '  无'
+
+    const inventoryLines = state.inventory.length > 0
+      ? state.inventory.map(i => `  ${i.name} x${i.quantity}${i.type ? `(${i.type})` : ''}`).join('\n')
+      : ''
 
     const extraSections = blocks.length > 0 ? '\n' + blocks.join('\n\n') + '\n' : ''
 
@@ -333,8 +444,9 @@ export class SaveService {
 ═════════════════════════════════
 
 【角色信息】
-名称：${state.playerName}
-等级：${state.level} | 当前角色：${state.currentCharacter}
+名称：${state.playerName} | 等级：${state.level} | 当前角色：${state.currentCharacter}
+种族：${cm.race} | 血脉：${cm.bloodline} | 称号：${cm.title || '无'}
+沉淀点：${eco.depositPoints} | 兑换点：${eco.exchangePoints}
 
 【基础属性】
 ${state.characters.map(ch => {
@@ -352,9 +464,116 @@ ${displayHP}
 DDC：${derivedStats.ddc} | 暴击率：${derivedStats.critRate}%
 
 【装备】
-${e.name ? `  ${e.name} | 物伤+${e.physDmg} 法伤+${e.magicDmg} 物防+${e.physDef} 法防+${e.magicDef} HP+${e.hpBonus} 闪避+${e.dodgeBonus}` : '  无装备'}${extraSections}${combatLine}【经济】
+${equipLines}
+
+【消耗品】
+${itemLines}${inventoryLines ? `\n【物品栏】\n${inventoryLines}` : ''}${extraSections}${combatLine}【当前位置】${state.location} - ${wi.scene}
+【当前世界】${wi.name}（${wi.level}·${wi.type}）
+
+【经济】
 ${resources}
+
+【进度统计】
+完成世界数：${prog.completedWorlds} | 存活时间：${prog.survivalTime}分钟
+总游戏时间：${prog.totalPlayTime}分钟 | 死亡次数：${prog.deathCount}
 ═════════════════════════════════
+[SERIALIZED:${btoa(encodeURIComponent(JSON.stringify(state)))}]`
+  }
+
+  static generateFallbackContextText(state: GameStateOutput, derivedStats: {
+    physAtk: number
+    magicAtk: number
+    physDef: number
+    magicDef: number
+    hp: number
+    ddc: number
+    critRate: number
+  }): string {
+    const c = state.combat
+    const e = state.equipment
+    const cm = state.characterMeta
+    const eco = state.economy
+    const wi = state.worldInfo
+    const prog = state.progress
+
+    const displayHP = c.active
+      ? `HP：${c.playerCurrentHP}/${c.playerMaxHP}`
+      : `HP：${derivedStats.hp}`
+    const combatLine = c.active ? `\n【战斗中】第${c.round}回合 | 敌人:${c.enemyName} HP:${c.enemyCurrentHP}/${c.enemyMaxHP}\n` : ''
+
+    const attrLines = state.characters.map(ch => {
+      const attrStr = Object.entries(ch.attributes)
+        .map(([k, v]) => `${k}:${v}`)
+        .join(' ')
+      return `  ${ch.name}: ${attrStr}`
+    }).join('\n')
+
+    const skillLines = state.activeSkills.length > 0
+      ? state.activeSkills.map(s => `  ${s.name}(${s.type}) ${s.value} CD:${s.cooldown}`).join('\n')
+      : '  无'
+
+    const equipLines = [
+      e.name ? `  当前装备: ${e.name} | 物伤+${e.physDmg} 法伤+${e.magicDmg} 物防+${e.physDef} 法防+${e.magicDef}` : '  无装备',
+      state.equipDetail.weapon.name ? `  武器: ${state.equipDetail.weapon.name}` : '',
+      state.equipDetail.armor.name ? `  防具: ${state.equipDetail.armor.name}` : '',
+    ].filter(Boolean).join('\n')
+
+    const itemLines = state.usableItems.length > 0
+      ? state.usableItems.map(i => `  ${i.name} x${i.quantity}`).join('\n')
+      : '  无'
+
+    const npcLines = state.dashboard.npcs.filter(n => n.inScene).length > 0
+      ? state.dashboard.npcs.filter(n => n.inScene).map(n => `  ${n.name} ${n.status} @${n.position}`).join('\n')
+      : '  无'
+
+    const questLines = state.quests.length > 0
+      ? state.quests.map(q => `  [${q.type}] ${q.name} - ${q.status} ${q.progress}`).join('\n')
+      : '  无'
+
+    const resourceLines = state.dashboard.playerResources.length > 0
+      ? state.dashboard.playerResources.map(r => `  ${r.name}: ${r.value}`).join('\n')
+      : '  无'
+
+    return `[读档指令] 以下是从存档恢复的游戏状态，请基于此继续叙事：
+
+【角色信息】
+名称：${state.playerName} | 等级：${state.level} | 种族：${cm.race} | 血脉：${cm.bloodline}
+称号：${cm.title || '无'} | 沉淀点：${eco.depositPoints} | 兑换点：${eco.exchangePoints}
+
+【基础属性】
+${attrLines}
+
+【战斗属性】
+${displayHP}
+护盾：${c.playerShield}
+物攻：${derivedStats.physAtk + e.physDmg} | 法攻：${derivedStats.magicAtk + e.magicDmg}
+物防：${derivedStats.physDef + e.physDef} | 法防：${derivedStats.magicDef + e.magicDef}
+DDC：${derivedStats.ddc} | 暴击率：${derivedStats.critRate}%
+${combatLine}
+【技能】
+${skillLines}
+
+【装备】
+${equipLines}
+
+【物品栏】
+${itemLines}
+
+【当前位置】${state.location} - ${wi.scene}
+【当前世界】${wi.name}（${wi.level}·${wi.type}）
+
+【关键NPC】
+${npcLines}
+
+【任务】
+${questLines}
+
+【进度统计】
+完成世界数：${prog.completedWorlds} | 存活时间：${prog.survivalTime}分钟
+总游戏时间：${prog.totalPlayTime}分钟 | 死亡次数：${prog.deathCount}
+
+【经济】
+${resourceLines}
 [SERIALIZED:${btoa(encodeURIComponent(JSON.stringify(state)))}]`
   }
 

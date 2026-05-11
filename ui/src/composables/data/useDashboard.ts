@@ -301,6 +301,7 @@ function parseQuestData(tableData: ReturnType<typeof findTableByKeywords>): Dash
       status: String(getCellValue(row, headers, '状态') || ''),
       priority: String(getCellValue(row, headers, '优先级') || ''),
       progress: String(getCellValue(row, headers, '进度') || ''),
+      description: String(getCellValue(row, headers, '描述') || getCellValue(row, headers, '详情') || ''),
       rowIndex: idx,
       tableKey: key,
     }));

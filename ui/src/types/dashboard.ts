@@ -40,6 +40,7 @@ export interface DashboardQuest {
   status: string;
   priority: string;
   progress: string;
+  description: string;
   rowIndex: number;
   tableKey: string;
 }
@@ -115,6 +116,7 @@ export const DASHBOARD_TABLE_CONFIG: Record<string, DashboardTableConfig> = {
       status: { column: '状态' },
       priority: { column: '优先级' },
       progress: { column: '进度' },
+      description: { column: '描述' },
     },
   },
   bag: {

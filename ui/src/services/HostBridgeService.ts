@@ -178,6 +178,125 @@ export async function sendOrInsertMessage(text: string, autoSend: boolean): Prom
   smartInsertToTextarea(text, 'dice');
 }
 
+// ==================== LLM 回复等待 ====================
+
+/**
+ * 等待 LLM 回复完成。
+ *
+ * 通过 MutationObserver 监听 #chat 容器，检测新出现的 assistant 消息，
+ * 当消息文本在 stableMs 毫秒内不再变化时认为回复完成。
+ *
+ * @param timeoutMs 最大等待时间（毫秒），默认 120 秒
+ * @param stableMs 文本稳定判定时间（毫秒），默认 2 秒
+ * @returns 捕获的 LLM 回复文本，超时返回 null
+ */
+export async function waitForAssistantReply(
+  timeoutMs: number = 120000,
+  stableMs: number = 2000,
+): Promise<string | null> {
+  const doc = getTopWindow().document;
+  const chatEl = doc.getElementById('chat');
+  if (!chatEl) return null;
+
+  const initialCount = chatEl.querySelectorAll('.mes').length;
+
+  return new Promise<string | null>((resolve) => {
+    let resolved = false;
+    let stableTimer: ReturnType<typeof setTimeout> | null = null;
+    let targetTextEl: HTMLElement | null = null;
+    let lastText = '';
+
+    const cleanup = (): void => {
+      observer.disconnect();
+      if (stableTimer) clearTimeout(stableTimer);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+
+    const tryResolve = (text: string): void => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(text);
+    };
+
+    // 超时
+    const timeoutId = setTimeout(() => {
+      // 超时时如果已捕获到部分文本，返回它
+      if (targetTextEl) {
+        tryResolve(targetTextEl.textContent || '');
+      } else {
+        tryResolve(null as unknown as string);
+      }
+    }, timeoutMs);
+
+    const checkStability = (): void => {
+      if (!targetTextEl || resolved) return;
+      const currentText = targetTextEl.textContent || '';
+      if (currentText === lastText && currentText.length > 0) {
+        tryResolve(currentText);
+      } else {
+        lastText = currentText;
+        stableTimer = setTimeout(checkStability, stableMs);
+      }
+    };
+
+    const isNewAssistantMessage = (node: Node): boolean => {
+      if (!(node instanceof HTMLElement)) return false;
+      if (!node.classList.contains('mes')) return false;
+      if (node.getAttribute('is_user') === 'true') return false;
+      if (node.getAttribute('is_system') === 'true') return false;
+      if (node.classList.contains('sys_mes')) return false;
+      const name = node.querySelector('.name_text')?.textContent?.trim();
+      if (name === 'System') return false;
+      return true;
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (isNewAssistantMessage(node)) {
+            const textEl = (node as HTMLElement).querySelector('.mes_text') as HTMLElement;
+            if (textEl) {
+              targetTextEl = textEl;
+              lastText = textEl.textContent || '';
+              // 开始监测文本稳定性
+              stableTimer = setTimeout(checkStability, stableMs);
+            }
+          }
+        }
+        // 也监测子树变化（消息文本更新）
+        if (targetTextEl && mutation.type === 'childList') {
+          const target = mutation.target as HTMLElement;
+          if (target === targetTextEl || targetTextEl.contains(target)) {
+            if (stableTimer) clearTimeout(stableTimer);
+            lastText = targetTextEl.textContent || '';
+            stableTimer = setTimeout(checkStability, stableMs);
+          }
+        }
+      }
+    });
+
+    observer.observe(chatEl, { childList: true, subtree: true });
+
+    // 也检查是否已有新的 assistant 消息（防止发送和 Observer 注册之间的竞态）
+    const currentCount = chatEl.querySelectorAll('.mes').length;
+    if (currentCount > initialCount) {
+      const allMes = chatEl.querySelectorAll('.mes');
+      for (let i = initialCount; i < allMes.length; i++) {
+        if (isNewAssistantMessage(allMes[i])) {
+          const textEl = (allMes[i] as HTMLElement).querySelector('.mes_text') as HTMLElement;
+          if (textEl) {
+            targetTextEl = textEl;
+            lastText = textEl.textContent || '';
+            stableTimer = setTimeout(checkStability, stableMs);
+            break;
+          }
+        }
+      }
+    }
+  });
+}
+
 // ==================== Re-exports ====================
 
 export { getDatabaseApi, getTavernHelper, getHostjQuery, getSillyTavern };

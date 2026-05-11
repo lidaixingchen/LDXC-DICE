@@ -518,6 +518,13 @@ function handleSaveGame(slotId: number): void {
     },
     worldName: combat.value.enemyName || '',
     location: '未知',
+    characterMeta: { race: '人类', bloodline: '无', title: '' },
+    economy: { depositPoints: 0, exchangePoints: 100 },
+    progress: { completedWorlds: 0, survivalTime: 0, totalPlayTime: 0, deathCount: 0 },
+    worldInfo: { name: '', level: '', type: '', scene: '' },
+    quests: [],
+    equipDetail: { weapon: { name: '', level: '', physDmg: 0, magicDmg: 0 }, armor: { name: '', level: '', physDef: 0, magicDef: 0, hpBonus: 0 }, accessories: [] },
+    inventory: [],
   }))
 }
 
@@ -559,6 +566,13 @@ function handleExportSave(): void {
     dashboard: { playerResources: [], npcs: [], quests: [], currentLocation: '' },
     worldName: combat.value.enemyName || '',
     location: '未知',
+    characterMeta: { race: '人类', bloodline: '无', title: '' },
+    economy: { depositPoints: 0, exchangePoints: 100 },
+    progress: { completedWorlds: 0, survivalTime: 0, totalPlayTime: 0, deathCount: 0 },
+    worldInfo: { name: '', level: '', type: '', scene: '' },
+    quests: [],
+    equipDetail: { weapon: { name: '', level: '', physDmg: 0, magicDmg: 0 }, armor: { name: '', level: '', physDef: 0, magicDef: 0, hpBonus: 0 }, accessories: [] },
+    inventory: [],
   }, stats)
 }
 

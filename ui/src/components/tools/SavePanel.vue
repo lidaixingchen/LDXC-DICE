@@ -3,20 +3,25 @@ import { computed, ref } from 'vue'
 import { CombatCalculationService } from '../../services/CombatCalculationService'
 import { WorldConfigService } from '../../services/WorldConfigService'
 import { SaveService } from '../../services/SaveService'
+import { sendOrInsertMessage, waitForAssistantReply, setSendTextareaValue, focusSendTextarea } from '../../services/HostBridgeService'
+import { showToast } from '../../utils/toast-manager'
 import { useCombatState, useEquipment, useCharacterData, useStatusEffects, getStatusIdCounter, setStatusIdCounter } from '../../composables'
 import { useDashboard } from '../../composables/data/useDashboard'
-import type { SaveSlot, GameStateInput, GameStateOutput } from '../../services/SaveService'
+import { useMvu } from '../../composables/data/useMvu'
+import type { SaveSlot, GameStateInput, GameStateOutput, CharacterMeta, EconomyData, ProgressStats, WorldInfo, EquipDetail, InventoryItem } from '../../services/SaveService'
 
 const { initiatorName, worldLevel, combat, activeSkills, usableItems } = useCombatState()
 const { equipment } = useEquipment()
 const { activeStatuses } = useStatusEffects()
 const { currentCharacter, characters, attributeButtons, selectCharacter, updateAttributeButtons } = useCharacterData()
 const { dashboardData } = useDashboard()
+const { mvuData } = useMvu()
 
 const saveSlots = ref<SaveSlot[]>([])
 const exportText = ref('')
 const importText = ref('')
 const importError = ref('')
+const saving = ref(false)
 
 function findSaveSlot(id: number): SaveSlot | undefined {
   return saveSlots.value.find(s => s.id === id)
@@ -24,6 +29,11 @@ function findSaveSlot(id: number): SaveSlot | undefined {
 
 function loadSaveSlots(): void {
   saveSlots.value = SaveService.loadSaveSlots()
+}
+
+function parseResourceValue(resources: ReadonlyArray<{ name: string; value: string | number }>, key: string): number {
+  const item = resources.find(r => r.name.includes(key))
+  return item ? Number(item.value) || 0 : 0
 }
 
 function collectGameState(): GameStateInput {
@@ -61,7 +71,63 @@ function collectGameState(): GameStateInput {
     status: q.status,
     priority: q.priority,
     progress: q.progress,
+    description: q.description || '',
   })) || []
+
+  // 从 Dashboard 解析新增字段
+  const specialAttrs = dashboard?.player?.specialAttrs || []
+  const resources = dashboard?.player?.resources || []
+  const equips = dashboard?.equips || []
+  const items = dashboard?.items || []
+
+  const characterMeta: CharacterMeta = {
+    race: String(specialAttrs.find(a => a.name.includes('种族'))?.value || '人类'),
+    bloodline: String(specialAttrs.find(a => a.name.includes('血脉'))?.value || '无'),
+    title: String(specialAttrs.find(a => a.name.includes('称号'))?.value || ''),
+  }
+
+  const economy: EconomyData = {
+    depositPoints: parseResourceValue(resources, '沉淀'),
+    exchangePoints: parseResourceValue(resources, '兑换'),
+  }
+
+  // 从 MVU 获取进度统计
+  const mvuStats = mvuData.value?.stat_data
+  const progressData = mvuStats?.进度 as Record<string, unknown> | undefined
+  const progress: ProgressStats = {
+    completedWorlds: Number(progressData?.完成世界数) || 0,
+    survivalTime: Number(progressData?.当前世界存活时间) || 0,
+    totalPlayTime: Number(progressData?.总游戏时间) || 0,
+    deathCount: Number(progressData?.死亡次数) || 0,
+  }
+
+  const worldInfo: WorldInfo = {
+    name: combatData.enemyName || '',
+    level: worldLevel?.value || '',
+    type: '',
+    scene: dashboard?.currentLocation || '',
+  }
+
+  // 按部位分类装备
+  const weapon = equips.find(e => e.part?.includes('武器') || e.type?.includes('武器'))
+  const armor = equips.find(e => e.part?.includes('防具') || e.part?.includes('护甲') || e.type?.includes('防具'))
+  const accessories = equips.filter(e =>
+    !e.part?.includes('武器') && !e.part?.includes('防具') && !e.part?.includes('护甲') &&
+    !e.type?.includes('武器') && !e.type?.includes('防具')
+  )
+
+  const equipDetail: EquipDetail = {
+    weapon: weapon ? { name: weapon.name, level: weapon.type || '', physDmg: 0, magicDmg: 0 } : { name: '', level: '', physDmg: 0, magicDmg: 0 },
+    armor: armor ? { name: armor.name, level: armor.type || '', physDef: 0, magicDef: 0, hpBonus: 0 } : { name: '', level: '', physDef: 0, magicDef: 0, hpBonus: 0 },
+    accessories: accessories.map(a => ({ name: a.name, description: a.type || '' })),
+  }
+
+  const inventory: InventoryItem[] = items.map(i => ({
+    name: i.name,
+    description: '',
+    quantity: Number(i.count) || 1,
+    type: i.type || '',
+  }))
 
   return {
     playerName: initiatorName?.value || charName || '冒险者',
@@ -82,6 +148,13 @@ function collectGameState(): GameStateInput {
     },
     worldName: combatData.enemyName || '',
     location: dashboard?.currentLocation || '未知',
+    characterMeta,
+    economy,
+    progress,
+    worldInfo,
+    quests,
+    equipDetail,
+    inventory,
   }
 }
 
@@ -114,31 +187,87 @@ function applyGameState(state: GameStateOutput): void {
   setStatusIdCounter(state.statusIdCounter)
 }
 
-function saveGame(slotId: number): void {
+const saveInstructionTemplate = `[系统指令·存档] 请根据当前游戏状态生成存档摘要，包含：
+1. 当前剧情进展和场景描述
+2. 角色状态和关键决策
+3. NPC 关系和任务进展
+4. 重要的世界观设定
+
+请以简洁的叙事形式总结，便于后续读档时恢复上下文。`
+
+async function saveGame(slotId: number): Promise<void> {
+  if (saving.value) return
   if (saveSlots.value.length >= 3 && !saveSlots.value.find(s => s.id === slotId)) {
     if (!confirm(`已有3个存档，覆盖存档位${slotId}？`)) return
   }
 
-  const state = collectGameState()
-  const packed = SaveService.packGameState(state)
-  saveSlots.value = SaveService.saveGame(slotId, saveSlots.value, packed)
+  saving.value = true
+  try {
+    // 1. 收集数据库状态
+    const state = collectGameState()
+
+    // 2. 发送存档指令给 LLM
+    showToast('正在向 LLM 发送存档指令...', 'info')
+    await sendOrInsertMessage(saveInstructionTemplate, true)
+
+    // 3. 等待 LLM 回复
+    showToast('正在等待 LLM 生成存档摘要...', 'info')
+    const llmReply = await waitForAssistantReply()
+
+    // 4. 组合保存
+    const packed = SaveService.packGameState(state)
+    packed.llmContext = llmReply || ''
+    saveSlots.value = SaveService.saveGame(slotId, saveSlots.value, packed)
+
+    if (llmReply) {
+      showToast(`存档位 ${slotId} 保存成功`, 'success')
+    } else {
+      showToast(`存档位 ${slotId} 保存成功（LLM 回复超时，存档无叙事上下文）`, 'warning')
+    }
+  } catch (e) {
+    console.error('[SavePanel] 存档失败:', e)
+    showToast(`存档失败: ${e instanceof Error ? e.message : '未知错误'}`, 'error')
+  } finally {
+    saving.value = false
+  }
 }
 
 function loadGame(slotId: number): void {
   const slot = saveSlots.value.find(s => s.id === slotId)
   if (!slot) {
-    alert(`存档位 ${slotId} 为空`)
+    showToast(`存档位 ${slotId} 为空`, 'warning')
     return
   }
 
   const state = SaveService.unpackGameState(slot)
   if (!state) {
-    alert(`存档位 ${slotId} 数据损坏，无法读取`)
+    showToast(`存档位 ${slotId} 数据损坏，无法读取`, 'error')
     return
   }
 
   if (!confirm(`确定读取存档位 ${slotId}？（当前未保存的进度将丢失）`)) return
+
+  // 1. 恢复前端状态
   applyGameState(state)
+
+  // 2. 将 LLM 上下文填入输入框
+  const llmContext = slot.data.llmContext
+  if (llmContext) {
+    setSendTextareaValue(llmContext)
+    focusSendTextarea()
+    showToast(`读取成功！请确认发送以恢复 LLM 上下文`, 'success')
+  } else {
+    // 旧存档没有 LLM 上下文，生成数据库摘要
+    const charObj = state.characters.find(c => c.name === state.currentCharacter) || state.characters[0]
+    const eq = state.equipment
+    const stats = charObj
+      ? CombatCalculationService.deriveCombatStats(charObj.attributes, state.level, eq)
+      : { physAtk: 0, magicAtk: 0, physDef: 0, magicDef: 0, hp: 0, ddc: 10, critRate: 0 }
+    const contextText = SaveService.generateFallbackContextText(state, stats)
+    setSendTextareaValue(contextText)
+    focusSendTextarea()
+    showToast(`读取成功！（旧存档，已生成数据库摘要）`, 'warning')
+  }
 }
 
 function exportSave(): void {
@@ -184,17 +313,22 @@ const slotPreview = computed(() => {
     const slot = findSaveSlot(id)
     if (!slot) return { id, hasData: false }
     const d = slot.data
+    const activeQuests = (d.quests || []).filter(q => q.status.includes('进行') || q.status.toLowerCase().includes('active'))
     return {
       id,
       hasData: true,
       timestamp: slot.timestamp,
       playerName: d.playerName,
       level: d.level,
+      race: d.characterMeta?.race || '',
       hpLabel: d.combat.active
         ? `HP ${d.combat.playerCurrentHP}/${d.combat.playerMaxHP}`
         : '',
       statusCount: d.statuses.length > 0 ? `${d.statuses.length}个状态` : '',
-      location: d.dashboard?.currentLocation || '',
+      location: d.worldInfo?.scene || d.dashboard?.currentLocation || d.location || '',
+      worldName: d.worldInfo?.name || d.worldName || '',
+      questSummary: activeQuests.length > 0 ? `${activeQuests.length}个进行中` : '',
+      hasLlmContext: !!d.llmContext,
     }
   })
 })
@@ -232,21 +366,27 @@ defineEmits<{
             <span v-if="s.hasData" class="save-slot-time">{{ s.timestamp }}</span>
             <span v-else class="save-slot-empty">— 空 —</span>
           </div>
-          <div v-if="s.hasData" class="save-slot-preview">
-            <span class="preview-name">{{ s.playerName }}</span>
-            <span class="preview-level">{{ s.level }}</span>
-          </div>
-          <div v-if="s.hasData && s.hpLabel" class="save-slot-hp">{{ s.hpLabel }}</div>
-          <div v-if="s.hasData && s.statusCount" class="save-slot-statuses">{{ s.statusCount }}</div>
-          <div v-if="s.hasData && s.location" class="save-slot-location">{{ s.location }}</div>
+          <template v-if="s.hasData">
+            <div class="save-slot-preview">
+              <span class="preview-name">{{ s.playerName }}</span>
+              <span v-if="s.race" class="preview-race">{{ s.race }}</span>
+              <span class="preview-level">{{ s.level }}</span>
+            </div>
+            <div v-if="s.hpLabel" class="save-slot-hp">{{ s.hpLabel }}</div>
+            <div v-if="s.statusCount" class="save-slot-statuses">{{ s.statusCount }}</div>
+            <div v-if="s.worldName" class="save-slot-world">{{ s.worldName }}</div>
+            <div v-if="s.location" class="save-slot-location">{{ s.location }}</div>
+            <div v-if="s.questSummary" class="save-slot-quests">{{ s.questSummary }}</div>
+            <div v-if="s.hasLlmContext" class="save-slot-llm-tag">LLM 上下文</div>
+          </template>
           <div class="save-slot-actions">
-            <button class="save-btn primary" @click="saveGame(s.id)" title="保存当前进度">
-              <i class="fa-solid fa-floppy-disk"></i> 存档
+            <button class="save-btn primary" :disabled="saving" @click="saveGame(s.id)" title="保存当前进度">
+              <i :class="saving ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-floppy-disk'"></i> {{ saving ? '保存中...' : '存档' }}
             </button>
-            <button class="save-btn" :disabled="!s.hasData" @click="loadGame(s.id)" title="读取存档">
+            <button class="save-btn" :disabled="!s.hasData || saving" @click="loadGame(s.id)" title="读取存档">
               <i class="fa-solid fa-folder-open"></i> 读档
             </button>
-            <button class="save-btn danger" :disabled="!s.hasData" @click="deleteSave(s.id)" title="删除存档">
+            <button class="save-btn danger" :disabled="!s.hasData || saving" @click="deleteSave(s.id)" title="删除存档">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </div>
@@ -410,6 +550,11 @@ defineEmits<{
     color: var(--acu-text-main, #ccc);
   }
 
+  .preview-race {
+    font-size: 8px;
+    color: var(--acu-text-sub, #888);
+  }
+
   .preview-level {
     font-size: 9px;
     color: var(--acu-accent, #e87e22);
@@ -421,11 +566,24 @@ defineEmits<{
 
 .save-slot-hp,
 .save-slot-statuses,
-.save-slot-location {
+.save-slot-world,
+.save-slot-location,
+.save-slot-quests {
   text-align: center;
   font-size: 8px;
   color: var(--acu-text-sub, #777);
   margin-bottom: 2px;
+}
+
+.save-slot-llm-tag {
+  text-align: center;
+  font-size: 7px;
+  color: var(--acu-color-info, #5dade2);
+  background: rgba(52, 152, 219, 0.12);
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin: 2px auto 0;
+  width: fit-content;
 }
 
 .save-slot-actions {
