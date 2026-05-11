@@ -1,6 +1,8 @@
 import { ref, computed, readonly } from 'vue';
 import { getDatabaseApi } from '../../services/HostBridgeService';
 import { storageSyncBus } from '@utils/storage-sync';
+import { settingsManager } from '@data/settings-manager';
+import { validateAllData, type RawData } from '@data/validation-executor';
 import type {
   DashboardData,
   DashboardPlayer,
@@ -130,6 +132,17 @@ function getTableData(options?: { silent?: boolean }): Record<string, any> | nul
       allTables.value = tables;
       if (!options?.silent) {
         console.log('[Dashboard] 获取到表格:', tables.map(t => t.name).join(', '));
+      }
+    }
+    // 加载时验证
+    if (data && settingsManager.shouldValidateOnLoad()) {
+      try {
+        const errors = validateAllData(data as RawData);
+        if (errors.length > 0 && settingsManager.getValue('validation', 'showValidationWarnings')) {
+          console.warn(`[Validation] 数据加载后发现 ${errors.length} 个验证问题`);
+        }
+      } catch (ve) {
+        console.warn('[Validation] 加载验证执行失败:', ve);
       }
     }
     return data;

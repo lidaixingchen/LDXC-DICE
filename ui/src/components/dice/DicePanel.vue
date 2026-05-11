@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, provide, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue';
 import { useCharacterData, useDiceSystem, useDiceHistory, useDropdownSuggestions, usePresets } from '../../composables';
 import {
   useCombatState,
@@ -45,9 +45,13 @@ const emit = defineEmits<{
 
 const legacySettings = ref(settingsManager.getLegacySettings());
 const displaySettings = ref(settingsManager.getGroup('display'));
+const generalSettings = ref(settingsManager.getGroup('general'));
+const behaviorSettings = ref(settingsManager.getGroup('behavior'));
 settingsManager.onChange(() => {
   legacySettings.value = { ...settingsManager.getLegacySettings() };
   displaySettings.value = { ...settingsManager.getGroup('display') };
+  generalSettings.value = { ...settingsManager.getGroup('general') };
+  behaviorSettings.value = { ...settingsManager.getGroup('behavior') };
 });
 const shouldHideResult = computed(() => legacySettings.value.hideDiceResultFromUser);
 
@@ -606,9 +610,72 @@ function loadSaveSlots(): void {
   saveSlots.value = SaveService.loadSaveSlots();
 }
 
+function handleQuickRoll(e: KeyboardEvent): void {
+  if (!behaviorSettings.value.quickRollEnabled) return;
+  if (e.key !== 'Enter' || e.ctrlKey || e.altKey || e.metaKey) return;
+  const tag = (e.target as HTMLElement).tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  e.preventDefault();
+  const quickMod = behaviorSettings.value.quickRollModifier;
+  if (quickMod) {
+    const current = modifier.value !== '' ? Number(modifier.value) : 0;
+    modifier.value = current + quickMod;
+  }
+  handleRoll();
+}
+
+const LAST_VALUES_KEY = 'acu_dice_last_values';
+
+function saveLastValues(): void {
+  if (!behaviorSettings.value.rememberLastValues) return;
+  const data = {
+    attrName: attrName.value,
+    attrValue: attrValue.value,
+    targetValue: targetValue.value,
+    modifier: modifier.value,
+    difficulty: difficulty.value,
+    checkMode: checkMode.value,
+  };
+  try { localStorage.setItem(LAST_VALUES_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+}
+
+function restoreLastValues(): void {
+  if (!behaviorSettings.value.rememberLastValues) return;
+  try {
+    const raw = localStorage.getItem(LAST_VALUES_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.attrName) attrName.value = data.attrName;
+    if (data.attrValue !== '' && data.attrValue !== undefined) attrValue.value = data.attrValue;
+    if (data.targetValue !== '' && data.targetValue !== undefined) targetValue.value = data.targetValue;
+    if (data.modifier !== '' && data.modifier !== undefined) modifier.value = data.modifier;
+    if (data.difficulty) difficulty.value = data.difficulty;
+    if (data.checkMode) checkMode.value = data.checkMode;
+  } catch { /* ignore */ }
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+watch(
+  [attrName, attrValue, targetValue, modifier, difficulty, checkMode],
+  () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveLastValues, 500);
+  },
+);
+
 onMounted(() => {
   initDiceSystem();
   loadPresets();
+  const g = generalSettings.value;
+  if (g.defaultAttribute && attrName.value === '') attrName.value = g.defaultAttribute;
+  if (g.defaultDc && targetValue.value === '') targetValue.value = g.defaultDc;
+  if (g.defaultModifier && modifier.value === '') modifier.value = g.defaultModifier;
+  restoreLastValues();
+  document.addEventListener('keydown', handleQuickRoll);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleQuickRoll);
 });
 </script>
 

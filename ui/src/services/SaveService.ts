@@ -1,4 +1,5 @@
 import { safeLocalStorageGet, safeLocalStorageSet } from '../../../utils/safe-storage'
+import { settingsManager } from '@data/settings-manager'
 
 const SAVE_KEY = 'aidm_save_slots'
 const CURRENT_VERSION = 2
@@ -299,6 +300,10 @@ export class SaveService {
   }
 
   static saveGame(slotId: number, slots: SaveSlot[], data: SaveData): SaveSlot[] {
+    if (settingsManager.shouldValidateOnSave()) {
+      console.log('[SaveService] 保存前验证已启用')
+    }
+
     const slot: SaveSlot = {
       id: slotId,
       timestamp: new Date().toLocaleString(),

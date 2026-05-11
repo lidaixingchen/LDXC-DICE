@@ -48,9 +48,47 @@
 /* 仅在减少动画时显示 */
 .acu-motion-reduce {
   display: none !important;
-  
+
   @media (prefers-reduced-motion: reduce) {
     display: block !important;
+  }
+}
+
+/* ========== UI 行为控制类 ========== */
+
+/* 隐藏自定义工具提示 */
+.acu-no-tooltips {
+  [data-tooltip],
+  .acu-level-tooltip,
+  .acu-tooltip-header,
+  .acu-tooltip-row {
+    display: none !important;
+  }
+}
+
+/* 紧凑模式 */
+.acu-compact {
+  --acu-space-xs: 2px;
+  --acu-space-sm: 4px;
+  --acu-space-md: 8px;
+  --acu-space-lg: 12px;
+
+  .acu-nav-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+}
+
+/* 性能模式 */
+.acu-performance {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .acu-glass-depth,
+  .acu-glass-surface {
+    backdrop-filter: none !important;
   }
 }
 

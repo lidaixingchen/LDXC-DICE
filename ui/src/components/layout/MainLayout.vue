@@ -71,11 +71,39 @@ const isOptionsCollapsed = ref(false);
 const legacySettings = ref<LegacySettings>(settingsManager.getLegacySettings());
 const displaySettings = ref(settingsManager.getGroup('display'));
 const advancedSettings = ref(settingsManager.getGroup('advanced'));
+const behaviorSettings = ref(settingsManager.getGroup('behavior'));
 settingsManager.onChange(() => {
   legacySettings.value = { ...settingsManager.getLegacySettings() };
   displaySettings.value = { ...settingsManager.getGroup('display') };
   advancedSettings.value = { ...settingsManager.getGroup('advanced') };
+  behaviorSettings.value = { ...settingsManager.getGroup('behavior') };
 });
+
+// 自动隐藏面板
+let autoHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+function resetAutoHideTimer(): void {
+  if (autoHideTimer) {
+    clearTimeout(autoHideTimer);
+    autoHideTimer = null;
+  }
+  if (behaviorSettings.value.autoHidePanel && !isCollapsed.value) {
+    autoHideTimer = setTimeout(() => {
+      isCollapsed.value = true;
+    }, behaviorSettings.value.autoHideDelay);
+  }
+}
+
+function handleUserActivity(): void {
+  if (isCollapsed.value) return;
+  resetAutoHideTimer();
+}
+
+watch(
+  () => behaviorSettings.value.autoHidePanel,
+  () => resetAutoHideTimer(),
+  { immediate: true },
+);
 let tableRefreshTimer: number | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
 
@@ -221,6 +249,7 @@ const wrapperClass = computed(() => [
   { 'acu-no-animation': !displaySettings.value.showAnimations },
   { 'acu-compact': displaySettings.value.compactMode },
   { 'acu-performance': advancedSettings.value.performanceMode },
+  { 'acu-no-tooltips': !displaySettings.value.showTooltips },
 ]);
 
 const showDataDisplay = computed(
@@ -300,6 +329,12 @@ onMounted(() => {
   window.addEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
   window.addEventListener('acu-show-dice-history', onShowDiceHistory);
   window.addEventListener('acu-show-preset-manager', onShowPresetManager);
+
+  // 自动隐藏面板：监听用户活动
+  document.addEventListener('mousemove', handleUserActivity);
+  document.addEventListener('keydown', handleUserActivity);
+  document.addEventListener('click', handleUserActivity);
+  resetAutoHideTimer();
 });
 
 watch(
@@ -318,11 +353,15 @@ watch(
 
 onUnmounted(() => {
   if (tableRefreshTimer) clearTimeout(tableRefreshTimer);
+  if (autoHideTimer) clearTimeout(autoHideTimer);
   window.removeEventListener('acu-data-updated', loadTables);
   window.removeEventListener('acu-show-changes-panel', onShowChangesPanel);
   window.removeEventListener('acu-open-settings-section', onOpenSettingsSection as EventListener);
   window.removeEventListener('acu-show-dice-history', onShowDiceHistory);
   window.removeEventListener('acu-show-preset-manager', onShowPresetManager);
+  document.removeEventListener('mousemove', handleUserActivity);
+  document.removeEventListener('keydown', handleUserActivity);
+  document.removeEventListener('click', handleUserActivity);
 });
 </script>
 
