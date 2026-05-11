@@ -176,6 +176,7 @@ onMounted(() => {
         <i class="fa-solid fa-sliders-h"></i>
         <span>预设管理器</span>
       </div>
+      <button class="acu-close-btn" @click="emit('close')"><i class="fa-solid fa-times"></i></button>
     </div>
 
     <div class="preset-body">
@@ -282,11 +283,41 @@ onMounted(() => {
 <style scoped lang="scss">
 .preset-manager {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--acu-bg-panel, #1a1a1e);
-  border-radius: 12px;
   overflow: hidden;
+}
+
+.preset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--acu-bg-header, #222);
+  border-bottom: 1px solid var(--acu-border, #333);
+}
+
+.preset-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--acu-accent, #8b5cf6);
+}
+
+.acu-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub, #aaa);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  &:hover {
+    color: var(--acu-accent, #8b5cf6);
+  }
 }
 
 </style>

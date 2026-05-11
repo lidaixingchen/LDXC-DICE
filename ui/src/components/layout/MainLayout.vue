@@ -6,6 +6,7 @@ import { setDatabaseToastMute, injectToastStyles } from '../../utils/toast-manag
 import { computed, onMounted, onUnmounted, ref, provide, watch } from 'vue';
 import { useDiceSystem, usePresets, useCombatState, useStatusEffects } from '../../composables';
 import { useDashboard } from '../../composables/data/useDashboard';
+import BottomNav, { type ActionButton } from './BottomNav.vue';
 import ChangesPanel from '../data/ChangesPanel.vue';
 import DashboardPanel from '../data/DashboardPanel.vue';
 import DicePanel from '../dice/DicePanel.vue';
@@ -114,13 +115,6 @@ const SPECIAL_NAV_ITEMS = [
   { key: '__favorites__', icon: 'fa-star', label: '收藏', id: 'acu-btn-favorites' },
   { key: '__generate__', icon: 'fa-wand-magic-sparkles', label: '生成', id: 'acu-btn-generate-nav' },
   { key: '__save__', icon: 'fa-floppy-disk', label: '存档', id: 'acu-btn-save-nav' },
-];
-
-const ACTION_BUTTONS = [
-  { id: 'acu-btn-open-editor', icon: 'fa-database', title: '打开数据库' },
-  { id: 'acu-btn-open-visualizer', icon: 'fa-table-columns', title: '可视化编辑' },
-  { id: 'acu-btn-settings', icon: 'fa-cog', title: '设置' },
-  { id: 'acu-btn-collapse', icon: 'fa-chevron-down', title: '收起' },
 ];
 
 function getIconForTableName(name: string): string {
@@ -291,6 +285,23 @@ const navItems = computed(() => {
 const specialItems = computed(() => navItems.value.filter(i => !('isTable' in i && i.isTable)));
 const tableItems = computed(() => navItems.value.filter(i => 'isTable' in i && i.isTable));
 
+const activeKey = computed(() => {
+  if (showDice.value) return '__dice__';
+  if (showChanges.value) return '__changes__';
+  if (showMvu.value) return '__mvu__';
+  if (showFavorites.value) return '__favorites__';
+  if (showGenerate.value) return '__generate__';
+  if (showSave.value) return '__save__';
+  return activeTab.value;
+});
+
+const actionButtons: ActionButton[] = [
+  { id: 'acu-btn-open-editor', icon: 'fa-database', title: '打开数据库' },
+  { id: 'acu-btn-open-visualizer', icon: 'fa-table-columns', title: '可视化编辑' },
+  { id: 'acu-btn-settings', icon: 'fa-cog', title: '设置' },
+  { id: 'acu-btn-collapse', icon: 'fa-chevron-down', title: '收起' },
+];
+
 const onShowChangesPanel = () => {
   closeAllPanels();
   activeTab.value = '';
@@ -440,80 +451,28 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- 3. 收起触发器 -->
-    <div
-      v-if="isCollapsed"
-      class="acu-expand-trigger"
-      :class="[
-        `acu-col-${legacySettings.collapseStyle || 'bar'}`,
-        `acu-align-${legacySettings.collapseAlign || 'right'}`,
-      ]"
-      @click="isCollapsed = false"
-    >
-      <i class="fa-solid fa-table"></i><span>骰子系统助手 ({{ tables.length }})</span>
-    </div>
-    <!-- 4. 导航栏 (包含动作栏位置控制) -->
-    <div v-else class="acu-nav-container" :class="{ 'acu-pos-top': legacySettings.actionsPosition === 'top', 'acu-split-mode': legacySettings.splitNavActions }">
-      <button
-        v-if="!legacySettings.hideDashboardButton"
-        class="acu-nav-btn"
-        :class="{ active: showDashboard }"
-        style="order: 0"
-        @click="handleNavClick('__dashboard__')"
-      >
-        <i class="fa-solid fa-chart-line"></i><span>仪表盘</span>
-      </button>
-
-      <div v-if="legacySettings.splitNavActions" class="acu-special-group">
-        <button
-          v-for="item in specialItems"
-          :key="item.key"
-          class="acu-nav-btn"
-          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
-          @click="handleNavClick(item.key)"
-        >
-          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
-        </button>
-      </div>
-
-      <template v-if="legacySettings.splitNavActions">
-        <button
-          v-for="(item, idx) in tableItems"
-          :key="item.key"
-          class="acu-nav-btn"
-          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
-          :style="{ order: idx + 100 }"
-          @click="handleNavClick(item.key)"
-        >
-          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
-        </button>
-      </template>
-
-      <template v-if="!legacySettings.splitNavActions">
-        <button
-          v-for="(item, idx) in navItems"
-          :key="item.key"
-          class="acu-nav-btn"
-          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
-          :style="{ order: idx + 2 }"
-          @click="handleNavClick(item.key)"
-        >
-          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
-        </button>
-      </template>
-
-      <div class="acu-actions-group" style="order: 9999">
-        <button
-          v-for="btn in ACTION_BUTTONS"
-          :key="btn.id"
-          class="acu-action-btn"
-          :title="btn.title"
-          @click="handleActionClick(btn.id)"
-        >
-          <i class="fa-solid" :class="btn.icon"></i>
-        </button>
-      </div>
-    </div>
+    <!-- 3+4. 导航栏 -->
+    <BottomNav
+      :special-items="specialItems"
+      :table-items="tableItems"
+      :all-nav-items="navItems"
+      :action-buttons="actionButtons"
+      :active-key="activeKey"
+      :is-expanded="!isCollapsed"
+      :show-dashboard="true"
+      :is-dashboard-active="showDashboard"
+      :hide-dashboard-button="legacySettings.hideDashboardButton"
+      :split-nav-actions="legacySettings.splitNavActions"
+      :actions-position="legacySettings.actionsPosition"
+      :grid-cols="gridCols"
+      :collapse-style="legacySettings.collapseStyle || 'bar'"
+      :collapse-align="legacySettings.collapseAlign || 'right'"
+      :embedded="legacySettings.positionMode === 'embedded'"
+      @nav-click="handleNavClick"
+      @action-click="handleActionClick"
+      @dashboard-click="handleNavClick('__dashboard__')"
+      @update:expanded="isCollapsed = !$event"
+    />
 
     <RelationGraph />
   </div>
@@ -641,212 +600,8 @@ onUnmounted(() => {
   margin-bottom: 12px;
 }
 
-/* 导航容器 */
-.acu-nav-container {
-  display: grid;
-  grid-template-columns: repeat(var(--acu-grid-cols, 3), 1fr);
-  gap: 4px;
-  padding: 6px;
-  background: var(--acu-bg-nav);
-  border: 1px solid var(--acu-border);
-  border-radius: 10px;
-  box-shadow: 0 2px 6px var(--acu-shadow);
-  width: 100%;
-  min-width: 280px;
-  margin: 0 auto;
-  position: relative;
-  z-index: calc(var(--acu-z-fixed, 31000) + 1);
-
-  /* 顶部停靠：将操作组移到上方 */
-  &.acu-pos-top {
-    .acu-actions-group {
-      order: -1 !important;
-      border-top: none;
-      border-bottom: 1px dashed var(--acu-border);
-      margin-top: 0;
-      margin-bottom: 6px;
-      padding-top: 0;
-      padding-bottom: 8px;
-    }
-  }
-
-  /* 分行模式：特殊导航在上，表格按钮在下 */
-  &.acu-split-mode {
-    .acu-special-group {
-      grid-column: 1 / -1;
-      display: flex;
-      gap: 4px;
-      justify-content: center;
-      border-bottom: 1px dashed var(--acu-border);
-      margin-bottom: 4px;
-      padding-bottom: 6px;
-    }
-  }
-}
-
-.acu-nav-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 2px;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  color: var(--acu-text-sub);
-  font-size: 11px;
-  cursor: pointer;
-  i {
-    font-size: var(--acu-nav-btn-icon-size, 16px);
-  }
-  &.active {
-    background: var(--acu-accent);
-    color: white;
-  }
-}
-
-.acu-actions-group {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-  align-items: center;
-  grid-column: span var(--acu-grid-cols, 3);
-  border-top: 1px solid var(--acu-border);
-  padding-top: 4px;
-  margin-top: 4px;
-}
-
-.acu-action-btn {
-  width: var(--acu-action-btn-size, 28px);
-  height: var(--acu-action-btn-size, 28px);
-  border-radius: 6px;
-  border: 1px solid var(--acu-border);
-  background: var(--acu-bg-panel);
-  color: var(--acu-text-sub);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  i {
-    font-size: var(--acu-action-btn-icon-size, 12px);
-  }
-}
-
-/* 收起触发器 */
-.acu-expand-trigger {
-  background: var(--acu-bg-nav);
-  border: 1px solid var(--acu-border);
-  box-shadow: 0 2px 6px var(--acu-shadow);
-  cursor: pointer;
-  color: var(--acu-text-main);
-  font-size: 13px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  z-index: calc(var(--acu-z-fixed, 31000) + 5);
-  &.acu-col-bar {
-    width: 100%;
-    justify-content: center;
-    padding: 8px 10px;
-    border-radius: 6px;
-    margin: 0 auto;
-  }
-  &.acu-col-dot {
-    width: auto !important;
-    padding: 6px 16px;
-    border-radius: 50px;
-  }
-  &.acu-col-icon {
-    width: 40px !important;
-    height: 40px !important;
-    padding: 0;
-    justify-content: center;
-    border-radius: 50%;
-    span {
-      display: none;
-    }
-  }
-  &.acu-align-right {
-    margin-left: auto;
-  }
-  &.acu-align-center {
-    margin: 0 auto;
-  }
-  &.acu-align-left {
-    margin-right: auto;
-    margin-left: 0;
-  }
-}
-
 /* PC 端布局 */
 @media (min-width: 768px) {
-  .acu-wrapper.acu-mode-embedded .acu-nav-container {
-    width: fit-content !important;
-    min-width: 300px;
-    max-width: 100%;
-    border-radius: 50px;
-    padding: 6px 20px;
-  }
-
-  .acu-nav-container {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    padding: 6px 10px;
-    grid-template-columns: none !important;
-    flex-direction: row !important;
-    justify-content: flex-start !important;
-    align-items: center !important;
-    height: auto !important;
-    width: 100%;
-  }
-
-  .acu-nav-container .acu-nav-btn {
-    width: fit-content !important;
-    flex: 0 0 auto !important;
-    height: var(--acu-nav-btn-height, 32px) !important;
-    padding: 0 12px;
-    font-size: 13px !important;
-    min-width: auto !important;
-    flex-direction: row;
-    gap: 6px;
-  }
-
-  .acu-nav-btn span {
-    display: inline !important;
-    max-width: 200px;
-  }
-
-  .acu-action-btn {
-    flex: 0 0 var(--acu-action-btn-size, 32px) !important;
-    width: var(--acu-action-btn-size, 32px) !important;
-    height: var(--acu-action-btn-size, 32px) !important;
-    background: transparent !important;
-    color: var(--acu-text-sub) !important;
-    border-radius: 6px;
-    border: 1px solid transparent;
-  }
-
-  .acu-actions-group {
-    width: auto !important;
-    margin-left: auto !important;
-    border: none !important;
-    padding: 0;
-    margin-top: 0 !important;
-    gap: 4px !important;
-    justify-content: flex-end;
-    order: 9999 !important;
-    display: flex;
-  }
-
-  .acu-nav-container.acu-pos-top .acu-actions-group {
-    margin-left: 0 !important;
-    margin-right: 10px !important;
-    justify-content: flex-start !important;
-    border-bottom: none !important;
-  }
-
   .acu-data-display {
     width: var(--acu-card-width, 380px) !important;
     min-width: 0;
