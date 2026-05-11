@@ -19,9 +19,6 @@ const props = defineProps<{
   actionButtons: ActionButton[];
   activeKey: string;
   isExpanded: boolean;
-  showDashboard: boolean;
-  isDashboardActive: boolean;
-  hideDashboardButton: boolean;
   splitNavActions: boolean;
   actionsPosition: 'top' | 'bottom';
   gridCols: number | string;
@@ -33,7 +30,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'nav-click', key: string): void;
   (e: 'action-click', id: string): void;
-  (e: 'dashboard-click'): void;
   (e: 'update:expanded', value: boolean): void;
 }>();
 
@@ -43,10 +39,6 @@ function handleNavClick(key: string): void {
 
 function handleActionClick(id: string): void {
   emit('action-click', id);
-}
-
-function handleDashboardClick(): void {
-  emit('dashboard-click');
 }
 
 function expand(): void {
@@ -79,17 +71,6 @@ function expand(): void {
     }"
     :style="{ '--acu-grid-cols': gridCols }"
   >
-    <!-- 仪表盘按钮 -->
-    <button
-      v-if="showDashboard && !hideDashboardButton"
-      class="acu-nav-btn"
-      :class="{ active: isDashboardActive }"
-      style="order: 0"
-      @click="handleDashboardClick"
-    >
-      <i class="fa-solid fa-chart-line"></i><span>仪表盘</span>
-    </button>
-
     <!-- 分行模式：特殊导航 + 表格导航 -->
     <template v-if="splitNavActions">
       <div class="acu-special-group">

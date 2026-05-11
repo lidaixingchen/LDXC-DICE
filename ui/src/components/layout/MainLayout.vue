@@ -109,6 +109,7 @@ let tableRefreshTimer: number | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
 
 const SPECIAL_NAV_ITEMS = [
+  { key: '__dashboard__', icon: 'fa-chart-line', label: '仪表盘', id: 'acu-btn-dashboard' },
   { key: '__dice__', icon: 'fa-dice-d20', label: '掷骰', id: 'acu-btn-dice-nav' },
   { key: '__changes__', icon: 'fa-code-compare', label: '审核', id: 'acu-btn-changes' },
   { key: '__mvu__', icon: 'fa-code-branch', label: '变量', id: 'acu-btn-mvu' },
@@ -197,6 +198,8 @@ function handleActionClick(id: string) {
     import('../../services/HostBridgeService').then(m => m.getDatabaseApi()?.openSettings?.());
   } else if (id === 'acu-btn-open-visualizer') {
     import('../../services/HostBridgeService').then(m => m.getDatabaseApi()?.openVisualizer?.());
+  } else if (id === 'acu-btn-relation') {
+    relationGraphRef.value?.toggle();
   }
 }
 
@@ -265,14 +268,15 @@ const showDataDisplay = computed(
 const gridCols = computed(() => {
   if (legacySettings.value.gridColumns && legacySettings.value.gridColumns !== 'auto')
     return legacySettings.value.gridColumns;
-  const n = navItems.value.length + (legacySettings.value.hideDashboardButton ? 0 : 1);
+  const n = navItems.value.length;
   if (n <= 4) return n < 2 ? 2 : n;
   return 4;
 });
 
 const navItems = computed(() => {
   const hidden = new Set(legacySettings.value.hiddenTableKeys || []);
-  const special = SPECIAL_NAV_ITEMS.filter(i => !hidden.has(i.key)).map(i => ({ ...i, isTable: false }));
+  const hideDashboard = legacySettings.value.hideDashboardButton;
+  const special = SPECIAL_NAV_ITEMS.filter(i => !hidden.has(i.key) && !(hideDashboard && i.key === '__dashboard__')).map(i => ({ ...i, isTable: false }));
   const tableItems = tables.value.filter(t => !hidden.has(t.key)).map(t => ({ ...t, isTable: true, label: t.name }));
   const all = [...special, ...tableItems];
   if (legacySettings.value.tableOrderKeys?.length) {
@@ -286,6 +290,7 @@ const specialItems = computed(() => navItems.value.filter(i => !('isTable' in i 
 const tableItems = computed(() => navItems.value.filter(i => 'isTable' in i && i.isTable));
 
 const activeKey = computed(() => {
+  if (showDashboard.value) return '__dashboard__';
   if (showDice.value) return '__dice__';
   if (showChanges.value) return '__changes__';
   if (showMvu.value) return '__mvu__';
@@ -295,9 +300,12 @@ const activeKey = computed(() => {
   return activeTab.value;
 });
 
+const relationGraphRef = ref<InstanceType<typeof RelationGraph> | null>(null);
+
 const actionButtons: ActionButton[] = [
   { id: 'acu-btn-open-editor', icon: 'fa-database', title: '打开数据库' },
   { id: 'acu-btn-open-visualizer', icon: 'fa-table-columns', title: '可视化编辑' },
+  { id: 'acu-btn-relation', icon: 'fa-project-diagram', title: '人物关系图' },
   { id: 'acu-btn-settings', icon: 'fa-cog', title: '设置' },
   { id: 'acu-btn-collapse', icon: 'fa-chevron-down', title: '收起' },
 ];
@@ -459,9 +467,6 @@ onUnmounted(() => {
       :action-buttons="actionButtons"
       :active-key="activeKey"
       :is-expanded="!isCollapsed"
-      :show-dashboard="true"
-      :is-dashboard-active="showDashboard"
-      :hide-dashboard-button="legacySettings.hideDashboardButton"
       :split-nav-actions="legacySettings.splitNavActions"
       :actions-position="legacySettings.actionsPosition"
       :grid-cols="gridCols"
@@ -470,11 +475,10 @@ onUnmounted(() => {
       :embedded="legacySettings.positionMode === 'embedded'"
       @nav-click="handleNavClick"
       @action-click="handleActionClick"
-      @dashboard-click="handleNavClick('__dashboard__')"
       @update:expanded="isCollapsed = !$event"
     />
 
-    <RelationGraph />
+    <RelationGraph ref="relationGraphRef" />
   </div>
 </template>
 
