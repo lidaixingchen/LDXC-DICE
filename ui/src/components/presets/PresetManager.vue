@@ -38,8 +38,11 @@ const filteredDicePresets = computed(() => {
   );
 });
 
+const AIDM_PRESET_IDS = new Set(['aidm_standard_check', 'aidm_combat_check', 'aidm_defense_check', 'aidm_contest_check']);
+
 function loadAllPresets() {
-  dicePresets.value = presetManager.getAllPresets().filter(p => (p as AdvancedDicePreset).kind === 'advanced' || (p as any).kind === 'dice');
+  dicePresets.value = presetManager.getAllPresets()
+    .filter(p => ((p as AdvancedDicePreset).kind === 'advanced' || (p as any).kind === 'dice') && !AIDM_PRESET_IDS.has(p.id!));
 }
 
 function openDiceEditor(id: string | null): void {
@@ -188,13 +191,13 @@ onMounted(() => {
     <div class="preset-body">
       <div class="dice-section">
         <div class="section-header">
-          <span>检定预设</span>
+          <span>通用检定预设</span>
           <button class="add-btn" @click="openDiceEditor(null)">
             <i class="fa-solid fa-plus"></i> 新建
           </button>
         </div>
         <div class="preset-toolbar">
-          <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索检定预设..." />
+          <input v-model="searchQuery" type="text" class="search-input" placeholder="搜索通用预设..." />
           <div class="toolbar-actions">
             <button class="toolbar-btn" title="导入文件" @click="importDiceFromFile">
               <i class="fa-solid fa-file-import"></i>

@@ -277,6 +277,13 @@ onActivated(() => {
   overflow-y: auto;
 }
 
+/* 内容区：禁用自身滚动，由子元素各自管理滚动 */
+.acu-panel-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* 统一设置面板宽度与内容区一致 */
 .acu-settings-container {
   display: flex;
@@ -293,6 +300,7 @@ onActivated(() => {
   grid-template-columns: 80px 1fr;
   gap: 10px;
   padding: 0 !important;
+  height: 100%;
 }
 
 .acu-settings-nav {
