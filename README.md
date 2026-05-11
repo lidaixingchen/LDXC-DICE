@@ -123,7 +123,7 @@ pnpm typecheck
 
 本项目是对 [my-tavern-scripts](https://github.com/jerryzmtz/my-tavern-scripts) 仓库中骰子系统的重构版本。主要改进：
 
-- 模块化架构（从 7000+ 行单文件重构为清晰的模块结构）
+- 模块化架构（从 40000+ 行单文件重构为清晰的模块结构）
 - 全面 TypeScript 类型安全
 - 单元测试覆盖
 - 宿主环境交互抽象（消除 jQuery 依赖和 DOM 突破）

@@ -35,6 +35,7 @@ import DefenseCheckPanel from './DefenseCheckPanel.vue';
 import InitiativeCheckPanel from './InitiativeCheckPanel.vue';
 import EscapeCheckPanel from './EscapeCheckPanel.vue';
 import CombatManager from '../combat/CombatManager.vue';
+import EffectConfirm from '../combat/EffectConfirm.vue';
 import StatusPanel from '../combat/StatusPanel.vue';
 import ToolsPanel from '../tools/ToolsPanel.vue';
 
@@ -80,6 +81,8 @@ const { equipment } = useEquipment();
 const isRolling = ref(false);
 const lastResult = ref<CheckResult | null>(null);
 const showResult = ref(false);
+const showEffectConfirm = ref(false);
+const pendingEffects = ref<import('../../types').EffectResult[]>([]);
 
 const checkMode = ref<CheckMode>('standard');
 const { initiatorName, worldLevel } = useCombatState();
@@ -324,7 +327,7 @@ async function handleRoll(): Promise<void> {
           initiatorName: initiatorName.value,
           shouldHideResult: shouldHideResult.value,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
       case 'contest': {
@@ -341,7 +344,7 @@ async function handleRoll(): Promise<void> {
           initiatorName: initiatorName.value,
           shouldHideResult: shouldHideResult.value,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
       case 'combat': {
@@ -361,7 +364,7 @@ async function handleRoll(): Promise<void> {
           applyDamageToEnemy,
           formatPlayerAttackContent,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
       case 'defense': {
@@ -380,7 +383,7 @@ async function handleRoll(): Promise<void> {
           applyDamageToPlayer,
           formatEnemyAttackContent,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
       case 'initiative': {
@@ -391,7 +394,7 @@ async function handleRoll(): Promise<void> {
           level: worldLevel.value,
           shouldHideResult: shouldHideResult.value,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
       case 'escape': {
@@ -406,7 +409,7 @@ async function handleRoll(): Promise<void> {
           level: worldLevel.value,
           shouldHideResult: shouldHideResult.value,
         });
-        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; }
+        if (result) { lastResult.value = result; showResult.value = !shouldHideResult.value; handleEffects(result); }
         break;
       }
     }
@@ -610,6 +613,35 @@ function loadSaveSlots(): void {
   saveSlots.value = SaveService.loadSaveSlots();
 }
 
+function handleEffects(result: CheckResult): void {
+  if (!result.effects?.length) return;
+  const bs = behaviorSettings.value;
+  if (bs.autoApplyEffects) {
+    console.log('[DicePanel] 自动应用效果:', result.effects.length, '个');
+    return;
+  }
+  if (bs.confirmBeforeEffect && displaySettings.value.showEffectConfirmation) {
+    pendingEffects.value = result.effects;
+    showEffectConfirm.value = true;
+    return;
+  }
+  if (displaySettings.value.showEffectConfirmation) {
+    pendingEffects.value = result.effects;
+    showEffectConfirm.value = true;
+  }
+}
+
+function onEffectConfirm(): void {
+  console.log('[DicePanel] 用户确认应用效果:', pendingEffects.value.length, '个');
+  showEffectConfirm.value = false;
+  pendingEffects.value = [];
+}
+
+function onEffectCancel(): void {
+  showEffectConfirm.value = false;
+  pendingEffects.value = [];
+}
+
 function handleQuickRoll(e: KeyboardEvent): void {
   if (!behaviorSettings.value.quickRollEnabled) return;
   if (e.key !== 'Enter' || e.ctrlKey || e.altKey || e.metaKey) return;
@@ -668,8 +700,11 @@ onMounted(() => {
   loadPresets();
   const g = generalSettings.value;
   if (g.defaultAttribute && attrName.value === '') attrName.value = g.defaultAttribute;
-  if (g.defaultDc && targetValue.value === '') targetValue.value = g.defaultDc;
-  if (g.defaultModifier && modifier.value === '') modifier.value = g.defaultModifier;
+  if (g.defaultPresetId) {
+    selectPreset(g.defaultPresetId);
+    const p = presets.value.find(x => x.id === g.defaultPresetId);
+    if (p) customDiceExpr.value = p.diceExpression || '1d20';
+  }
   restoreLastValues();
   document.addEventListener('keydown', handleQuickRoll);
 });
@@ -862,6 +897,12 @@ onUnmounted(() => {
         <template v-if="showResult && lastResult">
           <span class="acu-dice-result-value" :class="{ success: lastResult.success, failure: !lastResult.success }">{{ lastResult.total }}</span>
           <span class="acu-dice-result-badge" :class="{ success: lastResult.success, failure: !lastResult.success }">{{ lastResult.outcome }}</span>
+          <template v-if="displaySettings.resultDisplayMode === 'verbose'">
+            <span class="acu-dice-result-detail">({{ lastResult.roll }} + {{ lastResult.total - lastResult.roll }})</span>
+            <span v-if="lastResult.margin !== undefined" class="acu-dice-result-margin" :class="lastResult.margin >= 0 ? 'acu-text-success' : 'acu-text-danger'">
+              {{ lastResult.margin > 0 ? '+' : '' }}{{ lastResult.margin }}
+            </span>
+          </template>
           <button class="acu-dice-retry-btn" title="重新投骰" @click.stop="handleRetry">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
@@ -872,6 +913,12 @@ onUnmounted(() => {
         </template>
       </button>
     </div>
+    <EffectConfirm
+      v-if="showEffectConfirm && pendingEffects.length > 0"
+      :effects="pendingEffects"
+      @confirm="onEffectConfirm"
+      @cancel="onEffectCancel"
+    />
   </div>
 </template>
 

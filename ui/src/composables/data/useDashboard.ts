@@ -138,8 +138,14 @@ function getTableData(options?: { silent?: boolean }): Record<string, any> | nul
     if (data && settingsManager.shouldValidateOnLoad()) {
       try {
         const errors = validateAllData(data as RawData);
-        if (errors.length > 0 && settingsManager.getValue('validation', 'showValidationWarnings')) {
-          console.warn(`[Validation] 数据加载后发现 ${errors.length} 个验证问题`);
+        if (errors.length > 0) {
+          const isStrict = settingsManager.getValue('validation', 'strictMode');
+          const showWarnings = settingsManager.getValue('validation', 'showValidationWarnings');
+          if (isStrict) {
+            console.error(`[Validation] 严格模式：发现 ${errors.length} 个验证错误`);
+          } else if (showWarnings) {
+            console.warn(`[Validation] 数据加载后发现 ${errors.length} 个验证问题`);
+          }
         }
       } catch (ve) {
         console.warn('[Validation] 加载验证执行失败:', ve);

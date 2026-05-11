@@ -589,6 +589,14 @@ export class SettingsManager {
     return this.settings.advanced.logLevel;
   }
 
+  isExperimentalFeaturesEnabled(): boolean {
+    return this.settings.advanced.enableExperimentalFeatures;
+  }
+
+  getCacheSize(): number {
+    return this.settings.advanced.cacheSize;
+  }
+
   shouldValidateOnLoad(): boolean {
     return this.settings.validation.validateOnLoad;
   }

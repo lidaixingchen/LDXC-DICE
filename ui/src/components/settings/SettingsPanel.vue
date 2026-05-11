@@ -1179,20 +1179,12 @@ onUnmounted(() => {
             <summary class="acu-details-summary">常规设置（默认预设 / 自动保存 / 语言）</summary>
             <div class="acu-details-body">
               <div class="acu-setting-row">
-                <label>默认检定预设 <span class="acu-tag-experimental">实验性</span></label>
+                <label>默认检定预设</label>
                 <input type="text" :value="general.defaultPresetId" @change="updateGroupSetting('general', 'defaultPresetId', ($event.target as HTMLInputElement).value)" />
               </div>
               <div class="acu-setting-row">
                 <label>默认检定属性</label>
                 <input type="text" :value="general.defaultAttribute" @change="updateGroupSetting('general', 'defaultAttribute', ($event.target as HTMLInputElement).value)" />
-              </div>
-              <div class="acu-setting-row">
-                <label>默认 DC</label>
-                <input type="number" :value="general.defaultDc" @change="updateGroupSetting('general', 'defaultDc', parseInt(($event.target as HTMLInputElement).value))" />
-              </div>
-              <div class="acu-setting-row">
-                <label>默认修正值</label>
-                <input type="number" :value="general.defaultModifier" @change="updateGroupSetting('general', 'defaultModifier', parseInt(($event.target as HTMLInputElement).value))" />
               </div>
               <div class="acu-setting-row acu-setting-row-toggle">
                 <label>自动保存</label>
@@ -1204,13 +1196,6 @@ onUnmounted(() => {
               <div class="acu-setting-row">
                 <label>自动保存间隔 (ms)</label>
                 <input type="number" :value="general.autoSaveInterval" @change="updateGroupSetting('general', 'autoSaveInterval', parseInt(($event.target as HTMLInputElement).value))" />
-              </div>
-              <div class="acu-setting-row">
-                <label>语言 <span class="acu-tag-experimental">实验性</span></label>
-                <select :value="general.language" @change="updateGroupSetting('general', 'language', ($event.target as HTMLSelectElement).value as 'zh-CN' | 'en-US')">
-                  <option value="zh-CN">中文</option>
-                  <option value="en-US">English</option>
-                </select>
               </div>
             </div>
           </details>
@@ -1247,7 +1232,7 @@ onUnmounted(() => {
                 </label>
               </div>
               <div class="acu-setting-row">
-                <label>结果显示模式 <span class="acu-tag-experimental">实验性</span></label>
+                <label>结果显示模式</label>
                 <select :value="display.resultDisplayMode" @change="updateGroupSetting('display', 'resultDisplayMode', ($event.target as HTMLSelectElement).value as 'simple' | 'detailed' | 'verbose')">
                   <option value="simple">简洁</option>
                   <option value="detailed">详细</option>
@@ -1255,7 +1240,7 @@ onUnmounted(() => {
                 </select>
               </div>
               <div class="acu-setting-row acu-setting-row-toggle">
-                <label>显示效果确认 <span class="acu-tag-experimental">实验性</span></label>
+                <label>显示效果确认</label>
                 <label class="acu-toggle">
                   <input type="checkbox" :checked="display.showEffectConfirmation" @change="updateGroupSetting('display', 'showEffectConfirmation', ($event.target as HTMLInputElement).checked)" />
                   <span class="acu-toggle-slider"></span>
@@ -1268,14 +1253,14 @@ onUnmounted(() => {
             <summary class="acu-details-summary">交互行为（确认 / 快速投骰 / 历史记录）</summary>
             <div class="acu-details-body">
               <div class="acu-setting-row acu-setting-row-toggle">
-                <label>效果前确认 <span class="acu-tag-experimental">实验性</span></label>
+                <label>效果前确认</label>
                 <label class="acu-toggle">
                   <input type="checkbox" :checked="behavior.confirmBeforeEffect" @change="updateGroupSetting('behavior', 'confirmBeforeEffect', ($event.target as HTMLInputElement).checked)" />
                   <span class="acu-toggle-slider"></span>
                 </label>
               </div>
               <div class="acu-setting-row acu-setting-row-toggle">
-                <label>自动应用效果 <span class="acu-tag-experimental">实验性</span></label>
+                <label>自动应用效果</label>
                 <label class="acu-toggle">
                   <input type="checkbox" :checked="behavior.autoApplyEffects" @change="updateGroupSetting('behavior', 'autoApplyEffects', ($event.target as HTMLInputElement).checked)" />
                   <span class="acu-toggle-slider"></span>
@@ -1321,7 +1306,7 @@ onUnmounted(() => {
             <summary class="acu-details-summary">验证设置（严格模式 / 加载/保存验证）</summary>
             <div class="acu-details-body">
               <div class="acu-setting-row acu-setting-row-toggle">
-                <label>严格模式 <span class="acu-tag-experimental">实验性</span></label>
+                <label>严格模式</label>
                 <label class="acu-toggle">
                   <input type="checkbox" :checked="validation.strictMode" @change="updateGroupSetting('validation', 'strictMode', ($event.target as HTMLInputElement).checked)" />
                   <span class="acu-toggle-slider"></span>
@@ -1348,13 +1333,6 @@ onUnmounted(() => {
                   <span class="acu-toggle-slider"></span>
                 </label>
               </div>
-              <div class="acu-setting-row acu-setting-row-toggle">
-                <label>自动修复常见错误 <span class="acu-tag-experimental">实验性</span></label>
-                <label class="acu-toggle">
-                  <input type="checkbox" :checked="validation.autoFixCommonErrors" @change="updateGroupSetting('validation', 'autoFixCommonErrors', ($event.target as HTMLInputElement).checked)" />
-                  <span class="acu-toggle-slider"></span>
-                </label>
-              </div>
             </div>
           </details>
 
@@ -1378,11 +1356,18 @@ onUnmounted(() => {
                 </select>
               </div>
               <div class="acu-setting-row acu-setting-row-toggle">
-                <label>实验性功能 <span class="acu-tag-experimental">实验性</span></label>
+                <label>实验性功能</label>
                 <label class="acu-toggle">
                   <input type="checkbox" :checked="advanced.enableExperimentalFeatures" @change="updateGroupSetting('advanced', 'enableExperimentalFeatures', ($event.target as HTMLInputElement).checked)" />
                   <span class="acu-toggle-slider"></span>
                 </label>
+              </div>
+              <div class="acu-setting-row">
+                <label>语言 <span class="acu-tag-experimental">实验性</span></label>
+                <select :value="general.language" @change="updateGroupSetting('general', 'language', ($event.target as HTMLSelectElement).value as 'zh-CN' | 'en-US')">
+                  <option value="zh-CN">中文</option>
+                  <option value="en-US">English</option>
+                </select>
               </div>
               <div class="acu-setting-row">
                 <label>自定义 CSS</label>
@@ -1396,7 +1381,7 @@ onUnmounted(() => {
                 </label>
               </div>
               <div class="acu-setting-row">
-                <label>缓存大小 <span class="acu-tag-experimental">实验性</span></label>
+                <label>缓存大小</label>
                 <input type="number" :value="advanced.cacheSize" @change="updateGroupSetting('advanced', 'cacheSize', parseInt(($event.target as HTMLInputElement).value))" />
               </div>
             </div>
