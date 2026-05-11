@@ -13,6 +13,24 @@ let mainContainer: HTMLElement | null = null;
 let isInitialized = false;
 let isRendering = false;
 let mutationObserver: MutationObserver | null = null;
+let customCssStyle: HTMLStyleElement | null = null;
+
+function applyCustomCss(): void {
+  const css = settingsManager.getValue('advanced', 'customCss');
+  if (!css) {
+    if (customCssStyle) {
+      customCssStyle.remove();
+      customCssStyle = null;
+    }
+    return;
+  }
+  if (!customCssStyle) {
+    customCssStyle = document.createElement('style');
+    customCssStyle.id = 'acu-custom-css';
+    document.head.appendChild(customCssStyle);
+  }
+  customCssStyle.textContent = css;
+}
 
 function getTargetDocument(): Document {
   try {
@@ -178,6 +196,7 @@ function main(): void {
   try {
     renderInterface();
     initAcuDice();
+    applyCustomCss();
 
     // 安装输入栏拦截和发送恢复钩子
     interceptTextareaValue();
@@ -188,6 +207,7 @@ function main(): void {
     }, 1000);
 
     settingsManager.onChange(() => {
+      applyCustomCss();
       if (!isRendering) {
         setTimeout(() => renderInterface(), 50);
       }

@@ -1,4 +1,5 @@
 import { readonly, ref, type Ref } from 'vue';
+import { settingsManager } from '@data/settings-manager';
 import type {
   CheckResult,
   ContestResult,
@@ -6,8 +7,6 @@ import type {
   ContestHistoryEntry,
   HistoryEntry,
 } from '../../types';
-
-const MAX_HISTORY = 100;
 const checkHistory: Ref<CheckHistoryEntry[]> = ref([]);
 const contestHistory: Ref<ContestHistoryEntry[]> = ref([]);
 
@@ -37,8 +36,8 @@ export function useDiceHistory(): {
     };
 
     checkHistory.value.unshift(entry);
-    if (checkHistory.value.length > MAX_HISTORY) {
-      checkHistory.value = checkHistory.value.slice(0, MAX_HISTORY);
+    if (checkHistory.value.length > settingsManager.getHistorySize()) {
+      checkHistory.value = checkHistory.value.slice(0, settingsManager.getHistorySize());
     }
   }
 
@@ -66,8 +65,8 @@ export function useDiceHistory(): {
     };
 
     contestHistory.value.unshift(entry);
-    if (contestHistory.value.length > MAX_HISTORY) {
-      contestHistory.value = contestHistory.value.slice(0, MAX_HISTORY);
+    if (contestHistory.value.length > settingsManager.getHistorySize()) {
+      contestHistory.value = contestHistory.value.slice(0, settingsManager.getHistorySize());
     }
   }
 

@@ -2,7 +2,13 @@
 import { computed, onMounted, ref } from 'vue';
 import { useCharacterData, useDiceSystem, usePresets, useCombatState } from '../../composables';
 import { appendToSendTextarea, clickSendButton } from '../../services/HostBridgeService';
+import { settingsManager } from '@data/settings-manager';
 import type { CheckResult } from '../../types';
+
+const displaySettings = ref(settingsManager.getGroup('display'));
+settingsManager.onChange(() => {
+  displaySettings.value = { ...settingsManager.getGroup('display') };
+});
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -294,7 +300,7 @@ onMounted(() => {
           </span>
         </template>
         <template v-else>
-          <i class="fa-solid fa-dice" :class="{ 'fa-spin': isRolling }"></i>
+          <i class="fa-solid fa-dice" :class="{ 'fa-spin': isRolling && displaySettings.showRollAnimation }"></i>
           <span>{{ isRolling ? '掷骰中...' : '开始对抗！' }}</span>
         </template>
       </button>

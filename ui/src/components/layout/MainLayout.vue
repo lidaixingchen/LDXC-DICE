@@ -69,8 +69,12 @@ const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
 const legacySettings = ref<LegacySettings>(settingsManager.getLegacySettings());
+const displaySettings = ref(settingsManager.getGroup('display'));
+const advancedSettings = ref(settingsManager.getGroup('advanced'));
 settingsManager.onChange(() => {
   legacySettings.value = { ...settingsManager.getLegacySettings() };
+  displaySettings.value = { ...settingsManager.getGroup('display') };
+  advancedSettings.value = { ...settingsManager.getGroup('advanced') };
 });
 let tableRefreshTimer: number | null = null;
 const tables = ref<{ key: string; name: string; icon: string }[]>([]);
@@ -214,6 +218,9 @@ const wrapperClass = computed(() => [
   `acu-panel-expand-${legacySettings.value.panelExpandDirection || 'up'}`,
   { 'acu-has-active-panel': showDataDisplay.value },
   { 'acu-collapsed-active': isCollapsed.value },
+  { 'acu-no-animation': !displaySettings.value.showAnimations },
+  { 'acu-compact': displaySettings.value.compactMode },
+  { 'acu-performance': advancedSettings.value.performanceMode },
 ]);
 
 const showDataDisplay = computed(
@@ -251,6 +258,9 @@ const navItems = computed(() => {
   }
   return all;
 });
+
+const specialItems = computed(() => navItems.value.filter(i => !('isTable' in i && i.isTable)));
+const tableItems = computed(() => navItems.value.filter(i => 'isTable' in i && i.isTable));
 
 const onShowChangesPanel = () => {
   closeAllPanels();
@@ -415,18 +425,45 @@ onUnmounted(() => {
         <i class="fa-solid fa-chart-line"></i><span>仪表盘</span>
       </button>
 
-      <button
-        v-for="(item, idx) in navItems"
-        :key="item.key"
-        class="acu-nav-btn"
-        :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
-        :style="{ order: idx + 2 }"
-        @click="handleNavClick(item.key)"
-      >
-        <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
-      </button>
+      <div v-if="legacySettings.splitNavActions" class="acu-special-group">
+        <button
+          v-for="item in specialItems"
+          :key="item.key"
+          class="acu-nav-btn"
+          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
+          @click="handleNavClick(item.key)"
+        >
+          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
+        </button>
+      </div>
 
-      <div class="acu-actions-group" style="order: 1">
+      <template v-if="legacySettings.splitNavActions">
+        <button
+          v-for="(item, idx) in tableItems"
+          :key="item.key"
+          class="acu-nav-btn"
+          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
+          :style="{ order: idx + 100 }"
+          @click="handleNavClick(item.key)"
+        >
+          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
+        </button>
+      </template>
+
+      <template v-if="!legacySettings.splitNavActions">
+        <button
+          v-for="(item, idx) in navItems"
+          :key="item.key"
+          class="acu-nav-btn"
+          :class="['id' in item && item.id ? item.id : '', { active: isNavItemActive(item) }]"
+          :style="{ order: idx + 2 }"
+          @click="handleNavClick(item.key)"
+        >
+          <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
+        </button>
+      </template>
+
+      <div class="acu-actions-group" style="order: 9999">
         <button
           v-for="btn in ACTION_BUTTONS"
           :key="btn.id"
@@ -594,11 +631,13 @@ onUnmounted(() => {
     }
   }
 
-  /* 分行模式：功能按钮在上，表格按钮在下 */
+  /* 分行模式：特殊导航在上，表格按钮在下 */
   &.acu-split-mode {
-    .acu-actions-group {
-      order: -1 !important;
+    .acu-special-group {
       grid-column: 1 / -1;
+      display: flex;
+      gap: 4px;
+      justify-content: center;
       border-bottom: 1px dashed var(--acu-border);
       margin-bottom: 4px;
       padding-bottom: 6px;

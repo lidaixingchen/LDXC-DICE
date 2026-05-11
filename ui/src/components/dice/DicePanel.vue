@@ -44,8 +44,10 @@ const emit = defineEmits<{
 }>();
 
 const legacySettings = ref(settingsManager.getLegacySettings());
+const displaySettings = ref(settingsManager.getGroup('display'));
 settingsManager.onChange(() => {
   legacySettings.value = { ...settingsManager.getLegacySettings() };
+  displaySettings.value = { ...settingsManager.getGroup('display') };
 });
 const shouldHideResult = computed(() => legacySettings.value.hideDiceResultFromUser);
 
@@ -798,7 +800,7 @@ onMounted(() => {
           </button>
         </template>
         <template v-else>
-          <i class="fa-solid fa-dice" :class="{ 'fa-spin': isRolling }"></i>
+          <i class="fa-solid fa-dice" :class="{ 'fa-spin': isRolling && displaySettings.showRollAnimation }"></i>
           <span>{{ isRolling ? '掷骰中...' : '掷骰！' }}</span>
         </template>
       </button>

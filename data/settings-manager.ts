@@ -1,4 +1,5 @@
 import { storageSyncBus } from '../utils/storage-sync';
+import { debugConsole } from '../core/debug-console';
 
 export interface DiceSystemSettings {
   general: GeneralSettings;
@@ -260,6 +261,7 @@ export class SettingsManager {
   constructor() {
     this.settings = this.loadFromStorage();
     this.setupAutoSave();
+    debugConsole.setEnabled(this.settings.advanced.debugMode);
     storageSyncBus.register(SETTINGS_STORAGE_KEY, () => {
       this.settings = this.loadFromStorage();
       this.notifyChange();
@@ -465,6 +467,9 @@ export class SettingsManager {
     this.saveToStorage();
     if (group === 'general' && (field === 'autoSave' || field === 'autoSaveInterval')) {
       this.setupAutoSave();
+    }
+    if (group === 'advanced' && field === 'debugMode') {
+      debugConsole.setEnabled(value as boolean);
     }
     this.notifyChange();
   }
