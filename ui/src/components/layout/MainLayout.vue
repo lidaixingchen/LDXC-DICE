@@ -330,6 +330,8 @@ onUnmounted(() => {
       '--acu-bottom-offset': legacySettings.bottomOffset + 'px',
       '--acu-nav-btn-height': (legacySettings.navButtonHeight || 32) + 'px',
       '--acu-nav-btn-icon-size': (legacySettings.navButtonIconSize || 16) + 'px',
+      '--acu-action-btn-size': legacySettings.actionButtonSize + 'px',
+      '--acu-action-btn-icon-size': legacySettings.actionButtonIconSize + 'px',
       '--acu-font-family': getFontValue(legacySettings.fontFamily),
       zoom: legacySettings.fontSize / 12,
     }"
@@ -626,8 +628,8 @@ onUnmounted(() => {
 }
 
 .acu-action-btn {
-  width: 28px;
-  height: 28px;
+  width: var(--acu-action-btn-size, 28px);
+  height: var(--acu-action-btn-size, 28px);
   border-radius: 6px;
   border: 1px solid var(--acu-border);
   background: var(--acu-bg-panel);
@@ -636,6 +638,9 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  i {
+    font-size: var(--acu-action-btn-icon-size, 12px);
+  }
 }
 
 /* 收起触发器 */
@@ -725,9 +730,9 @@ onUnmounted(() => {
   }
 
   .acu-action-btn {
-    flex: 0 0 32px !important;
-    width: 32px !important;
-    height: 32px !important;
+    flex: 0 0 var(--acu-action-btn-size, 32px) !important;
+    width: var(--acu-action-btn-size, 32px) !important;
+    height: var(--acu-action-btn-size, 32px) !important;
     background: transparent !important;
     color: var(--acu-text-sub) !important;
     border-radius: 6px;

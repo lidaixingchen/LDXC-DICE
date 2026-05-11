@@ -637,7 +637,7 @@ onUnmounted(() => {
             />
           </div>
           <div class="acu-setting-row">
-            <label>全局字体大小 ({{ settings.fontSize }}px)</label>
+            <label>界面缩放 ({{ settings.fontSize }}px)</label>
             <input
               type="range"
               min="10"
@@ -645,6 +645,59 @@ onUnmounted(() => {
               step="1"
               :value="settings.fontSize"
               @input="updateLegacy({ fontSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-group-label">字号与尺寸</div>
+          <div class="acu-setting-row">
+            <label>选项按钮字号 ({{ settings.optionFontSize }}px)</label>
+            <input
+              type="range"
+              min="10"
+              max="20"
+              step="1"
+              :value="settings.optionFontSize"
+              @input="updateLegacy({ optionFontSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>表内文字大小 ({{ settings.tableFontSize }}px)</label>
+            <input
+              type="range"
+              min="10"
+              max="20"
+              step="1"
+              :value="settings.tableFontSize"
+              @input="updateLegacy({ tableFontSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>图表卡片大小 ({{ settings.chartCardSize }}px)</label>
+            <input
+              type="range"
+              min="120"
+              max="400"
+              :value="settings.chartCardSize"
+              @input="updateLegacy({ chartCardSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>动作按钮尺寸 ({{ settings.actionButtonSize }}px)</label>
+            <input
+              type="range"
+              min="24"
+              max="56"
+              :value="settings.actionButtonSize"
+              @input="updateLegacy({ actionButtonSize: parseInt(($event.target as any).value) })"
+            />
+          </div>
+          <div class="acu-setting-row">
+            <label>动作图标大小 ({{ settings.actionButtonIconSize }}px)</label>
+            <input
+              type="range"
+              min="8"
+              max="20"
+              :value="settings.actionButtonIconSize"
+              @input="updateLegacy({ actionButtonIconSize: parseInt(($event.target as any).value) })"
             />
           </div>
         </div>
@@ -805,35 +858,6 @@ onUnmounted(() => {
               @change="updateLegacy({ clickOptionToAutoSend: ($event.target as any).checked })"
             />
           </div>
-          <div class="acu-setting-row">
-            <label>选项按钮字号</label>
-            <input
-              type="number"
-              :value="settings.optionFontSize"
-              @change="updateLegacy({ optionFontSize: parseInt(($event.target as any).value) })"
-            />
-          </div>
-          <div class="acu-setting-row">
-            <label>表内文字大小</label>
-            <input
-              type="number"
-              min="10"
-              max="24"
-              step="1"
-              :value="settings.tableFontSize"
-              @change="updateLegacy({ tableFontSize: parseInt(($event.target as any).value) })"
-            />
-          </div>
-          <div class="acu-setting-row">
-            <label>图表卡片大小 ({{ settings.chartCardSize }}px)</label>
-            <input
-              type="range"
-              min="120"
-              max="400"
-              :value="settings.chartCardSize"
-              @input="updateLegacy({ chartCardSize: parseInt(($event.target as any).value) })"
-            />
-          </div>
           <div class="acu-group-label">掷骰安全</div>
           <div class="acu-setting-row checkbox">
             <label>隐藏本地投骰结果</label>
@@ -851,27 +875,7 @@ onUnmounted(() => {
               @change="updateLegacy({ muteDatabaseToasts: ($event.target as any).checked })"
             />
           </div>
-          <div class="acu-group-label">按钮尺寸</div>
-          <div class="acu-setting-row">
-            <label>动作按钮尺寸 ({{ settings.actionButtonSize }}px)</label>
-            <input
-              type="range"
-              min="24"
-              max="56"
-              :value="settings.actionButtonSize"
-              @input="updateLegacy({ actionButtonSize: parseInt(($event.target as any).value) })"
-            />
-          </div>
-          <div class="acu-setting-row">
-            <label>动作图标大小 ({{ settings.actionButtonIconSize }}px)</label>
-            <input
-              type="range"
-              min="8"
-              max="20"
-              :value="settings.actionButtonIconSize"
-              @input="updateLegacy({ actionButtonIconSize: parseInt(($event.target as any).value) })"
-            />
-          </div>
+          <div class="acu-group-label">显示控制</div>
           <div class="acu-setting-row checkbox">
             <label>隐藏仪表盘按钮</label>
             <input
