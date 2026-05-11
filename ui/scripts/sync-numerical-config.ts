@@ -38,7 +38,7 @@ interface ExchangePrices { equipment: Record<string, Record<string, number>>; sk
 type SchemaLeaf = string[]
 type SchemaScalar = null
 type SchemaNode = SchemaBranch | SchemaLeaf | SchemaScalar
-type SchemaBranch = Record<string, SchemaNode>
+interface SchemaBranch { [key: string]: SchemaNode }
 type SchemaDef = SchemaBranch
 
 function validateSchema(yamlObj: unknown, schema: SchemaDef, yamlFile: string, basePath = ''): void {
@@ -399,7 +399,7 @@ function parseStatusEffectRules(): StatusEffectRules {
 }
 
 function parseEconomy(): Economy {
-  const rewardYaml = loadAndValidate('01-数值参考/经济数值/任务奖励.yaml', TASK_REWARD_SCHEMA) as { '任务奖励': { '物品奖励': Record<string, string>; '属性点奖励': Record<string, Record<string, string>>; '兑换点奖励': Record<string, Record<string, number>> } }
+  const rewardYaml = loadAndValidate('01-数值参考/经济数值/任务奖励.yaml', TASK_REWARD_SCHEMA) as { '任务奖励': { '物品奖励': Record<string, string | Record<string, string>>; '属性点奖励': Record<string, Record<string, string>>; '兑换点奖励': Record<string, Record<string, number>> } }
   const promoYamlRaw = loadAndValidate('01-数值参考/经济数值/晋级消耗.yaml', PROMOTION_SCHEMA)
   const promoYaml = promoYamlRaw['晋级消耗'] as Record<string, number>
   const priceYaml = loadAndValidate('01-数值参考/经济数值/兑换价格.yaml', EXCHANGE_PRICE_SCHEMA) as { '兑换价格': { '装备价格': Record<string, Record<string, number>>; '技能价格': Record<string, Record<string, number>>; '服务价格': Record<string, string> } }
@@ -435,7 +435,7 @@ function parseEconomy(): Economy {
   return {
     taskRewards: {
       itemRarityRules: {
-        mainQuest: String(rewardYaml['任务奖励']['物品奖励']['主线任务']['品级'] || ''),
+        mainQuest: String((rewardYaml['任务奖励']['物品奖励']['主线任务'] as Record<string, string>)['品级'] || ''),
         sideQuest: String(rewardYaml['任务奖励']['物品奖励']['支线任务品级投掷规则'] || ''),
         hiddenQuest: String(rewardYaml['任务奖励']['物品奖励']['隐藏任务品级投掷规则'] || ''),
       },
