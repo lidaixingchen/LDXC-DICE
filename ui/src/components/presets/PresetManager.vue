@@ -303,7 +303,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
   color: var(--acu-accent);
 }
@@ -315,9 +315,332 @@ onMounted(() => {
   cursor: pointer;
   font-size: 16px;
   padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  &:hover {
+    background: var(--acu-accent-light);
+    color: var(--acu-accent);
+  }
+}
+
+.preset-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.dice-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--acu-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--acu-border);
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s;
+  &:hover {
+    background: var(--acu-accent-light);
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+  }
+}
+
+.preset-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
+  font-size: 12px;
+  outline: none;
+  &:focus {
+    border-color: var(--acu-accent);
+  }
+  &::placeholder {
+    color: var(--acu-text-sub);
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.toolbar-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s;
+  &:hover {
+    background: var(--acu-accent-light);
+    border-color: var(--acu-accent);
+    color: var(--acu-accent);
+  }
+}
+
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preset-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  cursor: pointer;
+  transition: all 0.15s;
+  &:hover {
+    border-color: var(--acu-accent);
+    background: var(--acu-accent-light);
+  }
+}
+
+.preset-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preset-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acu-text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-desc {
+  font-size: 11px;
+  color: var(--acu-text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  button {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--acu-text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s;
+    &:hover {
+      background: var(--acu-accent-light);
+      color: var(--acu-accent);
+    }
+    &.danger:hover {
+      background: var(--acu-error-bg);
+      color: var(--acu-error-text);
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--acu-text-sub);
+  gap: 8px;
+  i {
+    font-size: 36px;
+    opacity: 0.3;
+  }
+  span {
+    font-size: 12px;
+  }
+}
+
+.editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--acu-z-modal, 31100);
+}
+
+.editor-modal {
+  background: var(--acu-bg-panel);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--acu-border);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--acu-text-main);
+}
+
+.editor-close {
+  background: transparent;
+  border: none;
+  color: var(--acu-text-sub);
+  cursor: pointer;
+  font-size: 14px;
   &:hover {
     color: var(--acu-accent);
   }
 }
 
+.editor-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.form-row {
+  margin-bottom: 12px;
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--acu-text-sub);
+    margin-bottom: 4px;
+  }
+}
+
+.form-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
+  font-size: 12px;
+  outline: none;
+  &:focus {
+    border-color: var(--acu-accent);
+  }
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  outline: none;
+  &:focus {
+    border-color: var(--acu-accent);
+  }
+}
+
+.error-message {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--acu-error-bg);
+  color: var(--acu-error-text);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.editor-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--acu-border);
+}
+
+.footer-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s;
+  &:hover {
+    background: var(--acu-accent-light);
+    border-color: var(--acu-accent);
+  }
+  &.primary {
+    background: var(--acu-accent);
+    color: var(--acu-button-text-on-accent, #fff);
+    border-color: var(--acu-accent);
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+}
 </style>

@@ -542,8 +542,8 @@ onMounted(() => {
   }
 
   &.custom {
-    background: var(--acu-success-bg, rgba(63, 185, 80, 0.15));
-    color: var(--acu-success, #3fb950);
+    background: var(--acu-success-bg);
+    color: var(--acu-success-text);
   }
 }
 
@@ -557,16 +557,16 @@ onMounted(() => {
   height: 28px;
   border: none;
   border-radius: 4px;
-  background: var(--acu-bg-panel);
+  background: transparent;
   color: var(--acu-text-sub);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  
+
   &:hover {
-    background: var(--acu-btn-hover);
+    background: var(--acu-accent-light);
     color: var(--acu-accent);
   }
   
@@ -803,24 +803,24 @@ onMounted(() => {
   padding: 8px 16px;
   border: 1px solid var(--acu-border);
   border-radius: 6px;
-  background: var(--acu-bg-panel);
+  background: var(--acu-bg-header);
   color: var(--acu-text-main);
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s;
-  
+
   &:hover {
-    background: var(--acu-btn-hover);
+    background: var(--acu-accent-light);
+    border-color: var(--acu-accent);
   }
-  
+
   &.primary {
     background: var(--acu-accent);
     color: var(--acu-button-text-on-accent, #fff);
     border-color: var(--acu-accent);
-    
+
     &:hover {
-      background: var(--acu-btn-hover);
-      color: var(--acu-accent);
+      opacity: 0.9;
     }
   }
 }

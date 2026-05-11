@@ -42,10 +42,10 @@ const filteredLogs = computed(() => {
 });
 
 const levelColors: Record<LogLevel, string> = {
-  debug: '#9e9e9e',
-  info: '#2196f3',
-  warn: '#ff9800',
-  error: '#f44336',
+  debug: 'var(--acu-text-sub)',
+  info: 'var(--acu-accent)',
+  warn: 'var(--acu-warning-text)',
+  error: 'var(--acu-error-text)',
 };
 
 function loadLogs() {
@@ -300,8 +300,8 @@ onUnmounted(() => {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: var(--acu-bg-panel, #1e1e1e);
-  color: var(--acu-text-main, #d4d4d4);
+  background: var(--acu-bg-panel);
+  color: var(--acu-text-main);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 12px;
 }
@@ -311,13 +311,13 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  border-bottom: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-bg-header, #252526);
+  border-bottom: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
 }
 
 .acu-panel-title {
   font-weight: 700;
-  color: var(--acu-text-main, #ffffff);
+  color: var(--acu-text-main);
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -328,19 +328,19 @@ onUnmounted(() => {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 3px;
-  background: var(--acu-btn-bg, #5a5a5a);
-  color: var(--acu-text-sub, #999);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-sub);
 
   &.enabled {
-    background: var(--acu-success-bg, #1e4620);
-    color: var(--acu-success-text, #89d185);
+    background: var(--acu-success-bg);
+    color: var(--acu-success-text);
   }
 }
 
 .acu-close-btn {
   background: transparent;
   border: none;
-  color: var(--acu-text-sub, #999);
+  color: var(--acu-text-sub);
   cursor: pointer;
   width: 28px;
   height: 28px;
@@ -349,8 +349,8 @@ onUnmounted(() => {
   justify-content: center;
   border-radius: 4px;
   &:hover {
-    background: var(--acu-btn-bg, #3c3c3c);
-    color: #fff;
+    background: var(--acu-accent-light);
+    color: var(--acu-text-main);
   }
 }
 
@@ -358,16 +358,16 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-bg-header, #252526);
+  border-bottom: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
 }
 
 .acu-toolbar-btn {
   padding: 6px 12px;
   border-radius: 4px;
-  border: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-btn-bg, #3c3c3c);
-  color: var(--acu-text-main, #d4d4d4);
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
   cursor: pointer;
   font-size: 12px;
   display: flex;
@@ -375,22 +375,22 @@ onUnmounted(() => {
   gap: 6px;
 
   &:hover {
-    background: var(--acu-btn-hover, #4a4a4a);
+    background: var(--acu-accent-light);
   }
 
   &.active {
-    background: var(--acu-success-bg, #1e4620);
-    border-color: var(--acu-success-text, #89d185);
-    color: var(--acu-success-text, #89d185);
+    background: var(--acu-success-bg);
+    border-color: var(--acu-success-text);
+    color: var(--acu-success-text);
   }
 }
 
 .acu-filter-select {
   padding: 6px 8px;
   border-radius: 4px;
-  border: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-btn-bg, #3c3c3c);
-  color: var(--acu-text-main, #d4d4d4);
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
   font-size: 12px;
   cursor: pointer;
 }
@@ -400,13 +400,13 @@ onUnmounted(() => {
   height: 32px;
   padding: 0 12px;
   border-radius: 4px;
-  border: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-btn-bg, #3c3c3c);
-  color: var(--acu-text-main, #d4d4d4);
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
+  color: var(--acu-text-main);
   font-size: 12px;
 
   &::placeholder {
-    color: var(--acu-text-sub, #666);
+    color: var(--acu-text-sub);
   }
 }
 
@@ -420,16 +420,16 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--acu-border, #3c3c3c);
+  border: 1px solid var(--acu-border);
 }
 
 .acu-panel-label {
   padding: 6px 12px;
-  background: var(--acu-bg-header, #252526);
-  border-bottom: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-bg-header);
+  border-bottom: 1px solid var(--acu-border);
   font-size: 11px;
   font-weight: 600;
-  color: var(--acu-text-sub, #999);
+  color: var(--acu-text-sub);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -438,11 +438,11 @@ onUnmounted(() => {
 .acu-clear-btn {
   background: transparent;
   border: none;
-  color: var(--acu-text-sub, #666);
+  color: var(--acu-text-sub);
   cursor: pointer;
   font-size: 10px;
   &:hover {
-    color: var(--acu-text-main, #d4d4d4);
+    color: var(--acu-text-main);
   }
 }
 
@@ -458,26 +458,26 @@ onUnmounted(() => {
   margin-bottom: 2px;
 
   &.debug {
-    color: var(--acu-text-sub, #9e9e9e);
+    color: var(--acu-text-sub);
   }
 
   &.info {
-    color: var(--acu-text-main, #d4d4d4);
+    color: var(--acu-text-main);
   }
 
   &.warn {
-    background: var(--acu-warning-bg, #3a2a1a);
-    color: var(--acu-warning-text, #ff9800);
+    background: var(--acu-warning-bg);
+    color: var(--acu-warning-text);
   }
 
   &.error {
-    background: var(--acu-error-bg, #3a1a1a);
-    color: var(--acu-error-text, #f44336);
+    background: var(--acu-error-bg);
+    color: var(--acu-error-text);
   }
 }
 
 .acu-log-time {
-  color: var(--acu-text-sub, #666);
+  color: var(--acu-text-sub);
   margin-right: 8px;
 }
 
@@ -487,7 +487,7 @@ onUnmounted(() => {
 }
 
 .acu-log-source {
-  color: var(--acu-accent, #569cd6);
+  color: var(--acu-accent);
   margin-right: 4px;
 }
 
@@ -498,7 +498,7 @@ onUnmounted(() => {
 .acu-log-data {
   margin: 4px 0 0 16px;
   padding: 8px;
-  background: var(--acu-card-bg, #2d2d2d);
+  background: var(--acu-bg-header);
   border-radius: 4px;
   font-size: 11px;
   white-space: pre-wrap;
@@ -507,7 +507,7 @@ onUnmounted(() => {
 
 .acu-empty-logs {
   text-align: center;
-  color: var(--acu-text-sub, #666);
+  color: var(--acu-text-sub);
   padding: 20px;
 }
 
@@ -515,32 +515,32 @@ onUnmounted(() => {
   width: 350px;
   display: flex;
   flex-direction: column;
-  background: var(--acu-bg-panel, #1e1e1e);
+  background: var(--acu-bg-panel);
 }
 
 .acu-output-container {
   flex: 1;
   overflow-y: auto;
   padding: 8px;
-  background: var(--acu-bg-nav, #0d0d0d);
+  background: var(--acu-bg-nav);
 }
 
 .acu-output-line {
   padding: 2px 0;
   white-space: pre-wrap;
   word-break: break-all;
-  color: var(--acu-text-main, #d4d4d4);
+  color: var(--acu-text-main);
 }
 
 .acu-command-input {
   display: flex;
   align-items: center;
   padding: 8px;
-  background: var(--acu-bg-header, #252526);
-  border: 1px solid var(--acu-border, #3c3c3c);
+  background: var(--acu-bg-header);
+  border: 1px solid var(--acu-border);
 
   .acu-prompt {
-    color: var(--acu-success-text, #89d185);
+    color: var(--acu-success-text);
     margin-right: 8px;
     font-weight: 600;
   }
@@ -549,20 +549,20 @@ onUnmounted(() => {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--acu-text-main, #d4d4d4);
+    color: var(--acu-text-main);
     font-size: 12px;
     font-family: inherit;
     outline: none;
 
     &::placeholder {
-      color: var(--acu-text-sub, #666);
+      color: var(--acu-text-sub);
     }
   }
 }
 
 .acu-commands-panel {
-  border: 1px solid var(--acu-border, #3c3c3c);
-  background: var(--acu-bg-header, #252526);
+  border: 1px solid var(--acu-border);
+  background: var(--acu-bg-header);
   max-height: 120px;
   overflow-y: auto;
 }
@@ -579,17 +579,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background: var(--acu-btn-bg, #3c3c3c);
+  background: var(--acu-bg-header);
   border-radius: 4px;
   font-size: 11px;
 }
 
 .acu-command-name {
-  color: var(--acu-accent, #569cd6);
+  color: var(--acu-accent);
   font-weight: 600;
 }
 
 .acu-command-desc {
-  color: var(--acu-text-sub, #999);
+  color: var(--acu-text-sub);
 }
 </style>
