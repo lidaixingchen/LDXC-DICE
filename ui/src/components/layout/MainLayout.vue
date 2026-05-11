@@ -404,12 +404,12 @@ onUnmounted(() => {
       <i class="fa-solid fa-table"></i><span>骰子系统助手 ({{ tables.length }})</span>
     </div>
     <!-- 4. 导航栏 (包含动作栏位置控制) -->
-    <div v-else class="acu-nav-container" :class="{ 'acu-pos-top': legacySettings.actionsPosition === 'top' }">
+    <div v-else class="acu-nav-container" :class="{ 'acu-pos-top': legacySettings.actionsPosition === 'top', 'acu-split-mode': legacySettings.splitNavActions }">
       <button
         v-if="!legacySettings.hideDashboardButton"
         class="acu-nav-btn"
         :class="{ active: showDashboard }"
-        style="order: 1"
+        style="order: 0"
         @click="handleNavClick('__dashboard__')"
       >
         <i class="fa-solid fa-chart-line"></i><span>仪表盘</span>
@@ -426,7 +426,7 @@ onUnmounted(() => {
         <i class="fa-solid" :class="item.icon"></i><span>{{ item.label }}</span>
       </button>
 
-      <div class="acu-actions-group" style="order: 9999">
+      <div class="acu-actions-group" style="order: 1">
         <button
           v-for="btn in ACTION_BUTTONS"
           :key="btn.id"
@@ -591,6 +591,17 @@ onUnmounted(() => {
       margin-bottom: 6px;
       padding-top: 0;
       padding-bottom: 8px;
+    }
+  }
+
+  /* 分行模式：功能按钮在上，表格按钮在下 */
+  &.acu-split-mode {
+    .acu-actions-group {
+      order: -1 !important;
+      grid-column: 1 / -1;
+      border-bottom: 1px dashed var(--acu-border);
+      margin-bottom: 4px;
+      padding-bottom: 6px;
     }
   }
 }

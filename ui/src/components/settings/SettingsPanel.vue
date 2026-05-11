@@ -45,9 +45,17 @@ const activeSection = ref('appearance');
 const tables = computed(() => {
   const rawData = getTableData();
   if (!rawData) return [];
-  return Object.keys(rawData)
+  const sheetTables = Object.keys(rawData)
     .filter(k => k.startsWith('sheet_'))
     .map(k => ({ key: k, name: rawData[k].name }));
+  const orderKeys = settings.value.tableOrderKeys;
+  if (!orderKeys || orderKeys.length === 0) return sheetTables;
+  const orderMap = new Map(orderKeys.map((k, i) => [k, i]));
+  return [...sheetTables].sort((a, b) => {
+    const ia = orderMap.get(a.key) ?? 999;
+    const ib = orderMap.get(b.key) ?? 999;
+    return ia - ib;
+  });
 });
 
 interface RegexPreset {
@@ -774,6 +782,17 @@ onUnmounted(() => {
               <option value="bottom">底部停靠</option>
               <option value="top">顶部停靠</option>
             </select>
+          </div>
+          <div class="acu-setting-row acu-setting-row-toggle">
+            <label>功能按钮分行显示</label>
+            <label class="acu-toggle">
+              <input
+                type="checkbox"
+                :checked="settings.splitNavActions"
+                @change="updateLegacy({ splitNavActions: ($event.target as any).checked })"
+              />
+              <span class="acu-toggle-slider"></span>
+            </label>
           </div>
           <div class="acu-setting-row">
             <label>面板弹出方向</label>

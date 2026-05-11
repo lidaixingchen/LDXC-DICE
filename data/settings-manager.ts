@@ -40,6 +40,7 @@ export interface LegacySettings {
   chartCardSize: number;
   showHorizontalScrollbar: boolean;
   tableReverseKeys: string[];
+  splitNavActions: boolean;
 }
 
 export interface GeneralSettings {
@@ -200,6 +201,7 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     chartCardSize: 200,
     showHorizontalScrollbar: true,
     tableReverseKeys: [],
+    splitNavActions: true,
   },
   general: {
     defaultPresetId: 'aidm_standard_check',
@@ -377,6 +379,7 @@ export class SettingsManager {
     if (Array.isArray(raw.tableReverseKeys)) {
       normalized.tableReverseKeys = raw.tableReverseKeys.filter(v => typeof v === 'string') as string[];
     }
+    if (typeof raw.splitNavActions === 'boolean') normalized.splitNavActions = raw.splitNavActions;
 
     return normalized;
   }
