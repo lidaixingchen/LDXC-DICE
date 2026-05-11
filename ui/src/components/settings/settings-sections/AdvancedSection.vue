@@ -12,6 +12,7 @@ const emit = defineEmits<{
   (e: 'updateValidation', field: keyof ValidationSettings, value: ValidationSettings[keyof ValidationSettings]): void;
   (e: 'updateAdvanced', field: keyof AdvancedSettings, value: AdvancedSettings[keyof AdvancedSettings]): void;
   (e: 'clearCache'): void;
+  (e: 'resetSettings'): void;
 }>();
 </script>
 
@@ -109,7 +110,10 @@ const emit = defineEmits<{
     </div>
 
     <div class="acu-group-label">系统维护</div>
-    <button class="acu-full-btn danger" @click="emit('clearCache')">
+    <button class="acu-full-btn" @click="emit('resetSettings')">
+      <i class="fa-solid fa-rotate-left"></i> 重置所有设置
+    </button>
+    <button class="acu-full-btn danger" style="margin-top: 6px" @click="emit('clearCache')">
       <i class="fa-solid fa-bomb"></i> 彻底重置系统缓存
     </button>
   </div>

@@ -495,7 +495,7 @@ onMounted(() => {
 }
 
 .acu-preset-item {
-  background: var(--acu-card-bg);
+  background: var(--acu-bg-header);
   border: 1px solid var(--acu-border);
   border-radius: 8px;
   padding: 12px;
@@ -537,13 +537,13 @@ onMounted(() => {
   font-weight: 500;
   
   &.builtin {
-    background: #d1ecf1;
-    color: #0c5460;
+    background: var(--acu-accent-light);
+    color: var(--acu-accent);
   }
-  
+
   &.custom {
-    background: #d4edda;
-    color: #155724;
+    background: var(--acu-success-bg, rgba(63, 185, 80, 0.15));
+    color: var(--acu-success, #3fb950);
   }
 }
 
@@ -557,7 +557,7 @@ onMounted(() => {
   height: 28px;
   border: none;
   border-radius: 4px;
-  background: var(--acu-btn-bg);
+  background: var(--acu-bg-panel);
   color: var(--acu-text-sub);
   cursor: pointer;
   display: flex;
@@ -647,7 +647,7 @@ onMounted(() => {
     cursor: pointer;
     
     &:hover {
-      background: var(--acu-btn-bg);
+      background: var(--acu-bg-panel);
       color: var(--acu-text-main);
     }
   }
@@ -673,7 +673,7 @@ onMounted(() => {
     padding: 8px 12px;
     border: 1px solid var(--acu-border);
     border-radius: 6px;
-    background: var(--acu-input-bg);
+    background: var(--acu-bg-header);
     color: var(--acu-text-main);
     font-size: 13px;
     
@@ -729,7 +729,7 @@ onMounted(() => {
   padding: 4px 12px;
   border: 1px solid var(--acu-border);
   border-radius: 4px;
-  background: var(--acu-btn-bg);
+  background: var(--acu-bg-panel);
   color: var(--acu-text-main);
   cursor: pointer;
   font-size: 11px;
@@ -803,7 +803,7 @@ onMounted(() => {
   padding: 8px 16px;
   border: 1px solid var(--acu-border);
   border-radius: 6px;
-  background: var(--acu-btn-bg);
+  background: var(--acu-bg-panel);
   color: var(--acu-text-main);
   cursor: pointer;
   font-size: 13px;

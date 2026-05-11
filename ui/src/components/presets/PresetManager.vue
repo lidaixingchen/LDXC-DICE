@@ -171,8 +171,8 @@ onMounted(() => {
 
 <template>
   <div class="preset-manager">
-    <div class="preset-header">
-      <div class="preset-title">
+    <div class="acu-panel-header">
+      <div class="acu-panel-title">
         <i class="fa-solid fa-sliders-h"></i>
         <span>预设管理器</span>
       </div>
@@ -286,37 +286,37 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--acu-bg-panel, #1a1a1e);
+  background: var(--acu-bg-panel);
   overflow: hidden;
 }
 
-.preset-header {
+.acu-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background: var(--acu-bg-header, #222);
-  border-bottom: 1px solid var(--acu-border, #333);
+  background: var(--acu-bg-header);
+  border-bottom: 1px solid var(--acu-border);
 }
 
-.preset-title {
+.acu-panel-title {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 700;
   font-size: 13px;
-  color: var(--acu-accent, #8b5cf6);
+  color: var(--acu-accent);
 }
 
 .acu-close-btn {
   background: transparent;
   border: none;
-  color: var(--acu-text-sub, #aaa);
+  color: var(--acu-text-sub);
   cursor: pointer;
   font-size: 16px;
   padding: 4px;
   &:hover {
-    color: var(--acu-accent, #8b5cf6);
+    color: var(--acu-accent);
   }
 }
 

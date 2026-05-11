@@ -34,6 +34,12 @@ export interface LegacySettings {
   actionButtonSize: number;
   actionButtonIconSize: number;
   hideDashboardButton: boolean;
+  hideDiceButton: boolean;
+  hideChangesButton: boolean;
+  hideMvuButton: boolean;
+  hideFavoritesButton: boolean;
+  hideGenerateButton: boolean;
+  hideSaveButton: boolean;
   hideDiceResultFromUser: boolean;
   hiddenTableKeys: string[];
   tableOrderKeys: string[];
@@ -195,8 +201,14 @@ const DEFAULT_SETTINGS: DiceSystemSettings = {
     actionButtonSize: 30,
     actionButtonIconSize: 12,
     hideDashboardButton: false,
+    hideDiceButton: false,
+    hideChangesButton: false,
+    hideMvuButton: false,
+    hideFavoritesButton: false,
+    hideGenerateButton: false,
+    hideSaveButton: false,
     hideDiceResultFromUser: false,
-    hiddenTableKeys: [],
+    hiddenTableKeys: ['sheet_options'],
     tableOrderKeys: [],
     tableFontSize: 13,
     chartCardSize: 200,
@@ -371,6 +383,12 @@ export class SettingsManager {
     if (typeof raw.actionButtonSize === 'number') normalized.actionButtonSize = raw.actionButtonSize;
     if (typeof raw.actionButtonIconSize === 'number') normalized.actionButtonIconSize = raw.actionButtonIconSize;
     if (typeof raw.hideDashboardButton === 'boolean') normalized.hideDashboardButton = raw.hideDashboardButton;
+    if (typeof raw.hideDiceButton === 'boolean') normalized.hideDiceButton = raw.hideDiceButton;
+    if (typeof raw.hideChangesButton === 'boolean') normalized.hideChangesButton = raw.hideChangesButton;
+    if (typeof raw.hideMvuButton === 'boolean') normalized.hideMvuButton = raw.hideMvuButton;
+    if (typeof raw.hideFavoritesButton === 'boolean') normalized.hideFavoritesButton = raw.hideFavoritesButton;
+    if (typeof raw.hideGenerateButton === 'boolean') normalized.hideGenerateButton = raw.hideGenerateButton;
+    if (typeof raw.hideSaveButton === 'boolean') normalized.hideSaveButton = raw.hideSaveButton;
     if (Array.isArray(raw.hiddenTableKeys)) {
       normalized.hiddenTableKeys = raw.hiddenTableKeys.filter(v => typeof v === 'string') as string[];
     }

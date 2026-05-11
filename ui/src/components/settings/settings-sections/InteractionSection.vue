@@ -110,6 +110,48 @@ const emit = defineEmits<{
       </label>
     </div>
     <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏掷骰按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideDiceButton" @change="emit('updateLegacy', { hideDiceButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏审核按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideChangesButton" @change="emit('updateLegacy', { hideChangesButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏变量按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideMvuButton" @change="emit('updateLegacy', { hideMvuButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏收藏按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideFavoritesButton" @change="emit('updateLegacy', { hideFavoritesButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏生成按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideGenerateButton" @change="emit('updateLegacy', { hideGenerateButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
+      <label>隐藏存档按钮</label>
+      <label class="acu-toggle">
+        <input type="checkbox" :checked="settings.hideSaveButton" @change="emit('updateLegacy', { hideSaveButton: ($event.target as HTMLInputElement).checked })" />
+        <span class="acu-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="acu-setting-row acu-setting-row-toggle">
       <label>屏蔽数据库弹窗</label>
       <label class="acu-toggle">
         <input type="checkbox" :checked="settings.muteDatabaseToasts" @change="emit('updateLegacy', { muteDatabaseToasts: ($event.target as HTMLInputElement).checked })" />

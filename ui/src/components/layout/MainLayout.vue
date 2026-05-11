@@ -290,8 +290,17 @@ const gridCols = computed(() => {
 
 const navItems = computed(() => {
   const hidden = new Set(legacySettings.value.hiddenTableKeys || []);
-  const hideDashboard = legacySettings.value.hideDashboardButton;
-  const special = SPECIAL_NAV_ITEMS.filter(i => !hidden.has(i.key) && !(hideDashboard && i.key === '__dashboard__')).map(i => ({ ...i, isTable: false }));
+  const s = legacySettings.value;
+  const specialHidden: Record<string, boolean> = {
+    '__dashboard__': s.hideDashboardButton,
+    '__dice__': s.hideDiceButton,
+    '__changes__': s.hideChangesButton,
+    '__mvu__': s.hideMvuButton,
+    '__favorites__': s.hideFavoritesButton,
+    '__generate__': s.hideGenerateButton,
+    '__save__': s.hideSaveButton,
+  };
+  const special = SPECIAL_NAV_ITEMS.filter(i => !hidden.has(i.key) && !specialHidden[i.key]).map(i => ({ ...i, isTable: false }));
   const tableItems = tables.value.filter(t => !hidden.has(t.key)).map(t => ({ ...t, isTable: true, label: t.name }));
   const all = [...special, ...tableItems];
   if (legacySettings.value.tableOrderKeys?.length) {

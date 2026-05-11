@@ -65,26 +65,32 @@ const tables = computed(() => {
 
 const allTableNames = computed(() => tables.value.map(t => t.name));
 
-// --- 管理器 overlay 状态 ---
-const showPresetManager = ref(false);
-const showInteractionManager = ref(false);
-const showRegexManager = ref(false);
-const showAttributeRuleManager = ref(false);
-const showBlacklistManager = ref(false);
-const showBookmarkManager = ref(false);
-const showDebugConsole = ref(false);
+// --- 管理器状态 ---
+const activeManager = ref<string | null>(null);
+const previousSection = ref('managers');
 
 function openAdvancedManager(type: string) {
-  switch (type) {
-    case '预设管理': showPresetManager.value = true; break;
-    case '交互规则': showInteractionManager.value = true; break;
-    case '正则规则': showRegexManager.value = true; break;
-    case '属性规则': showAttributeRuleManager.value = true; break;
-    case '变量过滤': showBlacklistManager.value = true; break;
-    case '书签管理': showBookmarkManager.value = true; break;
-    case 'Debug': showDebugConsole.value = true; break;
-    default: alert(`即将打开 ${type} 管理器\n此功能需要单独的管理器组件支持`);
+  const managerMap: Record<string, string> = {
+    '预设管理': 'preset',
+    '交互规则': 'interaction',
+    '正则规则': 'regex',
+    '属性规则': 'attribute',
+    '变量过滤': 'blacklist',
+    '书签管理': 'bookmark',
+    'Debug': 'debug',
+  };
+  if (managerMap[type]) {
+    previousSection.value = activeSection.value;
+    activeManager.value = managerMap[type];
+    activeSection.value = 'manager-view';
+  } else {
+    alert(`即将打开 ${type} 管理器\n此功能需要单独的管理器组件支持`);
   }
+}
+
+function closeManager() {
+  activeManager.value = null;
+  activeSection.value = previousSection.value;
 }
 
 // --- 设置同步 ---
@@ -141,7 +147,14 @@ function clearSystemCache() {
   }
 }
 
-const validSections = ['appearance', 'layout', 'interaction', 'data', 'managers', 'advanced'];
+function resetAllSettings() {
+  if (window.confirm('确认重置所有设置为默认值？')) {
+    settingsManager.resetAll();
+    syncAll();
+  }
+}
+
+const validSections = ['appearance', 'layout', 'interaction', 'data', 'managers', 'advanced', 'manager-view'];
 
 onMounted(() => {
   if (props.requestedSection && validSections.includes(props.requestedSection)) {
@@ -164,117 +177,104 @@ onActivated(() => {
       <button class="acu-close-btn" @click="emit('close')"><i class="fa-solid fa-times"></i></button>
     </div>
 
-    <div class="acu-panel-content acu-settings-layout acu-scroll-y">
-      <!-- 侧边导航 -->
-      <aside class="acu-settings-nav">
-        <button
-          v-for="item in [
-            { k: 'appearance', l: '外观', i: 'fa-palette' },
-            { k: 'layout', l: '布局', i: 'fa-th-large' },
-            { k: 'interaction', l: '交互', i: 'fa-gamepad' },
-            { k: 'data', l: '数据', i: 'fa-database' },
-            { k: 'managers', l: '管理器', i: 'fa-folder-open' },
-            { k: 'advanced', l: '高级', i: 'fa-cog' },
-          ]"
-          :key="item.k"
-          :class="{ active: activeSection === item.k }"
-          @click="activeSection = item.k"
-        >
-          <i class="fa-solid" :class="item.i"></i> {{ item.l }}
-        </button>
-      </aside>
+    <div class="acu-panel-content acu-scroll-y">
+      <!-- 管理器视图：替换整个设置内容 -->
+      <div v-if="activeManager" class="acu-manager-view">
+        <PresetManager v-if="activeManager === 'preset'" @close="closeManager" />
+        <InteractionManager v-else-if="activeManager === 'interaction'" @close="closeManager" />
+        <RegexManager v-else-if="activeManager === 'regex'" @close="closeManager" />
+        <AttributeRuleManager v-else-if="activeManager === 'attribute'" @close="closeManager" />
+        <BlacklistManager v-else-if="activeManager === 'blacklist'" @close="closeManager" />
+        <BookmarkManager v-else-if="activeManager === 'bookmark'" @close="closeManager" />
+        <DebugConsole v-else-if="activeManager === 'debug'" @close="closeManager" />
+      </div>
 
-      <!-- 主配置区 -->
-      <main class="acu-settings-main">
-        <AppearanceSection
-          v-if="activeSection === 'appearance'"
-          :settings="settings"
-          :general="general"
-          :display="display"
-          @update-legacy="updateLegacy"
-          @update-display="updateDisplayField"
-          @update-general="updateGeneralField"
-        />
+      <!-- 设置布局：侧边导航 + 主配置区 -->
+      <div v-else class="acu-settings-layout">
+        <aside class="acu-settings-nav">
+          <button
+            v-for="item in [
+              { k: 'appearance', l: '外观', i: 'fa-palette' },
+              { k: 'layout', l: '布局', i: 'fa-th-large' },
+              { k: 'interaction', l: '交互', i: 'fa-gamepad' },
+              { k: 'data', l: '数据', i: 'fa-database' },
+              { k: 'managers', l: '管理器', i: 'fa-folder-open' },
+              { k: 'advanced', l: '高级', i: 'fa-cog' },
+            ]"
+            :key="item.k"
+            :class="{ active: activeSection === item.k }"
+            @click="activeSection = item.k"
+          >
+            <i class="fa-solid" :class="item.i"></i> {{ item.l }}
+          </button>
+        </aside>
 
-        <LayoutSection
-          v-if="activeSection === 'layout'"
-          :settings="settings"
-          :behavior="behavior"
-          :all-table-names="allTableNames"
-          @update-legacy="updateLegacy"
-          @update-behavior="updateBehaviorField"
-        />
+        <main class="acu-settings-main">
+          <AppearanceSection
+            v-if="activeSection === 'appearance'"
+            :settings="settings"
+            :general="general"
+            :display="display"
+            @update-legacy="updateLegacy"
+            @update-display="updateDisplayField"
+            @update-general="updateGeneralField"
+          />
 
-        <InteractionSection
-          v-if="activeSection === 'interaction'"
-          :settings="settings"
-          :display="display"
-          :behavior="behavior"
-          @update-legacy="updateLegacy"
-          @update-display="updateDisplayField"
-          @update-behavior="updateBehaviorField"
-        />
+          <LayoutSection
+            v-if="activeSection === 'layout'"
+            :settings="settings"
+            :behavior="behavior"
+            :all-table-names="allTableNames"
+            @update-legacy="updateLegacy"
+            @update-behavior="updateBehaviorField"
+          />
 
-        <DataSection
-          v-if="activeSection === 'data'"
-          :settings="settings"
-          :tables="tables"
-          @update-legacy="updateLegacy"
-        />
+          <InteractionSection
+            v-if="activeSection === 'interaction'"
+            :settings="settings"
+            :display="display"
+            :behavior="behavior"
+            @update-legacy="updateLegacy"
+            @update-display="updateDisplayField"
+            @update-behavior="updateBehaviorField"
+          />
 
-        <ManagersSection
-          v-if="activeSection === 'managers'"
-          @open-manager="openAdvancedManager"
-        />
+          <DataSection
+            v-if="activeSection === 'data'"
+            :settings="settings"
+            :tables="tables"
+            @update-legacy="updateLegacy"
+          />
 
-        <AdvancedSection
-          v-if="activeSection === 'advanced'"
-          :general="general"
-          :validation="validation"
-          :advanced="advanced"
-          @update-general="updateGeneralField"
-          @update-validation="updateValidationField"
-          @update-advanced="updateAdvancedField"
-          @clear-cache="clearSystemCache"
-        />
-      </main>
-    </div>
+          <ManagersSection
+            v-if="activeSection === 'managers'"
+            @open-manager="openAdvancedManager"
+          />
 
-    <!-- 管理器全屏 overlay -->
-    <div v-if="showPresetManager" class="acu-manager-overlay">
-      <PresetManager @close="showPresetManager = false" />
-    </div>
-    <div v-if="showInteractionManager" class="acu-manager-overlay">
-      <InteractionManager @close="showInteractionManager = false" />
-    </div>
-    <div v-if="showRegexManager" class="acu-manager-overlay">
-      <RegexManager @close="showRegexManager = false" />
-    </div>
-    <div v-if="showAttributeRuleManager" class="acu-manager-overlay">
-      <AttributeRuleManager @close="showAttributeRuleManager = false" />
-    </div>
-    <div v-if="showBlacklistManager" class="acu-manager-overlay">
-      <BlacklistManager @close="showBlacklistManager = false" />
-    </div>
-    <div v-if="showBookmarkManager" class="acu-manager-overlay">
-      <BookmarkManager @close="showBookmarkManager = false" />
-    </div>
-    <div v-if="showDebugConsole" class="acu-manager-overlay">
-      <DebugConsole @close="showDebugConsole = false" />
+          <AdvancedSection
+            v-if="activeSection === 'advanced'"
+            :general="general"
+            :validation="validation"
+            :advanced="advanced"
+            @update-general="updateGeneralField"
+            @update-validation="updateValidationField"
+            @update-advanced="updateAdvancedField"
+            @clear-cache="clearSystemCache"
+            @reset-settings="resetAllSettings"
+          />
+        </main>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss">
-/* 管理器全屏遮罩 */
-.acu-manager-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--acu-z-modal, 31100);
-  background: var(--acu-bg-panel);
+/* 管理器视图 */
+.acu-manager-view {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* 统一设置面板宽度与内容区一致 */
