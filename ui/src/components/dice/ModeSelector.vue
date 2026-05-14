@@ -38,6 +38,8 @@ function selectMode(mode: CheckMode): void {
       class="acu-mode-btn"
       :class="{ active: currentMode === m.id }"
       :title="m.description"
+      :aria-label="m.description"
+      :aria-pressed="currentMode === m.id"
       @click="selectMode(m.id)"
     >
       <i :class="m.icon"></i>

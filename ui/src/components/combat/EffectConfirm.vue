@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue';
 import type { EffectResult } from '../../types';
 
 const props = defineProps<{
@@ -10,6 +11,8 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
+const dialogRef = ref<HTMLDivElement>();
+
 function handleConfirm(): void {
   emit('confirm');
 }
@@ -17,12 +20,36 @@ function handleConfirm(): void {
 function handleCancel(): void {
   emit('cancel');
 }
+
+function handleKeydown(e: KeyboardEvent): void {
+  if (e.key === 'Escape') {
+    handleCancel();
+    return;
+  }
+  if (e.key === 'Tab' && dialogRef.value) {
+    const focusable = dialogRef.value.querySelectorAll<HTMLElement>('button, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+}
+
+onMounted(() => {
+  dialogRef.value?.querySelector<HTMLElement>('.acu-btn-primary')?.focus();
+});
 </script>
 
 <template>
   <Teleport to="body">
-    <div class="acu-effect-confirm-overlay">
-      <div class="acu-effect-confirm-dialog">
+    <div class="acu-effect-confirm-overlay" @keydown="handleKeydown">
+      <div ref="dialogRef" class="acu-effect-confirm-dialog" role="dialog" aria-modal="true" aria-label="确认执行效果">
         <div class="acu-dialog-header">
           <span class="acu-dialog-icon">⚠️</span>
           <span class="acu-dialog-title">确认执行效果</span>
@@ -30,7 +57,7 @@ function handleCancel(): void {
 
         <div class="acu-dialog-body">
           <p class="acu-dialog-desc">以下效果将被执行，请确认：</p>
-          
+
           <div class="acu-effects-list">
             <div v-for="effect in effects" :key="effect.effectId" class="acu-effect-preview">
               <span class="acu-preview-icon">{{ effect.success ? '✓' : '✗' }}</span>

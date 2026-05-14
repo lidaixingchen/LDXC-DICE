@@ -671,6 +671,13 @@ export class SettingsManager {
     this.saveToStorage();
     this.notifyChange();
   }
+
+  destroy(): void {
+    if (this.autoSaveTimer) {
+      clearInterval(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+  }
 }
 
 export const settingsManager = new SettingsManager();

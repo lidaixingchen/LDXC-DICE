@@ -724,13 +724,7 @@ function handleImportSave(): void {
   }
 }
 
-function handleGenerateWorlds(): void {
-  // ToolsPanel will handle this via WorldGenerationService
-}
-
-function handleGenerateSkills(): void {
-  // ToolsPanel will handle this via WorldGenerationService
-}
+// handleGenerateWorlds / handleGenerateSkills — delegated to ToolsPanel via WorldGenerationService
 
 loadSaveSlots();
 
@@ -1088,7 +1082,7 @@ onUnmounted(() => {
         </div>
       </template>
 
-      <button class="acu-dice-roll-btn" :disabled="isRolling" @click="handleRoll">
+      <button class="acu-dice-roll-btn" :disabled="isRolling" aria-label="掷骰" @click="handleRoll">
         <template v-if="showResult && lastResult">
           <span class="acu-dice-result-value" :class="{ success: lastResult.success, failure: !lastResult.success }">{{ lastResult.total }}</span>
           <span class="acu-dice-result-badge" :class="{ success: lastResult.success, failure: !lastResult.success }">{{ lastResult.outcome }}</span>
@@ -1098,7 +1092,7 @@ onUnmounted(() => {
               {{ lastResult.margin > 0 ? '+' : '' }}{{ lastResult.margin }}
             </span>
           </template>
-          <button class="acu-dice-retry-btn" title="重新投骰" @click.stop="handleRetry">
+          <button class="acu-dice-retry-btn" title="重新投骰" aria-label="重新投骰" @click.stop="handleRetry">
             <i class="fa-solid fa-rotate-right"></i>
           </button>
         </template>

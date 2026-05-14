@@ -59,7 +59,7 @@ export function useDefenseCheck() {
     }, result, combatStatusContent);
 
     await sendToTextarea(content);
-    addCheckEntry(result, { initiatorName: '<user>' });
+    addCheckEntry(result, { initiatorName: params.initiatorName || '<user>' });
 
     return result;
   }

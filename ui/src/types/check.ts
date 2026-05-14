@@ -36,6 +36,7 @@ export interface CombatCheckExecuteParams {
   modifier: number | string;
   level: string;
   selectedTarget: string;
+  initiatorName?: string;
   shouldHideResult: boolean;
   combat: Ref<CombatState>;
   applyDamageToEnemy: (damage: number) => void;
@@ -51,6 +52,7 @@ export interface DefenseCheckExecuteParams {
   playerDefense: number | string;
   level: string;
   attackerName: string;
+  initiatorName?: string;
   shouldHideResult: boolean;
   combat: Ref<CombatState>;
   applyDamageToPlayer: (damage: number) => number;
