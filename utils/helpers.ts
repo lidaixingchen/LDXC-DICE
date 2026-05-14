@@ -246,7 +246,8 @@ export interface SheetData {
 /**
  * 遍历数据库数据中的所有 sheet（key 以 'sheet_' 开头且 content 有效）
  */
-export function* iterateSheets(data: Record<string, SheetData | undefined>): Generator<{ key: string; sheet: SheetData; headers: string[] }> {
+export function* iterateSheets(data?: Record<string, SheetData | undefined>): Generator<{ key: string; sheet: SheetData; headers: string[] }> {
+  if (!data) return;
   for (const sheetKey in data) {
     if (!sheetKey.startsWith('sheet_')) continue;
     const sheet = data[sheetKey];
