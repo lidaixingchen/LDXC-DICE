@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { settingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
+import { getSettingsManager, type LegacySettings, getFontValue } from '@data/settings-manager';
 import { clearThemeColorCache } from '../../utils/theme-utils';
 import { syncRulesToEngine } from '@core/validation/regex-sync';
 import { setDatabaseToastMute, injectToastStyles } from '../../utils/toast-manager';
@@ -48,15 +48,15 @@ const showPresetManager = ref(false);
 const showOpposedCheck = ref(false);
 const isOptionsCollapsed = ref(false);
 
-const legacySettings = ref<LegacySettings>(settingsManager.getLegacySettings());
-const displaySettings = ref(settingsManager.getGroup('display'));
-const advancedSettings = ref(settingsManager.getGroup('advanced'));
-const behaviorSettings = ref(settingsManager.getGroup('behavior'));
-settingsManager.onChange(() => {
-  legacySettings.value = { ...settingsManager.getLegacySettings() };
-  displaySettings.value = { ...settingsManager.getGroup('display') };
-  advancedSettings.value = { ...settingsManager.getGroup('advanced') };
-  behaviorSettings.value = { ...settingsManager.getGroup('behavior') };
+const legacySettings = ref<LegacySettings>(getSettingsManager().getLegacySettings());
+const displaySettings = ref(getSettingsManager().getGroup('display'));
+const advancedSettings = ref(getSettingsManager().getGroup('advanced'));
+const behaviorSettings = ref(getSettingsManager().getGroup('behavior'));
+getSettingsManager().onChange(() => {
+  legacySettings.value = { ...getSettingsManager().getLegacySettings() };
+  displaySettings.value = { ...getSettingsManager().getGroup('display') };
+  advancedSettings.value = { ...getSettingsManager().getGroup('advanced') };
+  behaviorSettings.value = { ...getSettingsManager().getGroup('behavior') };
 });
 
 // 自动隐藏面板

@@ -1,7 +1,7 @@
 import { ref, computed, readonly } from 'vue';
 import { getDatabaseApi } from '../../services/HostBridgeService';
-import { storageSyncBus } from '@utils/storage-sync';
-import { settingsManager } from '@data/settings-manager';
+import { getStorageSyncBus } from '@utils/storage-sync';
+import { getSettingsManager } from '@data/settings-manager';
 import { validateAllData, type RawData } from '@data/validation-executor';
 import type {
   DashboardData,
@@ -103,10 +103,10 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const allTables = ref<{ key: string; name: string }[]>([]);
 
-storageSyncBus.register(CHANGES_STORAGE_KEY, () => {
+getStorageSyncBus().register(CHANGES_STORAGE_KEY, () => {
   loadChanges();
 });
-storageSyncBus.register(DASHBOARD_VISIBLE_KEY, (newValue) => {
+getStorageSyncBus().register(DASHBOARD_VISIBLE_KEY, (newValue) => {
   isVisible.value = newValue === 'true';
 });
 
@@ -135,12 +135,12 @@ function getTableData(options?: { silent?: boolean }): Record<string, any> | nul
       }
     }
     // 加载时验证
-    if (data && settingsManager.shouldValidateOnLoad()) {
+    if (data && getSettingsManager().shouldValidateOnLoad()) {
       try {
         const errors = validateAllData(data as RawData);
         if (errors.length > 0) {
-          const isStrict = settingsManager.getValue('validation', 'strictMode');
-          const showWarnings = settingsManager.getValue('validation', 'showValidationWarnings');
+          const isStrict = getSettingsManager().getValue('validation', 'strictMode');
+          const showWarnings = getSettingsManager().getValue('validation', 'showValidationWarnings');
           if (isStrict) {
             console.error(`[Validation] 严格模式：发现 ${errors.length} 个验证错误`);
           } else if (showWarnings) {

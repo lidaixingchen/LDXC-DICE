@@ -1,5 +1,5 @@
 import type { ValidationRuleConfig } from './validation-presets';
-import { validationPresetManager } from './validation-preset-manager';
+import { getValidationPresetManager } from './validation-preset-manager';
 import { isNpcTableName } from '../utils/helpers';
 
 export interface ValidationError {
@@ -298,7 +298,7 @@ export function validateTable(
 ): ValidationError[] {
   if (!rawData) return [];
 
-  const tableRules = rules || validationPresetManager.getRulesByTable(tableName);
+  const tableRules = rules || getValidationPresetManager().getRulesByTable(tableName);
   if (tableRules.length === 0) return [];
 
   let targetSheet: TableData | null = null;
@@ -326,7 +326,7 @@ export function validateTable(
 export function validateAllData(rawData: RawData): ValidationError[] {
   if (!rawData) return [];
 
-  const rules = validationPresetManager.getEnabledRules();
+  const rules = getValidationPresetManager().getEnabledRules();
   if (rules.length === 0) return [];
 
   const allErrors: ValidationError[] = [];

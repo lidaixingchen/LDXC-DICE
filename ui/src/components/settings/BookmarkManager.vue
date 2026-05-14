@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { Bookmark, BookmarkGroup, BookmarkType } from '@data/bookmark-manager';
-import { bookmarkManager } from '@data/bookmark-manager';
+import { getBookmarkManager } from '@data/bookmark-manager';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -23,11 +23,11 @@ const showImportModal = ref(false);
 const importJson = ref('');
 const importError = ref('');
 
-const stats = computed(() => bookmarkManager.getStatistics());
+const stats = computed(() => getBookmarkManager().getStatistics());
 
 const filteredBookmarks = computed(() => {
   if (!searchQuery.value) return bookmarks.value;
-  return bookmarkManager.searchBookmarks(searchQuery.value);
+  return getBookmarkManager().searchBookmarks(searchQuery.value);
 });
 
 const typeOptions: { value: BookmarkType; label: string; icon: string }[] = [
@@ -40,9 +40,9 @@ const typeOptions: { value: BookmarkType; label: string; icon: string }[] = [
 ];
 
 function loadBookmarks() {
-  bookmarks.value = bookmarkManager.getAllBookmarks();
-  groups.value = bookmarkManager.getAllGroups();
-  quickAccess.value = bookmarkManager.getQuickAccessBookmarks();
+  bookmarks.value = getBookmarkManager().getAllBookmarks();
+  groups.value = getBookmarkManager().getAllGroups();
+  quickAccess.value = getBookmarkManager().getQuickAccessBookmarks();
 }
 
 function createBookmark() {
@@ -76,7 +76,7 @@ function saveBookmark() {
   }
 
   if (isNewBookmark.value) {
-    bookmarkManager.addBookmark({
+    getBookmarkManager().addBookmark({
       name: editingBookmark.value.name,
       type: editingBookmark.value.type,
       target: editingBookmark.value.target,
@@ -87,7 +87,7 @@ function saveBookmark() {
       order: editingBookmark.value.order,
     });
   } else {
-    bookmarkManager.updateBookmark(editingBookmark.value.id, editingBookmark.value);
+    getBookmarkManager().updateBookmark(editingBookmark.value.id, editingBookmark.value);
   }
 
   showEditor.value = false;
@@ -97,23 +97,23 @@ function saveBookmark() {
 
 function deleteBookmark(bookmark: Bookmark) {
   if (confirm(`确定要删除书签 "${bookmark.name}" 吗？`)) {
-    bookmarkManager.removeBookmark(bookmark.id);
+    getBookmarkManager().removeBookmark(bookmark.id);
     loadBookmarks();
   }
 }
 
 function navigateTo(bookmark: Bookmark) {
-  bookmarkManager.accessBookmark(bookmark.id);
+  getBookmarkManager().accessBookmark(bookmark.id);
   emit('navigate', bookmark);
 }
 
 function addToQuickAccess(bookmark: Bookmark) {
-  bookmarkManager.addToQuickAccess(bookmark.id);
+  getBookmarkManager().addToQuickAccess(bookmark.id);
   loadBookmarks();
 }
 
 function removeFromQuickAccess(bookmark: Bookmark) {
-  bookmarkManager.removeFromQuickAccess(bookmark.id);
+  getBookmarkManager().removeFromQuickAccess(bookmark.id);
   loadBookmarks();
 }
 
@@ -149,9 +149,9 @@ function saveGroup() {
   }
 
   if (isNewGroup.value) {
-    bookmarkManager.createGroup(editingGroup.value.name, editingGroup.value.icon, editingGroup.value.color);
+    getBookmarkManager().createGroup(editingGroup.value.name, editingGroup.value.icon, editingGroup.value.color);
   } else {
-    bookmarkManager.updateGroup(editingGroup.value.id, editingGroup.value);
+    getBookmarkManager().updateGroup(editingGroup.value.id, editingGroup.value);
   }
 
   showGroupEditor.value = false;
@@ -161,13 +161,13 @@ function saveGroup() {
 
 function deleteGroup(group: BookmarkGroup) {
   if (confirm(`确定要删除分组 "${group.name}" 吗？书签不会被删除。`)) {
-    bookmarkManager.deleteGroup(group.id);
+    getBookmarkManager().deleteGroup(group.id);
     loadBookmarks();
   }
 }
 
 function exportData() {
-  const json = bookmarkManager.exportData();
+  const json = getBookmarkManager().exportData();
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -189,7 +189,7 @@ function importFromJson() {
     return;
   }
 
-  const result = bookmarkManager.importData(importJson.value);
+  const result = getBookmarkManager().importData(importJson.value);
   if (result.success) {
     showImportModal.value = false;
     loadBookmarks();
@@ -345,7 +345,7 @@ onMounted(() => {
           </div>
           <div class="acu-group-bookmarks">
             <div
-              v-for="bookmark in bookmarkManager.getBookmarksInGroup(group.id)"
+              v-for="bookmark in getBookmarkManager().getBookmarksInGroup(group.id)"
               :key="bookmark.id"
               class="acu-mini-bookmark"
               @click="navigateTo(bookmark)"

@@ -1,6 +1,6 @@
 import type { AdvancedDicePreset, OutcomeLevel } from '../core/types';
 import { safeEvalCondition } from '../core/safe-eval';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 import { PRESET_FORMAT_VERSION } from '../core/types';
 import { validatePreset, type ValidationResult } from '../core/validation';
 import { loadPresetFromJson, type ImportResult } from '../presets/advanced-preset-loader';
@@ -16,7 +16,7 @@ export class PresetManager {
 
   constructor() {
     this.loadFromStorage();
-    storageSyncBus.register(PRESETS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(PRESETS_STORAGE_KEY, () => {
       this.loadFromStorage();
     });
   }
@@ -281,4 +281,9 @@ export class PresetManager {
   }
 }
 
-export const presetManager = new PresetManager();
+let _presetManager: PresetManager | null = null;
+export function getPresetManager(): PresetManager {
+  if (!_presetManager) _presetManager = new PresetManager();
+  return _presetManager;
+}
+export function resetPresetManager(): void { _presetManager = null; }

@@ -1,4 +1,4 @@
-export { AttributePresetManager, BUILTIN_ATTRIBUTE_PRESETS, attributePresetManager } from './attribute-preset-manager';
+export { AttributePresetManager, BUILTIN_ATTRIBUTE_PRESETS, getAttributePresetManager, resetAttributePresetManager } from './attribute-preset-manager';
 export type { AttributePresetConfig, StoredAttributePreset } from './attribute-preset-manager';
 export {
   AIDM_ATTRIBUTE_PRESET,
@@ -12,18 +12,18 @@ export {
   getSpv,
 } from './attribute-presets';
 export type { AttributePreset, BaseAttributeConfig, LevelName, LevelPresetConfig } from './attribute-presets';
-export { BlacklistManager, blacklistManager } from './blacklist-manager';
+export { BlacklistManager, getBlacklistManager, resetBlacklistManager } from './blacklist-manager';
 export type { BlacklistEntry, BlacklistFilterResult } from './blacklist-manager';
-export { BookmarkManager, bookmarkManager } from './bookmark-manager';
+export { BookmarkManager, getBookmarkManager, resetBookmarkManager } from './bookmark-manager';
 export type { Bookmark, BookmarkGroup, BookmarkType, QuickAccessItem } from './bookmark-manager';
-export { FavoritesManager, favoritesManager } from './favorites-manager';
-export { InteractionRuleManager, interactionRuleManager } from './interaction-rule-manager';
+export { FavoritesManager, getFavoritesManager, resetFavoritesManager } from './favorites-manager';
+export { InteractionRuleManager, getInteractionRuleManager, resetInteractionRuleManager } from './interaction-rule-manager';
 export type { InteractionPreset } from './interaction-rule-manager';
-export { PresetManager, presetManager } from './preset-manager';
-export { RegexRuleManager, regexRuleManager } from './regex-rule-manager';
+export { PresetManager, getPresetManager, resetPresetManager } from './preset-manager';
+export { RegexRuleManager, getRegexRuleManager, resetRegexRuleManager } from './regex-rule-manager';
 export type { RegexPreset, RegexRuleConfig } from './regex-rule-manager';
-export { SettingsManager, settingsManager } from './settings-manager';
-export { ValidationPresetManager, validationPresetManager } from './validation-preset-manager';
+export { SettingsManager, getSettingsManager, resetSettingsManager } from './settings-manager';
+export { ValidationPresetManager, getValidationPresetManager, resetValidationPresetManager } from './validation-preset-manager';
 export type { StoredValidationPreset } from './validation-preset-manager';
 export {
   AIDM_VALIDATION_PRESET,

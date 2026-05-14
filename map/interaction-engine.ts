@@ -6,7 +6,7 @@ import type {
   MapPosition,
   DiceMap,
 } from './types';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 import { safeEvalCondition } from '../core/safe-eval';
 
 export interface InteractionContext {
@@ -49,7 +49,7 @@ export class InteractionEngine {
     this.initializeDefaultHandlers();
     this.loadFromStorage();
 
-    storageSyncBus.register(INTERACTIONS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(INTERACTIONS_STORAGE_KEY, () => {
       this.rules.clear();
       this.loadFromStorage();
     });
@@ -283,14 +283,15 @@ export class InteractionEngine {
     if (!condition) return true;
 
     try {
-      // 将上下文数值属性注入为变量
-      const vars: Record<string, number> = {};
+      let expr = condition;
       for (const [key, val] of Object.entries(context)) {
         if (typeof val === 'number') {
-          vars[key] = val;
+          const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\$${escapedKey}\\b`, 'g');
+          expr = expr.replace(regex, String(val));
         }
       }
-      return safeEvalCondition(condition);
+      return safeEvalCondition(expr);
     } catch (e) {
       console.warn('[InteractionEngine] 条件评估失败:', e);
       return false;
@@ -531,4 +532,9 @@ export class InteractionEngine {
   }
 }
 
-export const interactionEngine = new InteractionEngine();
+let _interactionEngine: InteractionEngine | null = null;
+export function getInteractionEngine(): InteractionEngine {
+  if (!_interactionEngine) _interactionEngine = new InteractionEngine();
+  return _interactionEngine;
+}
+export function resetInteractionEngine(): void { _interactionEngine = null; }

@@ -2,7 +2,7 @@ import { createDatabaseAdapter, type DatabaseAdapter } from './adapters/database
 import { AttributeManager } from './core/attribute-manager';
 import { DiceExpressionError, evaluateCondition, evaluateFormula, rollComplexDiceExpression, rollDiceExpression, validateTokens } from './core/dice-roller';
 import { EffectEngine } from './core/effect-engine';
-import { errorHandler } from './core/error-handler';
+import { getErrorHandler } from './core/error-handler';
 import type {
   AdvancedDicePreset,
   DiceRollContext,
@@ -11,7 +11,7 @@ import type {
   OutcomeLevel,
   RollResult,
 } from './core/types';
-import { PresetManager, presetManager } from './data/preset-manager';
+import { PresetManager, getPresetManager } from './data/preset-manager';
 import { registerBuiltinPresets } from './presets/builtin-presets';
 import { createLogger, logger } from './utils/logger';
 
@@ -40,10 +40,10 @@ export class DiceSystem {
     this.dbAdapter = createDatabaseAdapter();
     this.effectEngine = new EffectEngine(this.dbAdapter);
     this.attributeManager = new AttributeManager(this.dbAdapter);
-    this.presetManager = presetManager;
+    this.presetManager = getPresetManager();
 
     // 安装全局错误处理器
-    errorHandler.install();
+    getErrorHandler().install();
 
     if (config.autoRegisterPresets !== false) {
       registerBuiltinPresets(this.presetManager);
@@ -199,13 +199,17 @@ export function getDiceSystem(): DiceSystem | null {
   return instance;
 }
 
+export function resetDiceSystem(): void {
+  instance = null;
+}
+
 export {
   AttributeManager,
   createDatabaseAdapter,
   createLogger,
   DiceExpressionError,
   EffectEngine,
-  errorHandler,
+  getErrorHandler,
   evaluateCondition,
   evaluateFormula,
   logger,

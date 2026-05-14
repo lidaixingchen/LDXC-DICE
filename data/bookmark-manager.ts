@@ -1,4 +1,4 @@
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 
 const BOOKMARKS_STORAGE_KEY = 'acu_dice_bookmarks';
 
@@ -45,7 +45,7 @@ export class BookmarkManager {
 
   constructor() {
     this.loadFromStorage();
-    storageSyncBus.register(BOOKMARKS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(BOOKMARKS_STORAGE_KEY, () => {
       this.loadFromStorage();
     });
   }
@@ -451,4 +451,9 @@ export class BookmarkManager {
   }
 }
 
-export const bookmarkManager = new BookmarkManager();
+let _bookmarkManager: BookmarkManager | null = null;
+export function getBookmarkManager(): BookmarkManager {
+  if (!_bookmarkManager) _bookmarkManager = new BookmarkManager();
+  return _bookmarkManager;
+}
+export function resetBookmarkManager(): void { _bookmarkManager = null; }

@@ -80,7 +80,7 @@ type InjectionHandler = (
   options: InjectionOptions,
 ) => InjectionResult;
 
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 import { safeEval, safeEvalCondition } from '../core/safe-eval';
 
 const INJECTIONS_STORAGE_KEY = 'acu_dice_table_injections';
@@ -96,7 +96,7 @@ export class TableInjector {
     this.loadFromStorage();
     this.initializeDefaultHandlers();
 
-    storageSyncBus.register(INJECTIONS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(INJECTIONS_STORAGE_KEY, () => {
       this.injections.clear();
       this.loadFromStorage();
     });

@@ -1,4 +1,4 @@
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import { createApp, type App as VueApp } from 'vue';
 import { initAcuDice } from './api';
 import { interceptTextareaValue, installSendRestoreHook } from './utils/input-injector';
@@ -16,7 +16,7 @@ let mutationObserver: MutationObserver | null = null;
 let customCssStyle: HTMLStyleElement | null = null;
 
 function applyCustomCss(): void {
-  const css = settingsManager.getValue('advanced', 'customCss');
+  const css = getSettingsManager().getValue('advanced', 'customCss');
   if (!css) {
     if (customCssStyle) {
       customCssStyle.remove();
@@ -72,7 +72,7 @@ function renderInterface(): void {
     const targetDoc = getTargetDocument();
     ensureStylesInTargetDocument(targetDoc);
 
-    const config = settingsManager.getLegacySettings();
+    const config = getSettingsManager().getLegacySettings();
     const isEmbedded = config.positionMode === 'embedded';
 
     let mountParent: HTMLElement | null = null;
@@ -137,7 +137,7 @@ function setupMutationObserver(): void {
         return;
       }
 
-      const config = settingsManager.getLegacySettings();
+      const config = getSettingsManager().getLegacySettings();
       if (config.positionMode !== 'embedded') {
         return;
       }
@@ -163,7 +163,7 @@ function setupMutationObserver(): void {
         }
         pendingRenderTimer = setTimeout(() => {
           pendingRenderTimer = null;
-          const latestConfig = settingsManager.getLegacySettings();
+          const latestConfig = getSettingsManager().getLegacySettings();
           if (latestConfig.positionMode !== 'embedded') return;
           if (!isRendering) {
             renderInterface();
@@ -206,7 +206,7 @@ function main(): void {
       setupMutationObserver();
     }, 1000);
 
-    settingsManager.onChange(() => {
+    getSettingsManager().onChange(() => {
       applyCustomCss();
       if (!isRendering) {
         setTimeout(() => renderInterface(), 50);

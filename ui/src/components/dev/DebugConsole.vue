@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import type { LogEntry, LogLevel, DebugCommand } from '@core/debug-console';
-import { debugConsole } from '@core/debug-console';
+import { getDebugConsole } from '@core/debug-console';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -18,9 +18,9 @@ const autoScroll = ref(true);
 const logsContainer = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 
-const isEnabled = computed(() => debugConsole.isEnabled());
-const currentLogLevel = computed(() => debugConsole.getLogLevel());
-const commands = computed(() => debugConsole.getCommands());
+const isEnabled = computed(() => getDebugConsole().isEnabled());
+const currentLogLevel = computed(() => getDebugConsole().getLogLevel());
+const commands = computed(() => getDebugConsole().getCommands());
 
 const filteredLogs = computed(() => {
   let result = logs.value;
@@ -49,7 +49,7 @@ const levelColors: Record<LogLevel, string> = {
 };
 
 function loadLogs() {
-  logs.value = debugConsole.getLogs(undefined, 500);
+  logs.value = getDebugConsole().getLogs(undefined, 500);
 }
 
 function scrollToBottom() {
@@ -91,7 +91,7 @@ async function executeCommand() {
   output.value.push(`> ${command}`);
 
   try {
-    const result = await debugConsole.executeCommand(command);
+    const result = await getDebugConsole().executeCommand(command);
     output.value.push(result);
   } catch (e) {
     output.value.push(`错误: ${e instanceof Error ? e.message : '未知错误'}`);
@@ -133,15 +133,15 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 function toggleDebug() {
-  debugConsole.setEnabled(!debugConsole.isEnabled());
+  getDebugConsole().setEnabled(!getDebugConsole().isEnabled());
 }
 
 function setLogLevel(level: LogLevel) {
-  debugConsole.setLogLevel(level);
+  getDebugConsole().setLogLevel(level);
 }
 
 function clearLogs() {
-  debugConsole.clearLogs();
+  getDebugConsole().clearLogs();
   logs.value = [];
   output.value.push('日志已清除');
 }
@@ -151,7 +151,7 @@ function clearOutput() {
 }
 
 function exportLogs() {
-  const json = debugConsole.exportLogs();
+  const json = getDebugConsole().exportLogs();
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

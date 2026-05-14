@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue';
 import { getSillyTavern } from '../../services/HostBridgeService';
-import { storageSyncBus } from '@utils/storage-sync';
+import { getStorageSyncBus } from '@utils/storage-sync';
 
 const STORAGE_KEY_PREFIX = 'acu_bookmarks_v1_';
 const MAX_CONTEXTS = 20;
@@ -87,7 +87,7 @@ watch(bookmarks, (newVal) => {
   saveBookmarks(newVal);
 }, { deep: true });
 
-storageSyncBus.register(getStorageKey(), () => {
+getStorageSyncBus().register(getStorageKey(), () => {
   bookmarks.value = loadBookmarks();
 });
 

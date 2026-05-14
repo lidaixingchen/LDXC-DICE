@@ -5,7 +5,7 @@
  */
 
 import type { LevelPresetConfig } from './attribute-presets';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 import { AIDM_ATTRIBUTE_PRESET } from './attribute-presets';
 import { compareVersion } from '../utils/helpers';
 
@@ -134,10 +134,10 @@ export class AttributePresetManager {
   private cache: StoredAttributePreset[] | null = null;
 
   constructor() {
-    storageSyncBus.register(STORAGE_KEY_PRESETS, () => {
+    getStorageSyncBus().register(STORAGE_KEY_PRESETS, () => {
       this.cache = null;
     });
-    storageSyncBus.register(STORAGE_KEY_ACTIVE_PRESET, () => {
+    getStorageSyncBus().register(STORAGE_KEY_ACTIVE_PRESET, () => {
       this.cache = null;
     });
   }
@@ -337,4 +337,9 @@ export class AttributePresetManager {
   }
 }
 
-export const attributePresetManager = new AttributePresetManager();
+let _attributePresetManager: AttributePresetManager | null = null;
+export function getAttributePresetManager(): AttributePresetManager {
+  if (!_attributePresetManager) _attributePresetManager = new AttributePresetManager();
+  return _attributePresetManager;
+}
+export function resetAttributePresetManager(): void { _attributePresetManager = null; }

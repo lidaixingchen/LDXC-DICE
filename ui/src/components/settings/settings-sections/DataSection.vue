@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import type { LegacySettings } from '@data/settings-manager';
-import { validationPresetManager } from '@data/validation-preset-manager';
+import { getValidationPresetManager } from '@data/validation-preset-manager';
 import type { ValidationRuleConfig } from '@data/validation-presets';
 import { groupErrorsByTable, validateAllData, type ValidationError, type RawData } from '@data/validation-executor';
 import { useDashboard } from '../../../composables/data/useDashboard';
@@ -30,14 +30,14 @@ const validationRunning = ref(false);
 const selectedErrorTable = ref<string | null>(null);
 
 function loadValidationPresets() {
-  validationPresets.value = validationPresetManager.getAllPresets();
-  const activePreset = validationPresetManager.getActivePreset();
+  validationPresets.value = getValidationPresetManager().getAllPresets();
+  const activePreset = getValidationPresetManager().getActivePreset();
   currentValidationPreset.value = activePreset.id;
   validationRules.value = activePreset.rules;
 }
 
 function selectValidationPreset(presetId: string) {
-  validationPresetManager.setActivePreset(presetId);
+  getValidationPresetManager().setActivePreset(presetId);
   loadValidationPresets();
 }
 
@@ -45,7 +45,7 @@ function toggleRuleEnabled(ruleId: string) {
   const rule = validationRules.value.find(r => r.id === ruleId);
   if (rule) {
     rule.enabled = !rule.enabled;
-    validationPresetManager.updatePresetRules(currentValidationPreset.value, validationRules.value);
+    getValidationPresetManager().updatePresetRules(currentValidationPreset.value, validationRules.value);
   }
 }
 
@@ -53,7 +53,7 @@ function toggleRuleIntercept(ruleId: string) {
   const rule = validationRules.value.find(r => r.id === ruleId);
   if (rule) {
     rule.intercept = !rule.intercept;
-    validationPresetManager.updatePresetRules(currentValidationPreset.value, validationRules.value);
+    getValidationPresetManager().updatePresetRules(currentValidationPreset.value, validationRules.value);
   }
 }
 
@@ -70,7 +70,7 @@ function saveRule() {
     } else {
       validationRules.value.push(editingRule.value);
     }
-    validationPresetManager.updatePresetRules(currentValidationPreset.value, validationRules.value);
+    getValidationPresetManager().updatePresetRules(currentValidationPreset.value, validationRules.value);
     loadValidationPresets();
     showRuleEditor.value = false;
     editingRule.value = null;
@@ -80,7 +80,7 @@ function saveRule() {
 function deleteRule(ruleId: string) {
   if (confirm('确定要删除此验证规则吗？')) {
     validationRules.value = validationRules.value.filter(r => r.id !== ruleId);
-    validationPresetManager.updatePresetRules(currentValidationPreset.value, validationRules.value);
+    getValidationPresetManager().updatePresetRules(currentValidationPreset.value, validationRules.value);
     loadValidationPresets();
   }
 }
@@ -104,7 +104,7 @@ function createNewRule() {
 }
 
 function exportValidationPreset() {
-  const dataStr = validationPresetManager.exportPreset(currentValidationPreset.value);
+  const dataStr = getValidationPresetManager().exportPreset(currentValidationPreset.value);
   if (!dataStr) return;
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -122,7 +122,7 @@ function importValidationPreset(event: Event) {
   reader.onload = e => {
     try {
       const jsonStr = e.target?.result as string;
-      const result = validationPresetManager.importPreset(jsonStr);
+      const result = getValidationPresetManager().importPreset(jsonStr);
       if (result.preset) {
         loadValidationPresets();
         alert('导入成功！');

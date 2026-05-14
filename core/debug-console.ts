@@ -464,17 +464,22 @@ export class DebugConsole {
   }
 }
 
-export const debugConsole = new DebugConsole();
+let _debugConsole: DebugConsole | null = null;
+export function getDebugConsole(): DebugConsole {
+  if (!_debugConsole) _debugConsole = new DebugConsole();
+  return _debugConsole;
+}
+export function resetDebugConsole(): void { _debugConsole = null; }
 
 export function createDebugProxy<T extends object>(target: T, name: string): T {
   return new Proxy(target, {
     get(obj: T, prop: string | symbol) {
       const value = (obj as any)[prop];
-      debugConsole.debug(`[${name}] 读取属性: ${String(prop)}`, value);
+      getDebugConsole().debug(`[${name}] 读取属性: ${String(prop)}`, value);
       return value;
     },
     set(obj: T, prop: string | symbol, value: unknown) {
-      debugConsole.debug(`[${name}] 设置属性: ${String(prop)}`, value);
+      getDebugConsole().debug(`[${name}] 设置属性: ${String(prop)}`, value);
       (obj as any)[prop] = value;
       return true;
     },

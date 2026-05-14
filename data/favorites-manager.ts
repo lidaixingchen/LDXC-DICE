@@ -1,5 +1,5 @@
 import type { AdvancedDicePreset } from '../core/types';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 
 export interface FavoriteItem {
   id: string;
@@ -59,10 +59,10 @@ export class FavoritesManager {
 
   constructor() {
     this.loadFromStorage();
-    storageSyncBus.register(FAVORITES_STORAGE_KEY, () => {
+    getStorageSyncBus().register(FAVORITES_STORAGE_KEY, () => {
       this.loadFromStorage();
     });
-    storageSyncBus.register(FAVORITE_GROUPS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(FAVORITE_GROUPS_STORAGE_KEY, () => {
       this.loadFromStorage();
     });
   }
@@ -406,4 +406,9 @@ export class FavoritesManager {
   }
 }
 
-export const favoritesManager = new FavoritesManager();
+let _favoritesManager: FavoritesManager | null = null;
+export function getFavoritesManager(): FavoritesManager {
+  if (!_favoritesManager) _favoritesManager = new FavoritesManager();
+  return _favoritesManager;
+}
+export function resetFavoritesManager(): void { _favoritesManager = null; }

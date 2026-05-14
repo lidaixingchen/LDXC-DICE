@@ -1,4 +1,4 @@
-import { regexEngine, type RegexRule } from './regex-engine';
+import { getRegexEngine, type RegexRule } from './regex-engine';
 
 const STORAGE_KEY_REGEX_PRESETS = 'acu_regex_presets';
 const STORAGE_KEY_CURRENT_PRESET = 'acu_current_regex_preset';
@@ -63,7 +63,7 @@ export function syncRulesToEngine(): { loaded: number; skipped: number } {
   for (const stored of storedRules) {
     try {
       const engineRule = convertToEngineRule(stored);
-      regexEngine.addRule(engineRule);
+      getRegexEngine().addRule(engineRule);
       loaded++;
     } catch {
       skipped++;
@@ -103,7 +103,7 @@ export function deleteRuleFromStorage(ruleId: string, presetId?: string): void {
   const filtered = rules.filter(r => r.id !== ruleId);
   localStorage.setItem(getRulesKey(targetPresetId), JSON.stringify(filtered));
 
-  regexEngine.removeRule(ruleId);
+  getRegexEngine().removeRule(ruleId);
 }
 
 export function getCurrentPresetId(): string | null {

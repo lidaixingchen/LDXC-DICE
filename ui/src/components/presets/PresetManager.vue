@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { AdvancedDicePreset } from '@core/types';
-import { presetManager } from '@data/preset-manager';
+import { getPresetManager } from '@data/preset-manager';
 import { notifyPresetsUpdated } from '../../composables/core/usePresets';
 import PresetConflictDialog from './PresetConflictDialog.vue';
 
@@ -41,7 +41,7 @@ const filteredDicePresets = computed(() => {
 const AIDM_PRESET_IDS = new Set(['aidm_standard_check', 'aidm_combat_check', 'aidm_defense_check', 'aidm_contest_check']);
 
 function loadAllPresets() {
-  dicePresets.value = presetManager.getAllPresets()
+  dicePresets.value = getPresetManager().getAllPresets()
     .filter(p => ((p as AdvancedDicePreset).kind === 'advanced' || (p as any).kind === 'dice') && !AIDM_PRESET_IDS.has(p.id!));
 }
 
@@ -70,7 +70,7 @@ function hasNameConflict(preset: AdvancedDicePreset): boolean {
 function resolveConflictOverwrite(): void {
   if (!conflictPresetData.value) return;
   showConflictDialog.value = false;
-  presetManager.registerPreset(conflictPresetData.value);
+  getPresetManager().registerPreset(conflictPresetData.value);
   loadAllPresets();
   notifyPresetsUpdated();
   conflictPresetData.value = null;
@@ -81,7 +81,7 @@ function resolveConflictRename(newName: string): void {
   showConflictDialog.value = false;
   conflictPresetData.value.name = newName;
   conflictPresetData.value.id = `${conflictPresetData.value.id}_${Date.now()}`;
-  presetManager.registerPreset(conflictPresetData.value);
+  getPresetManager().registerPreset(conflictPresetData.value);
   loadAllPresets();
   notifyPresetsUpdated();
   conflictPresetData.value = null;
@@ -99,7 +99,7 @@ function doImport(preset: AdvancedDicePreset): void {
     conflictExistingNames.value = dicePresets.value.map(p => p.name);
     showConflictDialog.value = true;
   } else {
-    presetManager.registerPreset(preset);
+    getPresetManager().registerPreset(preset);
     loadAllPresets();
     notifyPresetsUpdated();
   }
@@ -149,7 +149,7 @@ function exportAllDicePresets(): void {
 
 function deleteDicePreset(preset: AdvancedDicePreset): void {
   if (confirm(`确定删除预设 "${preset.name}"？`)) {
-    presetManager.unregisterPreset(preset.id);
+    getPresetManager().unregisterPreset(preset.id);
     loadAllPresets();
     notifyPresetsUpdated();
   }
@@ -163,7 +163,7 @@ function saveDicePreset(): void {
     data.description = editingPresetDesc.value;
     data.kind = 'advanced';
     data.version = data.version || '1.0.0';
-    presetManager.registerPreset(data);
+    getPresetManager().registerPreset(data);
     loadAllPresets();
     notifyPresetsUpdated();
     viewMode.value = 'main';

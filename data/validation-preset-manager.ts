@@ -5,7 +5,7 @@
  */
 
 import { AIDM_VALIDATION_PRESET } from './validation-presets';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 import type { ValidationRuleConfig, ValidationPreset } from './validation-presets';
 import { compareVersion } from '../utils/helpers';
 
@@ -26,10 +26,10 @@ export class ValidationPresetManager {
   private cache: StoredValidationPreset[] | null = null;
 
   constructor() {
-    storageSyncBus.register(STORAGE_KEY_PRESETS, () => {
+    getStorageSyncBus().register(STORAGE_KEY_PRESETS, () => {
       this.cache = null;
     });
-    storageSyncBus.register(STORAGE_KEY_ACTIVE_PRESET, () => {
+    getStorageSyncBus().register(STORAGE_KEY_ACTIVE_PRESET, () => {
       this.cache = null;
     });
   }
@@ -365,4 +365,9 @@ export class ValidationPresetManager {
   }
 }
 
-export const validationPresetManager = new ValidationPresetManager();
+let _validationPresetManager: ValidationPresetManager | null = null;
+export function getValidationPresetManager(): ValidationPresetManager {
+  if (!_validationPresetManager) _validationPresetManager = new ValidationPresetManager();
+  return _validationPresetManager;
+}
+export function resetValidationPresetManager(): void { _validationPresetManager = null; }

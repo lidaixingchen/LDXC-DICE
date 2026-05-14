@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useDashboard } from '../../composables/data/useDashboard';
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import { isRowHighlighted, isCellHighlighted } from '@data/snapshot-manager';
 
 const props = defineProps<{
@@ -30,11 +30,11 @@ const sortColumn = ref<number | null>(null);
 const sortDirection = ref<'asc' | 'desc' | 'none'>('none');
 
 const perPageOptions = [10, 25, 50, 100];
-const selectedPerPage = ref(settingsManager.getLegacySettings().itemsPerPage || 50);
+const selectedPerPage = ref(getSettingsManager().getLegacySettings().itemsPerPage || 50);
 
-const legacySettings = ref(settingsManager.getLegacySettings());
-settingsManager.onChange(() => {
-  legacySettings.value = { ...settingsManager.getLegacySettings() };
+const legacySettings = ref(getSettingsManager().getLegacySettings());
+getSettingsManager().onChange(() => {
+  legacySettings.value = { ...getSettingsManager().getLegacySettings() };
 });
 const highlightNew = computed(() => legacySettings.value.highlightNew);
 const showHorizontalScrollbar = computed(() => legacySettings.value.showHorizontalScrollbar !== false);
@@ -50,7 +50,7 @@ function toggleReverse() {
   } else {
     keys.push(currentTableKey.value);
   }
-  settingsManager.updateLegacySettings({ tableReverseKeys: keys });
+  getSettingsManager().updateLegacySettings({ tableReverseKeys: keys });
 }
 
 watch(
@@ -216,7 +216,7 @@ const processedRows = computed(() => {
 const itemsPerPage = computed(() => selectedPerPage.value);
 
 watch(selectedPerPage, val => {
-  settingsManager.updateLegacySettings({ itemsPerPage: val });
+  getSettingsManager().updateLegacySettings({ itemsPerPage: val });
 });
 
 const paginatedRows = computed(() => {

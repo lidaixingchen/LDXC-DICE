@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { RegexRuleCategory } from '@core/validation/regex-engine';
-import { regexRuleManager } from '@data/regex-rule-manager';
+import { getRegexRuleManager } from '@data/regex-rule-manager';
 import type { RegexPreset, RegexRuleConfig } from '@data/regex-rule-manager';
 
 const emit = defineEmits<{
@@ -32,28 +32,28 @@ const categories: { value: RegexRuleCategory; label: string }[] = [
 const rules = computed(() => currentPreset.value?.rules || []);
 
 function loadPresets() {
-  presets.value = regexRuleManager.getAllPresets();
-  currentPreset.value = regexRuleManager.getCurrentPreset();
+  presets.value = getRegexRuleManager().getAllPresets();
+  currentPreset.value = getRegexRuleManager().getCurrentPreset();
 }
 
 function selectPreset(preset: RegexPreset) {
-  regexRuleManager.setCurrentPreset(preset.id);
+  getRegexRuleManager().setCurrentPreset(preset.id);
   currentPreset.value = preset;
-  regexRuleManager.applyCurrentPreset();
+  getRegexRuleManager().applyCurrentPreset();
 }
 
 function createPreset() {
   const name = prompt('请输入预设名称：');
   if (!name) return;
 
-  const preset = regexRuleManager.createPreset(name);
-  presets.value = regexRuleManager.getAllPresets();
+  const preset = getRegexRuleManager().createPreset(name);
+  presets.value = getRegexRuleManager().getAllPresets();
   selectPreset(preset);
 }
 
 function deletePreset(preset: RegexPreset) {
   if (confirm(`确定要删除预设 "${preset.name}" 吗？`)) {
-    regexRuleManager.deletePreset(preset.id);
+    getRegexRuleManager().deletePreset(preset.id);
     loadPresets();
   }
 }
@@ -62,14 +62,14 @@ function duplicatePreset(preset: RegexPreset) {
   const newName = prompt('请输入新预设名称：', `${preset.name} (副本)`);
   if (!newName) return;
 
-  const duplicated = regexRuleManager.duplicatePreset(preset.id, newName);
+  const duplicated = getRegexRuleManager().duplicatePreset(preset.id, newName);
   if (duplicated) {
-    presets.value = regexRuleManager.getAllPresets();
+    presets.value = getRegexRuleManager().getAllPresets();
   }
 }
 
 function exportPreset(preset: RegexPreset) {
-  const json = regexRuleManager.exportPreset(preset.id);
+  const json = getRegexRuleManager().exportPreset(preset.id);
   if (!json) return;
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -82,7 +82,7 @@ function exportPreset(preset: RegexPreset) {
 }
 
 function exportToSillyTavern(preset: RegexPreset) {
-  const json = regexRuleManager.exportToSillyTavern(preset.id);
+  const json = getRegexRuleManager().exportToSillyTavern(preset.id);
   if (!json) return;
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -106,7 +106,7 @@ function importFromJson() {
     return;
   }
 
-  const result = regexRuleManager.importPreset(importJson.value);
+  const result = getRegexRuleManager().importPreset(importJson.value);
   if (result.success && result.preset) {
     showImportModal.value = false;
     loadPresets();
@@ -128,16 +128,16 @@ function importFromSillyTavern() {
     reader.onload = ev => {
       try {
         const json = ev.target?.result as string;
-        const result = regexRuleManager.importFromSillyTavern(json);
+        const result = getRegexRuleManager().importFromSillyTavern(json);
 
         if (result.imported > 0) {
           if (!currentPreset.value) {
-            const preset = regexRuleManager.createPreset('酒馆导入');
+            const preset = getRegexRuleManager().createPreset('酒馆导入');
             currentPreset.value = preset;
           }
 
           for (const rule of result.rules) {
-            regexRuleManager.addRuleToPreset(currentPreset.value.id, rule);
+            getRegexRuleManager().addRuleToPreset(currentPreset.value.id, rule);
           }
 
           loadPresets();
@@ -200,9 +200,9 @@ function saveRule() {
   }
 
   if (isNewRule.value) {
-    regexRuleManager.addRuleToPreset(currentPreset.value.id, editingRule.value);
+    getRegexRuleManager().addRuleToPreset(currentPreset.value.id, editingRule.value);
   } else {
-    regexRuleManager.updateRuleInPreset(currentPreset.value.id, editingRule.value.id, editingRule.value);
+    getRegexRuleManager().updateRuleInPreset(currentPreset.value.id, editingRule.value.id, editingRule.value);
   }
 
   showRuleEditor.value = false;
@@ -214,21 +214,21 @@ function deleteRule(rule: RegexRuleConfig) {
   if (!currentPreset.value) return;
 
   if (confirm(`确定要删除规则 "${rule.name}" 吗？`)) {
-    regexRuleManager.removeRuleFromPreset(currentPreset.value.id, rule.id);
+    getRegexRuleManager().removeRuleFromPreset(currentPreset.value.id, rule.id);
     loadPresets();
   }
 }
 
 function toggleRule(rule: RegexRuleConfig) {
   if (!currentPreset.value) return;
-  regexRuleManager.toggleRule(currentPreset.value.id, rule.id);
+  getRegexRuleManager().toggleRule(currentPreset.value.id, rule.id);
   loadPresets();
 }
 
 function testRules() {
   if (!testInput.value) return;
 
-  const result = regexRuleManager.transform(testInput.value);
+  const result = getRegexRuleManager().transform(testInput.value);
   testOutput.value = result.transformed;
 }
 

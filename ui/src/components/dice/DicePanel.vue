@@ -24,7 +24,7 @@ import type { SkillData, ItemData, StatusEffect, CombatState, EquipmentSlot, Sav
 import type { AttributeButton } from '../../composables/data/useCharacterData';
 import type { CheckResult } from '../../types';
 import type { CheckTypeName, CheckTypeConfig, AdvancedDicePreset } from '@core/types';
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import { showToast } from '../../utils/toast-manager';
 
 import DicePanelHeader from './DicePanelHeader.vue';
@@ -46,15 +46,15 @@ const emit = defineEmits<{
   (e: 'switchToOpposed'): void;
 }>();
 
-const legacySettings = ref(settingsManager.getLegacySettings());
-const displaySettings = ref(settingsManager.getGroup('display'));
-const generalSettings = ref(settingsManager.getGroup('general'));
-const behaviorSettings = ref(settingsManager.getGroup('behavior'));
-settingsManager.onChange(() => {
-  legacySettings.value = { ...settingsManager.getLegacySettings() };
-  displaySettings.value = { ...settingsManager.getGroup('display') };
-  generalSettings.value = { ...settingsManager.getGroup('general') };
-  behaviorSettings.value = { ...settingsManager.getGroup('behavior') };
+const legacySettings = ref(getSettingsManager().getLegacySettings());
+const displaySettings = ref(getSettingsManager().getGroup('display'));
+const generalSettings = ref(getSettingsManager().getGroup('general'));
+const behaviorSettings = ref(getSettingsManager().getGroup('behavior'));
+getSettingsManager().onChange(() => {
+  legacySettings.value = { ...getSettingsManager().getLegacySettings() };
+  displaySettings.value = { ...getSettingsManager().getGroup('display') };
+  generalSettings.value = { ...getSettingsManager().getGroup('general') };
+  behaviorSettings.value = { ...getSettingsManager().getGroup('behavior') };
 });
 const shouldHideResult = computed(() => legacySettings.value.hideDiceResultFromUser);
 
@@ -145,7 +145,7 @@ const npcList = computed(() => {
 const diceMode = computed(() => behaviorSettings.value.diceMode);
 
 function setDiceMode(mode: 'aidm' | 'general'): void {
-  settingsManager.updateValue('behavior', 'diceMode', mode);
+  getSettingsManager().updateValue('behavior', 'diceMode', mode);
 }
 
 // --- 通用模式状态 ---

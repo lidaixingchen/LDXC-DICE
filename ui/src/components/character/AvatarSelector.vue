@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { avatarManager, type Avatar, type AvatarCategory } from '@map/avatar-manager';
+import { getAvatarManager, type Avatar, type AvatarCategory } from '@map/avatar-manager';
 
 const avatars = ref<Avatar[]>([]);
 const categories = ref<AvatarCategory[]>([]);
@@ -39,8 +39,8 @@ const filteredAvatars = computed(() => {
 });
 
 function refreshData(): void {
-  avatars.value = avatarManager.getAllAvatars();
-  categories.value = avatarManager.getAllCategories();
+  avatars.value = getAvatarManager().getAllAvatars();
+  categories.value = getAvatarManager().getAllCategories();
 }
 
 function handleSelectAvatar(avatar: Avatar): void {
@@ -50,7 +50,7 @@ function handleSelectAvatar(avatar: Avatar): void {
 
 function handleDeleteAvatar(id: string): void {
   if (confirm('确定要删除这个头像吗？')) {
-    avatarManager.removeAvatar(id);
+    getAvatarManager().removeAvatar(id);
     refreshData();
     if (selectedAvatar.value?.id === id) {
       selectedAvatar.value = null;
@@ -63,7 +63,7 @@ async function handleFileImport(event: Event): Promise<void> {
   const file = input.files?.[0];
   if (!file) return;
 
-  const avatar = await avatarManager.importFromImage(file, {
+  const avatar = await getAvatarManager().importFromImage(file, {
     name: file.name.replace(/\.[^/.]+$/, ''),
     type: importType.value,
   });
@@ -79,7 +79,7 @@ async function handleFileImport(event: Event): Promise<void> {
 async function handleUrlImport(): Promise<void> {
   if (!importUrl.value) return;
 
-  const avatar = await avatarManager.importFromUrl(importUrl.value, {
+  const avatar = await getAvatarManager().importFromUrl(importUrl.value, {
     name: importName.value || '新头像',
     type: importType.value,
   });
@@ -93,11 +93,11 @@ async function handleUrlImport(): Promise<void> {
 }
 
 function handleExport(): void {
-  const pack = avatarManager.exportPack(
+  const pack = getAvatarManager().exportPack(
     avatars.value.map(a => a.id),
     '头像包',
   );
-  const json = avatarManager.exportPackJson(pack);
+  const json = getAvatarManager().exportPackJson(pack);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -114,9 +114,9 @@ function handlePackImport(event: Event): void {
 
   const reader = new FileReader();
   reader.onload = () => {
-    const pack = avatarManager.importPackJson(reader.result as string);
+    const pack = getAvatarManager().importPackJson(reader.result as string);
     if (pack) {
-      const result = avatarManager.importPack(pack);
+      const result = getAvatarManager().importPack(pack);
       alert(`导入完成: ${result.imported} 个头像`);
       refreshData();
     }

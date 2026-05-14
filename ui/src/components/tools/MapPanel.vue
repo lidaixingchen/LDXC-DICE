@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { mapManager, type DiceMap, type MapToken, type MapViewport, type MapTool, MAP_TOOLS } from '@map';
+import { getMapManager, type DiceMap, type MapToken, type MapViewport, type MapTool, MAP_TOOLS } from '@map';
 import { THEME_COLORS } from '../../utils/theme-utils';
 import { mapRenderer } from '@map/map-renderer';
-import { interactionEngine, type InteractionContext, type InteractionResult } from '@map/interaction-engine';
+import { getInteractionEngine, type InteractionContext, type InteractionResult } from '@map/interaction-engine';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const currentMap = ref<DiceMap | null>(null);
@@ -14,7 +14,7 @@ const showMapList = ref(false);
 const showTokenEditor = ref(false);
 const editingToken = ref<MapToken | null>(null);
 
-const maps = computed(() => mapManager.getAllMaps());
+const maps = computed(() => getMapManager().getAllMaps());
 const tools = ref<MapTool[]>(MAP_TOOLS);
 
 const isPanning = ref(false);
@@ -132,7 +132,7 @@ function handleWheel(event: WheelEvent): void {
 function handleSelect(worldPos: { x: number; y: number }, addToSelection: boolean): void {
   if (!currentMap.value) return;
 
-  const token = mapManager.getTokenAt(currentMap.value.id, worldPos);
+  const token = getMapManager().getTokenAt(currentMap.value.id, worldPos);
 
   if (token) {
     if (addToSelection) {
@@ -158,7 +158,7 @@ function handleTokenPlace(worldPos: { x: number; y: number }): void {
 
   const snappedPos = mapRenderer.snapToGrid(worldPos, currentMap.value.grid);
 
-  const token = mapManager.addToken(currentMap.value.id, {
+  const token = getMapManager().addToken(currentMap.value.id, {
     name: '新令牌',
     type: 'character',
     position: snappedPos,
@@ -185,7 +185,7 @@ function handleTokenPlace(worldPos: { x: number; y: number }): void {
 function handleInteract(worldPos: { x: number; y: number }): void {
   if (!currentMap.value) return;
 
-  const token = mapManager.getTokenAt(currentMap.value.id, worldPos);
+  const token = getMapManager().getTokenAt(currentMap.value.id, worldPos);
 
   const context: InteractionContext = {
     mapId: currentMap.value.id,
@@ -195,7 +195,7 @@ function handleInteract(worldPos: { x: number; y: number }): void {
     timestamp: Date.now(),
   };
 
-  interactionEngine.process(context, currentMap.value).then((result: InteractionResult) => {
+  getInteractionEngine().process(context, currentMap.value).then((result: InteractionResult) => {
     if (result.handled) {
       console.log('[MapPanel] 交互处理结果:', result);
       render();
@@ -241,7 +241,7 @@ function finishDrawing(endPos: { x: number; y: number }): void {
 
   switch (selectedTool.value) {
     case 'draw_rect':
-      mapManager.addShape(currentMap.value.id, {
+      getMapManager().addShape(currentMap.value.id, {
         type: 'rect',
         position: { x: Math.min(startPos.x, endPos.x), y: Math.min(startPos.y, endPos.y) },
         size: { width: Math.abs(endPos.x - startPos.x), height: Math.abs(endPos.y - startPos.y) },
@@ -256,7 +256,7 @@ function finishDrawing(endPos: { x: number; y: number }): void {
 
     case 'draw_circle': {
       const radius = Math.sqrt((endPos.x - startPos.x) ** 2 + (endPos.y - startPos.y) ** 2);
-      mapManager.addShape(currentMap.value.id, {
+      getMapManager().addShape(currentMap.value.id, {
         type: 'circle',
         position: { x: startPos.x - radius, y: startPos.y - radius },
         size: { width: radius * 2, height: radius * 2 },
@@ -279,7 +279,7 @@ function selectTool(toolId: string): void {
 }
 
 function createNewMap(): void {
-  const map = mapManager.createMap({
+  const map = getMapManager().createMap({
     name: `新地图 ${maps.value.length + 1}`,
     size: { width: 1920, height: 1080 },
   });
@@ -289,9 +289,9 @@ function createNewMap(): void {
 }
 
 function loadMap(mapId: string): void {
-  mapManager.setCurrentMap(mapId);
-  currentMap.value = mapManager.getCurrentMap();
-  viewport.value = mapManager.getViewport();
+  getMapManager().setCurrentMap(mapId);
+  currentMap.value = getMapManager().getCurrentMap();
+  viewport.value = getMapManager().getViewport();
   selectedTokens.value = [];
   showMapList.value = false;
 
@@ -302,7 +302,7 @@ function loadMap(mapId: string): void {
 
 function deleteMap(mapId: string): void {
   if (confirm('确定要删除这个地图吗？')) {
-    mapManager.deleteMap(mapId);
+    getMapManager().deleteMap(mapId);
     if (currentMap.value?.id === mapId) {
       currentMap.value = null;
     }
@@ -338,7 +338,7 @@ function editSelectedToken(): void {
 function saveTokenEdit(): void {
   if (!currentMap.value || !editingToken.value) return;
 
-  mapManager.updateToken(currentMap.value.id, editingToken.value.id, editingToken.value);
+  getMapManager().updateToken(currentMap.value.id, editingToken.value.id, editingToken.value);
   showTokenEditor.value = false;
   editingToken.value = null;
   render();
@@ -348,7 +348,7 @@ function deleteSelectedTokens(): void {
   if (!currentMap.value) return;
 
   for (const tokenId of selectedTokens.value) {
-    mapManager.removeToken(currentMap.value.id, tokenId);
+    getMapManager().removeToken(currentMap.value.id, tokenId);
   }
 
   selectedTokens.value = [];
@@ -359,7 +359,7 @@ function deleteSelectedTokens(): void {
 function handleExport(): void {
   if (!currentMap.value) return;
 
-  const json = mapManager.exportMap(currentMap.value.id);
+  const json = getMapManager().exportMap(currentMap.value.id);
   if (!json) return;
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -378,7 +378,7 @@ function handleImport(event: Event): void {
 
   const reader = new FileReader();
   reader.onload = () => {
-    const map = mapManager.importMap(reader.result as string);
+    const map = getMapManager().importMap(reader.result as string);
     if (map) {
       loadMap(map.id);
     }
@@ -396,12 +396,12 @@ const emit = defineEmits<{
 let unsubscribe: (() => void) | null = null;
 
 onMounted(() => {
-  const maps = mapManager.getAllMaps();
+  const maps = getMapManager().getAllMaps();
   if (maps.length > 0) {
     loadMap(maps[0].id);
   }
 
-  unsubscribe = mapManager.onChange((map: DiceMap | null) => {
+  unsubscribe = getMapManager().onChange((map: DiceMap | null) => {
     currentMap.value = map;
     render();
   });

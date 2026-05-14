@@ -50,4 +50,11 @@ class StorageSyncBus {
   }
 }
 
-export const storageSyncBus = new StorageSyncBus();
+let _storageSyncBus: StorageSyncBus | null = null;
+export function getStorageSyncBus(): StorageSyncBus {
+  if (!_storageSyncBus) _storageSyncBus = new StorageSyncBus();
+  return _storageSyncBus;
+}
+export function resetStorageSyncBus(): void {
+  if (_storageSyncBus) { _storageSyncBus.destroy(); _storageSyncBus = null; }
+}

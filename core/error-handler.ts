@@ -7,7 +7,7 @@
  * - 状态持久化，下次启动自动恢复
  */
 
-import { debugConsole } from './debug-console';
+import { getDebugConsole } from './debug-console';
 
 const ERROR_THRESHOLD = 3;       // 连续次数阈值
 const ERROR_WINDOW_MS = 5000;    // 时间窗口（毫秒）
@@ -185,9 +185,9 @@ class ErrorHandlerImpl {
   private triggerFatalError(): void {
     try {
       // 自动开启调试控制台
-      if (!debugConsole.isEnabled()) {
-        debugConsole.setEnabled(true);
-        debugConsole.info('[ErrorHandler] 检测到连续致命错误，自动启用调试控制台');
+      if (!getDebugConsole().isEnabled()) {
+        getDebugConsole().setEnabled(true);
+        getDebugConsole().info('[ErrorHandler] 检测到连续致命错误，自动启用调试控制台');
       }
 
       // 持久化错误标志
@@ -272,7 +272,7 @@ class ErrorHandlerImpl {
       btn.onclick = () => {
         try {
           const detail = {
-            logs: debugConsole.getLogs(undefined, 200),
+            logs: getDebugConsole().getLogs(undefined, 200),
             message: '检测到脚本错误，请查看下方调试日志',
           };
           if (typeof CustomEvent !== 'undefined' && typeof window !== 'undefined') {
@@ -315,8 +315,8 @@ class ErrorHandlerImpl {
       const errorDetected = localStorage.getItem(STORAGE_KEY_ERROR_FLAG) === 'true';
       if (errorDetected) {
         // 自动开启调试控制台
-        if (!debugConsole.isEnabled()) {
-          debugConsole.setEnabled(true);
+        if (!getDebugConsole().isEnabled()) {
+          getDebugConsole().setEnabled(true);
         }
         // 显示紧急入口按钮
         this.showEmergencyButton();
@@ -351,6 +351,12 @@ class ErrorHandlerImpl {
   }
 }
 
-/** 全局单例 */
-export const errorHandler = new ErrorHandlerImpl();
+let _errorHandler: ErrorHandlerImpl | null = null;
+export function getErrorHandler(): ErrorHandlerImpl {
+  if (!_errorHandler) _errorHandler = new ErrorHandlerImpl();
+  return _errorHandler;
+}
+export function resetErrorHandler(): void {
+  if (_errorHandler) { _errorHandler.uninstall(); _errorHandler = null; }
+}
 export type { ErrorCallback };

@@ -19,7 +19,7 @@ import {
   DEFAULT_GRID,
   DEFAULT_MAP_SIZE,
 } from './types';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 
 const MAPS_STORAGE_KEY = 'acu_dice_maps';
 const SNAPSHOTS_STORAGE_KEY = 'acu_dice_map_snapshots';
@@ -37,12 +37,12 @@ export class MapManager {
   constructor() {
     this.loadFromStorage();
 
-    storageSyncBus.register(MAPS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(MAPS_STORAGE_KEY, () => {
       this.maps.clear();
       this.loadFromStorage();
       this.notifyChange(this.getCurrentMap());
     });
-    storageSyncBus.register(SNAPSHOTS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(SNAPSHOTS_STORAGE_KEY, () => {
       this.snapshots.clear();
       this.loadFromStorage();
     });
@@ -667,4 +667,9 @@ export class MapManager {
   }
 }
 
-export const mapManager = new MapManager();
+let _mapManager: MapManager | null = null;
+export function getMapManager(): MapManager {
+  if (!_mapManager) _mapManager = new MapManager();
+  return _mapManager;
+}
+export function resetMapManager(): void { _mapManager = null; }

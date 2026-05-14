@@ -9,7 +9,7 @@ import type {
   LegacySettings,
   ValidationSettings,
 } from '@data/settings-manager';
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import { useDashboard } from '../../composables/data/useDashboard';
 
 import AppearanceSection from './settings-sections/AppearanceSection.vue';
@@ -37,12 +37,12 @@ const emit = defineEmits<{
   (e: 'themeChange', theme: string): void;
 }>();
 
-const settings = ref<LegacySettings>(settingsManager.getLegacySettings());
-const general = ref<GeneralSettings>(settingsManager.getGroup('general'));
-const display = ref<DisplaySettings>(settingsManager.getGroup('display'));
-const behavior = ref<BehaviorSettings>(settingsManager.getGroup('behavior'));
-const validation = ref<ValidationSettings>(settingsManager.getGroup('validation'));
-const advanced = ref<AdvancedSettings>(settingsManager.getGroup('advanced'));
+const settings = ref<LegacySettings>(getSettingsManager().getLegacySettings());
+const general = ref<GeneralSettings>(getSettingsManager().getGroup('general'));
+const display = ref<DisplaySettings>(getSettingsManager().getGroup('display'));
+const behavior = ref<BehaviorSettings>(getSettingsManager().getGroup('behavior'));
+const validation = ref<ValidationSettings>(getSettingsManager().getGroup('validation'));
+const advanced = ref<AdvancedSettings>(getSettingsManager().getGroup('advanced'));
 
 const { getTableData } = useDashboard();
 const activeSection = ref('appearance');
@@ -95,16 +95,16 @@ function closeManager() {
 
 // --- 设置同步 ---
 function syncAll() {
-  settings.value = { ...settingsManager.getLegacySettings() };
-  general.value = { ...settingsManager.getGroup('general') };
-  display.value = { ...settingsManager.getGroup('display') };
-  behavior.value = { ...settingsManager.getGroup('behavior') };
-  validation.value = { ...settingsManager.getGroup('validation') };
-  advanced.value = { ...settingsManager.getGroup('advanced') };
+  settings.value = { ...getSettingsManager().getLegacySettings() };
+  general.value = { ...getSettingsManager().getGroup('general') };
+  display.value = { ...getSettingsManager().getGroup('display') };
+  behavior.value = { ...getSettingsManager().getGroup('behavior') };
+  validation.value = { ...getSettingsManager().getGroup('validation') };
+  advanced.value = { ...getSettingsManager().getGroup('advanced') };
 }
 
 function updateLegacy(updates: Partial<LegacySettings>) {
-  settingsManager.updateLegacySettings(updates);
+  getSettingsManager().updateLegacySettings(updates);
   syncAll();
   if (updates.theme) {
     emit('themeChange', updates.theme);
@@ -116,7 +116,7 @@ function updateGroupSetting<K extends keyof DiceSystemSettings, F extends keyof 
   field: F,
   value: DiceSystemSettings[K][F],
 ) {
-  settingsManager.updateValue(group, field, value);
+  getSettingsManager().updateValue(group, field, value);
   syncAll();
 }
 
@@ -156,7 +156,7 @@ function clearSystemCache() {
 
 function resetAllSettings() {
   if (window.confirm('确认重置所有设置为默认值？')) {
-    settingsManager.resetAll();
+    getSettingsManager().resetAll();
     syncAll();
   }
 }
@@ -167,7 +167,7 @@ onMounted(() => {
   if (props.requestedSection && validSections.includes(props.requestedSection)) {
     activeSection.value = props.requestedSection;
   }
-  settingsManager.onChange(syncAll);
+  getSettingsManager().onChange(syncAll);
 });
 
 onActivated(() => {

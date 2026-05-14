@@ -438,13 +438,18 @@ export class RegexEngine {
   }
 }
 
-export const regexEngine = new RegexEngine();
+let _regexEngine: RegexEngine | null = null;
+export function getRegexEngine(): RegexEngine {
+  if (!_regexEngine) _regexEngine = new RegexEngine();
+  return _regexEngine;
+}
+export function resetRegexEngine(): void { _regexEngine = null; }
 
 export function transformExpression(
   source: string,
   context?: Partial<TransformContext>,
 ): TransformResult {
-  return regexEngine.transform(source, context);
+  return getRegexEngine().transform(source, context);
 }
 
 export function addCustomRule(rule: Omit<RegexRule, 'id'>): RegexRule {
@@ -452,26 +457,26 @@ export function addCustomRule(rule: Omit<RegexRule, 'id'>): RegexRule {
     ...rule,
     id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
   };
-  regexEngine.addRule(newRule);
+  getRegexEngine().addRule(newRule);
   return newRule;
 }
 
 export function getDiceRules(): RegexRule[] {
-  return regexEngine.getRulesByCategory('dice');
+  return getRegexEngine().getRulesByCategory('dice');
 }
 
 export function getVariableRules(): RegexRule[] {
-  return regexEngine.getRulesByCategory('variable');
+  return getRegexEngine().getRulesByCategory('variable');
 }
 
 export function getConditionRules(): RegexRule[] {
-  return regexEngine.getRulesByCategory('condition');
+  return getRegexEngine().getRulesByCategory('condition');
 }
 
 export function getTemplateRules(): RegexRule[] {
-  return regexEngine.getRulesByCategory('template');
+  return getRegexEngine().getRulesByCategory('template');
 }
 
 export function getOutputRules(): RegexRule[] {
-  return regexEngine.getRulesByCategory('output');
+  return getRegexEngine().getRulesByCategory('output');
 }

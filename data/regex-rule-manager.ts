@@ -1,6 +1,6 @@
 import type { RegexRule, RegexRuleCategory, TransformOptions } from '../core/validation/regex-engine';
-import { storageSyncBus } from '../utils/storage-sync';
-import { regexEngine } from '../core/validation/regex-engine';
+import { getStorageSyncBus } from '../utils/storage-sync';
+import { getRegexEngine } from '../core/validation/regex-engine';
 
 const REGEX_PRESETS_KEY = 'acu_regex_presets';
 const CURRENT_REGEX_PRESET_KEY = 'acu_current_regex_preset';
@@ -44,10 +44,10 @@ export class RegexRuleManager {
 
   constructor() {
     this.loadFromStorage();
-    storageSyncBus.register(REGEX_PRESETS_KEY, () => {
+    getStorageSyncBus().register(REGEX_PRESETS_KEY, () => {
       this.loadFromStorage();
     });
-    storageSyncBus.register(CURRENT_REGEX_PRESET_KEY, () => {
+    getStorageSyncBus().register(CURRENT_REGEX_PRESET_KEY, () => {
       this.loadFromStorage();
     });
   }
@@ -218,8 +218,8 @@ export class RegexRuleManager {
   private syncToEngine(preset: RegexPreset): void {
     for (const rule of preset.rules) {
       try {
-        if (regexEngine.getRule(rule.id)) {
-          regexEngine.removeRule(rule.id);
+        if (getRegexEngine().getRule(rule.id)) {
+          getRegexEngine().removeRule(rule.id);
         }
 
         const engineRule: RegexRule = {
@@ -233,7 +233,7 @@ export class RegexRuleManager {
           category: rule.category,
         };
 
-        regexEngine.addRule(engineRule);
+        getRegexEngine().addRule(engineRule);
       } catch (e) {
         console.warn(`[RegexRuleManager] 同步规则 ${rule.name} 失败:`, e);
       }
@@ -248,7 +248,7 @@ export class RegexRuleManager {
   }
 
   testRule(ruleId: string, input: string): { original: string; transformed: string; matched: boolean } {
-    const result = regexEngine.testRule(ruleId, input);
+    const result = getRegexEngine().testRule(ruleId, input);
     return {
       original: result.original,
       transformed: result.transformed,
@@ -257,7 +257,7 @@ export class RegexRuleManager {
   }
 
   transform(input: string, options?: Partial<TransformOptions>): { original: string; transformed: string; appliedRules: string[] } {
-    const result = regexEngine.transform(input, { options: options as any });
+    const result = getRegexEngine().transform(input, { options: options as any });
     return {
       original: result.original,
       transformed: result.transformed,
@@ -395,4 +395,9 @@ export class RegexRuleManager {
   }
 }
 
-export const regexRuleManager = new RegexRuleManager();
+let _regexRuleManager: RegexRuleManager | null = null;
+export function getRegexRuleManager(): RegexRuleManager {
+  if (!_regexRuleManager) _regexRuleManager = new RegexRuleManager();
+  return _regexRuleManager;
+}
+export function resetRegexRuleManager(): void { _regexRuleManager = null; }

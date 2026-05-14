@@ -1,5 +1,5 @@
 import { readonly, ref, type Ref } from 'vue';
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import type {
   CheckResult,
   ContestResult,
@@ -36,8 +36,8 @@ export function useDiceHistory(): {
     };
 
     checkHistory.value.unshift(entry);
-    if (checkHistory.value.length > settingsManager.getHistorySize()) {
-      checkHistory.value = checkHistory.value.slice(0, settingsManager.getHistorySize());
+    if (checkHistory.value.length > getSettingsManager().getHistorySize()) {
+      checkHistory.value = checkHistory.value.slice(0, getSettingsManager().getHistorySize());
     }
   }
 
@@ -65,8 +65,8 @@ export function useDiceHistory(): {
     };
 
     contestHistory.value.unshift(entry);
-    if (contestHistory.value.length > settingsManager.getHistorySize()) {
-      contestHistory.value = contestHistory.value.slice(0, settingsManager.getHistorySize());
+    if (contestHistory.value.length > getSettingsManager().getHistorySize()) {
+      contestHistory.value = contestHistory.value.slice(0, getSettingsManager().getHistorySize());
     }
   }
 

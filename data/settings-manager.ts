@@ -1,5 +1,5 @@
-import { storageSyncBus } from '../utils/storage-sync';
-import { debugConsole } from '../core/debug-console';
+import { getStorageSyncBus } from '../utils/storage-sync';
+import { getDebugConsole } from '../core/debug-console';
 
 export interface DiceSystemSettings {
   general: GeneralSettings;
@@ -275,8 +275,8 @@ export class SettingsManager {
   constructor() {
     this.settings = this.loadFromStorage();
     this.setupAutoSave();
-    debugConsole.setEnabled(this.settings.advanced.debugMode);
-    storageSyncBus.register(SETTINGS_STORAGE_KEY, () => {
+    getDebugConsole().setEnabled(this.settings.advanced.debugMode);
+    getStorageSyncBus().register(SETTINGS_STORAGE_KEY, () => {
       this.settings = this.loadFromStorage();
       this.notifyChange();
     });
@@ -489,7 +489,7 @@ export class SettingsManager {
       this.setupAutoSave();
     }
     if (group === 'advanced' && field === 'debugMode') {
-      debugConsole.setEnabled(value as boolean);
+      getDebugConsole().setEnabled(value as boolean);
     }
     this.notifyChange();
   }
@@ -680,4 +680,9 @@ export class SettingsManager {
   }
 }
 
-export const settingsManager = new SettingsManager();
+let _settingsManager: SettingsManager | null = null;
+export function getSettingsManager(): SettingsManager {
+  if (!_settingsManager) _settingsManager = new SettingsManager();
+  return _settingsManager;
+}
+export function resetSettingsManager(): void { if (_settingsManager) { _settingsManager.destroy(); _settingsManager = null; } }

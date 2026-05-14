@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { BlacklistEntry } from '@data/blacklist-manager';
-import { blacklistManager } from '@data/blacklist-manager';
+import { getBlacklistManager } from '@data/blacklist-manager';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -18,7 +18,7 @@ const showTestPanel = ref(false);
 const testInput = ref('');
 const testOutput = ref<{ matches: string[]; nonMatches: string[] } | null>(null);
 
-const stats = computed(() => blacklistManager.getStatistics());
+const stats = computed(() => getBlacklistManager().getStatistics());
 
 const typeOptions = [
   { value: 'exact', label: '精确匹配' },
@@ -33,7 +33,7 @@ const scopeOptions = [
 ];
 
 function loadEntries() {
-  entries.value = blacklistManager.getAllEntries();
+  entries.value = getBlacklistManager().getAllEntries();
 }
 
 function createEntry() {
@@ -68,7 +68,7 @@ function saveEntry() {
   }
 
   if (isNewEntry.value) {
-    blacklistManager.addEntry({
+    getBlacklistManager().addEntry({
       name: editingEntry.value.name,
       pattern: editingEntry.value.pattern,
       type: editingEntry.value.type,
@@ -78,7 +78,7 @@ function saveEntry() {
       description: editingEntry.value.description,
     });
   } else {
-    blacklistManager.updateEntry(editingEntry.value.id, editingEntry.value);
+    getBlacklistManager().updateEntry(editingEntry.value.id, editingEntry.value);
   }
 
   showEditor.value = false;
@@ -88,13 +88,13 @@ function saveEntry() {
 
 function deleteEntry(entry: BlacklistEntry) {
   if (confirm(`确定要删除黑名单项 "${entry.name}" 吗？`)) {
-    blacklistManager.removeEntry(entry.id);
+    getBlacklistManager().removeEntry(entry.id);
     loadEntries();
   }
 }
 
 function toggleEntry(entry: BlacklistEntry) {
-  blacklistManager.toggleEntry(entry.id);
+  getBlacklistManager().toggleEntry(entry.id);
   loadEntries();
 }
 
@@ -102,11 +102,11 @@ function testPattern() {
   if (!editingEntry.value?.pattern || !testInput.value) return;
 
   const values = testInput.value.split('\n').filter(v => v.trim());
-  testOutput.value = blacklistManager.testPattern(editingEntry.value.pattern, editingEntry.value.type, values);
+  testOutput.value = getBlacklistManager().testPattern(editingEntry.value.pattern, editingEntry.value.type, values);
 }
 
 function exportData() {
-  const json = blacklistManager.exportData();
+  const json = getBlacklistManager().exportData();
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -128,7 +128,7 @@ function importFromJson() {
     return;
   }
 
-  const result = blacklistManager.importData(importJson.value);
+  const result = getBlacklistManager().importData(importJson.value);
   if (result.success) {
     showImportModal.value = false;
     loadEntries();
@@ -140,7 +140,7 @@ function importFromJson() {
 
 function clearAll() {
   if (confirm('确定要清空所有黑名单项吗？此操作不可恢复！')) {
-    blacklistManager.clearAll();
+    getBlacklistManager().clearAll();
     loadEntries();
   }
 }

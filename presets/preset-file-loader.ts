@@ -1,7 +1,7 @@
 import type { AdvancedDicePreset } from '../core/types';
-import { presetManager } from '../data/preset-manager';
+import { getPresetManager } from '../data/preset-manager';
 import { loadPresetFromJson } from './advanced-preset-loader';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 
 const PRESET_FILES_STORAGE_KEY = 'acu_loaded_preset_files';
 
@@ -19,7 +19,7 @@ export class PresetFileLoader {
   constructor() {
     this.loadFromStorage();
 
-    storageSyncBus.register(PRESET_FILES_STORAGE_KEY, () => {
+    getStorageSyncBus().register(PRESET_FILES_STORAGE_KEY, () => {
       this.loadedFiles.clear();
       this.loadFromStorage();
     });
@@ -66,12 +66,12 @@ export class PresetFileLoader {
       }
 
       const preset = result.preset;
-      const existingPreset = presetManager.getPreset(preset.id);
+      const existingPreset = getPresetManager().getPreset(preset.id);
       if (existingPreset) {
         preset.id = `${preset.id}_${Date.now()}`;
       }
 
-      presetManager.registerPreset(preset);
+      getPresetManager().registerPreset(preset);
       this.presetFiles.set(preset.id, preset);
 
       const info: PresetFileInfo = {
@@ -164,12 +164,12 @@ export class PresetFileLoader {
 
         if (loadResult.success && loadResult.preset) {
           const preset = loadResult.preset;
-          const existingPreset = presetManager.getPreset(preset.id);
+          const existingPreset = getPresetManager().getPreset(preset.id);
           if (existingPreset) {
             preset.id = `${preset.id}_${Date.now()}_${i}`;
           }
 
-          presetManager.registerPreset(preset);
+          getPresetManager().registerPreset(preset);
           this.presetFiles.set(preset.id, preset);
           result.loaded++;
           result.presets.push(preset);
@@ -192,14 +192,14 @@ export class PresetFileLoader {
   getPresetByFilename(filename: string): AdvancedDicePreset | null {
     const info = this.loadedFiles.get(filename);
     if (!info) return null;
-    return presetManager.getPreset(info.presetId);
+    return getPresetManager().getPreset(info.presetId);
   }
 
   removePresetByFilename(filename: string): boolean {
     const info = this.loadedFiles.get(filename);
     if (!info) return false;
 
-    presetManager.unregisterPreset(info.presetId);
+    getPresetManager().unregisterPreset(info.presetId);
     this.presetFiles.delete(info.presetId);
     this.loadedFiles.delete(filename);
     this.saveToStorage();
@@ -208,11 +208,11 @@ export class PresetFileLoader {
   }
 
   exportPreset(presetId: string): string | null {
-    return presetManager.exportPreset(presetId);
+    return getPresetManager().exportPreset(presetId);
   }
 
   exportAllPresets(): string {
-    const presets = presetManager.getAllPresets();
+    const presets = getPresetManager().getAllPresets();
     return JSON.stringify(presets, null, 2);
   }
 }

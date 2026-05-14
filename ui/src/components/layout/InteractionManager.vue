@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { MapInteraction, MapInteractionAction, MapInteractionTrigger } from '@map/types';
-import { interactionRuleManager, INTERACTION_TEMPLATES } from '@data/interaction-rule-manager';
+import { getInteractionRuleManager, INTERACTION_TEMPLATES } from '@data/interaction-rule-manager';
 import type { InteractionPreset } from '@data/interaction-rule-manager';
 
 const emit = defineEmits<{
@@ -52,12 +52,12 @@ const importError = ref('');
 const rules = computed(() => currentPreset.value?.rules || []);
 
 function loadPresets() {
-  presets.value = interactionRuleManager.getAllPresets();
-  currentPreset.value = interactionRuleManager.getCurrentPreset();
+  presets.value = getInteractionRuleManager().getAllPresets();
+  currentPreset.value = getInteractionRuleManager().getCurrentPreset();
 }
 
 function selectPreset(preset: InteractionPreset) {
-  interactionRuleManager.setCurrentPreset(preset.id);
+  getInteractionRuleManager().setCurrentPreset(preset.id);
   currentPreset.value = preset;
 }
 
@@ -65,14 +65,14 @@ function createPreset() {
   const name = prompt('请输入预设名称：');
   if (!name) return;
 
-  const preset = interactionRuleManager.createPreset(name);
-  presets.value = interactionRuleManager.getAllPresets();
+  const preset = getInteractionRuleManager().createPreset(name);
+  presets.value = getInteractionRuleManager().getAllPresets();
   selectPreset(preset);
 }
 
 function deletePreset(preset: InteractionPreset) {
   if (confirm(`确定要删除预设 "${preset.name}" 吗？`)) {
-    interactionRuleManager.deletePreset(preset.id);
+    getInteractionRuleManager().deletePreset(preset.id);
     loadPresets();
   }
 }
@@ -81,14 +81,14 @@ function duplicatePreset(preset: InteractionPreset) {
   const newName = prompt('请输入新预设名称：', `${preset.name} (副本)`);
   if (!newName) return;
 
-  const duplicated = interactionRuleManager.duplicatePreset(preset.id, newName);
+  const duplicated = getInteractionRuleManager().duplicatePreset(preset.id, newName);
   if (duplicated) {
-    presets.value = interactionRuleManager.getAllPresets();
+    presets.value = getInteractionRuleManager().getAllPresets();
   }
 }
 
 function exportPreset(preset: InteractionPreset) {
-  const json = interactionRuleManager.exportPreset(preset.id);
+  const json = getInteractionRuleManager().exportPreset(preset.id);
   if (!json) return;
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -112,7 +112,7 @@ function importFromJson() {
     return;
   }
 
-  const result = interactionRuleManager.importPreset(importJson.value);
+  const result = getInteractionRuleManager().importPreset(importJson.value);
   if (result.success && result.preset) {
     showImportModal.value = false;
     loadPresets();
@@ -124,10 +124,10 @@ function importFromJson() {
 function createRuleFromTemplate(templateId: string) {
   if (!currentPreset.value) return;
 
-  const rule = interactionRuleManager.createRuleFromTemplate(templateId);
+  const rule = getInteractionRuleManager().createRuleFromTemplate(templateId);
   if (!rule) return;
 
-  const newRule = interactionRuleManager.addRuleToPreset(currentPreset.value.id, rule);
+  const newRule = getInteractionRuleManager().addRuleToPreset(currentPreset.value.id, rule);
   if (newRule) {
     loadPresets();
     editRule(newRule);
@@ -142,7 +142,7 @@ function editRule(rule: MapInteraction) {
 function saveRule() {
   if (!editingRule.value || !currentPreset.value) return;
 
-  interactionRuleManager.updateRuleInPreset(
+  getInteractionRuleManager().updateRuleInPreset(
     currentPreset.value.id,
     editingRule.value.id,
     editingRule.value
@@ -156,7 +156,7 @@ function deleteRule(rule: MapInteraction) {
   if (!currentPreset.value) return;
 
   if (confirm(`确定要删除规则吗？`)) {
-    interactionRuleManager.removeRuleFromPreset(currentPreset.value.id, rule.id);
+    getInteractionRuleManager().removeRuleFromPreset(currentPreset.value.id, rule.id);
     loadPresets();
   }
 }
@@ -164,7 +164,7 @@ function deleteRule(rule: MapInteraction) {
 function toggleRule(rule: MapInteraction) {
   if (!currentPreset.value) return;
 
-  interactionRuleManager.updateRuleInPreset(currentPreset.value.id, rule.id, {
+  getInteractionRuleManager().updateRuleInPreset(currentPreset.value.id, rule.id, {
     enabled: !rule.enabled,
   });
   loadPresets();

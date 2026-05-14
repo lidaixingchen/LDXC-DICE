@@ -2,12 +2,12 @@
 import { computed, onMounted, ref } from 'vue';
 import { useCharacterData, useDiceSystem, usePresets, useCombatState } from '../../composables';
 import { appendToSendTextarea, clickSendButton } from '../../services/HostBridgeService';
-import { settingsManager } from '@data/settings-manager';
+import { getSettingsManager } from '@data/settings-manager';
 import type { CheckResult } from '../../types';
 
-const displaySettings = ref(settingsManager.getGroup('display'));
-settingsManager.onChange(() => {
-  displaySettings.value = { ...settingsManager.getGroup('display') };
+const displaySettings = ref(getSettingsManager().getGroup('display'));
+getSettingsManager().onChange(() => {
+  displaySettings.value = { ...getSettingsManager().getGroup('display') };
 });
 
 const emit = defineEmits<{

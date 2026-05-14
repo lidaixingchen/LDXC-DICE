@@ -1,6 +1,6 @@
 import type { MapInteraction, MapInteractionAction, MapInteractionTrigger } from '../map/types';
-import { storageSyncBus } from '../utils/storage-sync';
-import { interactionEngine } from '../map/interaction-engine';
+import { getStorageSyncBus } from '../utils/storage-sync';
+import { getInteractionEngine } from '../map/interaction-engine';
 
 const INTERACTION_PRESETS_KEY = 'acu_interaction_presets';
 
@@ -104,7 +104,7 @@ export class InteractionRuleManager {
 
   constructor() {
     this.loadFromStorage();
-    storageSyncBus.register(INTERACTION_PRESETS_KEY, () => {
+    getStorageSyncBus().register(INTERACTION_PRESETS_KEY, () => {
       this.loadFromStorage();
     });
   }
@@ -196,7 +196,7 @@ export class InteractionRuleManager {
     const preset = this.presets.get(presetId);
     if (!preset) return null;
 
-    const newRule = interactionEngine.addRule(rule);
+    const newRule = getInteractionEngine().addRule(rule);
     preset.rules.push(newRule);
     preset.updatedAt = Date.now();
     this.saveToStorage();
@@ -219,7 +219,7 @@ export class InteractionRuleManager {
     preset.updatedAt = Date.now();
     this.saveToStorage();
 
-    return interactionEngine.updateRule(ruleId, updates);
+    return getInteractionEngine().updateRule(ruleId, updates);
   }
 
   removeRuleFromPreset(presetId: string, ruleId: string): boolean {
@@ -230,7 +230,7 @@ export class InteractionRuleManager {
     preset.updatedAt = Date.now();
     this.saveToStorage();
 
-    return interactionEngine.removeRule(ruleId);
+    return getInteractionEngine().removeRule(ruleId);
   }
 
   createRuleFromTemplate(templateId: string, overrides?: {
@@ -318,4 +318,9 @@ export class InteractionRuleManager {
   }
 }
 
-export const interactionRuleManager = new InteractionRuleManager();
+let _interactionRuleManager: InteractionRuleManager | null = null;
+export function getInteractionRuleManager(): InteractionRuleManager {
+  if (!_interactionRuleManager) _interactionRuleManager = new InteractionRuleManager();
+  return _interactionRuleManager;
+}
+export function resetInteractionRuleManager(): void { _interactionRuleManager = null; }

@@ -37,7 +37,7 @@ export interface AvatarPack {
 }
 
 import { safeLocalStorageSet } from '../utils/safe-storage';
-import { storageSyncBus } from '../utils/storage-sync';
+import { getStorageSyncBus } from '../utils/storage-sync';
 
 const AVATARS_STORAGE_KEY = 'acu_dice_avatars';
 const CATEGORIES_STORAGE_KEY = 'acu_dice_avatar_categories';
@@ -53,11 +53,11 @@ export class AvatarManager {
     this.initializeDefaultCategories();
     this.migrateThumbnails();
 
-    storageSyncBus.register(AVATARS_STORAGE_KEY, () => {
+    getStorageSyncBus().register(AVATARS_STORAGE_KEY, () => {
       this.avatars.clear();
       this.loadFromStorage();
     });
-    storageSyncBus.register(CATEGORIES_STORAGE_KEY, () => {
+    getStorageSyncBus().register(CATEGORIES_STORAGE_KEY, () => {
       this.categories.clear();
       this.loadFromStorage();
     });
@@ -454,4 +454,9 @@ export class AvatarManager {
   }
 }
 
-export const avatarManager = new AvatarManager();
+let _avatarManager: AvatarManager | null = null;
+export function getAvatarManager(): AvatarManager {
+  if (!_avatarManager) _avatarManager = new AvatarManager();
+  return _avatarManager;
+}
+export function resetAvatarManager(): void { _avatarManager = null; }

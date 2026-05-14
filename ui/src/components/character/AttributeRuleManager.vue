@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-  attributePresetManager,
+  getAttributePresetManager,
   type StoredAttributePreset,
   type AttributePresetConfig,
 } from '@data/attribute-preset-manager';
@@ -19,17 +19,17 @@ const editingAttributeType = ref<'base' | 'special'>('base');
 const showAttributeEditor = ref(false);
 
 function loadPresets() {
-  presets.value = attributePresetManager.getAllPresets();
-  activePresetId.value = attributePresetManager.getActivePreset()?.id || null;
+  presets.value = getAttributePresetManager().getAllPresets();
+  activePresetId.value = getAttributePresetManager().getActivePreset()?.id || null;
 }
 
 function setActivePreset(id: string | null) {
-  attributePresetManager.setActivePreset(id);
+  getAttributePresetManager().setActivePreset(id);
   activePresetId.value = id;
 }
 
 function createNewPreset() {
-  const newPreset = attributePresetManager.createPreset({
+  const newPreset = getAttributePresetManager().createPreset({
     name: '新属性预设',
     description: '自定义属性生成规则',
     baseAttributes: [],
@@ -48,9 +48,9 @@ function savePreset() {
   if (!editingPreset.value) return;
 
   if (editingPreset.value.builtin) {
-    const newPreset = attributePresetManager.duplicatePreset(editingPreset.value.id);
+    const newPreset = getAttributePresetManager().duplicatePreset(editingPreset.value.id);
     if (newPreset) {
-      attributePresetManager.updatePreset(newPreset.id, {
+      getAttributePresetManager().updatePreset(newPreset.id, {
         name: editingPreset.value.name + ' (修改版)',
         description: editingPreset.value.description,
         baseAttributes: editingPreset.value.baseAttributes,
@@ -59,7 +59,7 @@ function savePreset() {
       });
     }
   } else {
-    attributePresetManager.updatePreset(editingPreset.value.id, {
+    getAttributePresetManager().updatePreset(editingPreset.value.id, {
       name: editingPreset.value.name,
       description: editingPreset.value.description,
       baseAttributes: editingPreset.value.baseAttributes,
@@ -75,12 +75,12 @@ function savePreset() {
 
 function deletePreset(id: string) {
   if (!confirm('确定要删除此预设吗？')) return;
-  attributePresetManager.deletePreset(id);
+  getAttributePresetManager().deletePreset(id);
   loadPresets();
 }
 
 function duplicatePreset(id: string) {
-  const newPreset = attributePresetManager.duplicatePreset(id);
+  const newPreset = getAttributePresetManager().duplicatePreset(id);
   if (newPreset) {
     loadPresets();
     editPreset(newPreset);
@@ -88,7 +88,7 @@ function duplicatePreset(id: string) {
 }
 
 function exportPreset(id: string) {
-  const json = attributePresetManager.exportPreset(id);
+  const json = getAttributePresetManager().exportPreset(id);
   if (!json) return;
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -107,7 +107,7 @@ function importPreset(event: Event) {
   const reader = new FileReader();
   reader.onload = e => {
     const json = e.target?.result as string;
-    const imported = attributePresetManager.importPreset(json, true);
+    const imported = getAttributePresetManager().importPreset(json, true);
     if (imported) {
       loadPresets();
       alert(`成功导入预设：${imported.name}`);
