@@ -1,6 +1,6 @@
 import type { AdvancedDicePreset, DiceRollContext } from '@core/types';
 import { computed, readonly, type ComputedRef } from 'vue';
-import { DiceSystem, createDiceSystem } from '../../../../index';
+import { DiceSystem, createDiceSystem } from '@index';
 import { eventBus } from '../../event-bus';
 import type {
   CheckOptions,

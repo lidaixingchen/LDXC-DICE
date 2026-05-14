@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { getDatabaseApi } from '../../services/HostBridgeService';
+import { isNpcTableName } from '@utils/helpers';
 
 export interface Character {
   name: string;
@@ -9,11 +10,6 @@ export interface Character {
 export interface AttributeButton {
   name: string;
   value: number;
-}
-
-function isNpcTableName(name: string): boolean {
-  const n = name.toLowerCase();
-  return n.includes('npc') || n.includes('角色') || n.includes('人物') || n.includes('npc表') || n.includes('角色表');
 }
 
 function isPlayerTableName(name: string): boolean {
@@ -72,8 +68,8 @@ export function useCharacterData() {
           const row = rows[0];
           const attrs: Record<string, number> = {};
 
-          headers.forEach((h: string, idx: number) => {
-            if (!h) return;
+          headers.forEach((h, idx) => {
+            if (!h || typeof h !== 'string') return;
             const val = row[idx];
             if (val === undefined || val === null) return;
 
@@ -96,7 +92,7 @@ export function useCharacterData() {
             }
           });
 
-          const nameCol = headers.findIndex((h: string) => h && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
+          const nameCol = headers.findIndex((h) => typeof h === 'string' && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
           const charName = nameCol >= 0 ? String(row[nameCol] || '主角') : '主角';
           chars.unshift({ name: charName, attributes: attrs });
         }
@@ -104,13 +100,13 @@ export function useCharacterData() {
         if (isNpcTableName(sheet.name)) {
           for (const row of rows) {
             if (!row || !row.some((cell: any) => cell)) continue;
-            const nameCol = headers.findIndex((h: string) => h && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
+            const nameCol = headers.findIndex((h) => typeof h === 'string' && (h.includes('姓名') || h.includes('名字') || h.toLowerCase().includes('name')));
             const name = nameCol >= 0 ? String(row[nameCol] || '') : '';
             if (!name) continue;
 
             const attrs: Record<string, number> = {};
-            headers.forEach((h: string, idx: number) => {
-              if (!h) return;
+            headers.forEach((h, idx) => {
+              if (typeof h !== 'string' || !h) return;
               const val = row[idx];
               if (val === undefined || val === null) return;
 

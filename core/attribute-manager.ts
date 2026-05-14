@@ -1,4 +1,5 @@
 import type { DatabaseAdapter } from '../adapters/database-adapter';
+import { iterateSheets } from '../utils/helpers';
 
 interface AttributeInfo {
   name: string;
@@ -72,12 +73,7 @@ export class AttributeManager {
       ? [attrName, ...aliasCandidates.filter(n => n !== attrName)]
       : [attrName];
 
-    for (const sheetKey in data) {
-      if (!sheetKey.startsWith('sheet_')) continue;
-      const sheet = data[sheetKey];
-      if (!sheet?.content || sheet.content.length < 2) continue;
-
-      const headers = sheet.content[0] as string[];
+    for (const { key: sheetKey, sheet, headers } of iterateSheets(data as Record<string, { name: string; content: (string | number | null)[][] } | undefined>)) {
       const pkField = this.dbAdapter.getPrimaryKey(sheet.name);
       let pkIndex = -1;
       if (pkField) {
@@ -136,12 +132,7 @@ export class AttributeManager {
     const data = this.dbAdapter.getTableData();
     if (!data) return attributes;
 
-    for (const sheetKey in data) {
-      if (!sheetKey.startsWith('sheet_')) continue;
-      const sheet = data[sheetKey];
-      if (!sheet?.content || sheet.content.length < 2) continue;
-
-      const headers = sheet.content[0] as string[];
+    for (const { key: sheetKey, sheet, headers } of iterateSheets(data as Record<string, { name: string; content: (string | number | null)[][] } | undefined>)) {
       const pkField = this.dbAdapter.getPrimaryKey(sheet.name);
       let pkIndex = -1;
       if (pkField) {
@@ -203,12 +194,7 @@ export class AttributeManager {
     let resolvedAttrName = attrName;
     let currentValue: number | null = null;
 
-    for (const sheetKey in data) {
-      if (!sheetKey.startsWith('sheet_')) continue;
-      const sheet = data[sheetKey];
-      if (!sheet?.content || sheet.content.length < 2) continue;
-
-      const headers = sheet.content[0] as string[];
+    for (const { key: sheetKey, sheet, headers } of iterateSheets(data as Record<string, { name: string; content: (string | number | null)[][] } | undefined>)) {
       const pkField = this.dbAdapter.getPrimaryKey(sheet.name);
       let pkIndex = -1;
       if (pkField) {

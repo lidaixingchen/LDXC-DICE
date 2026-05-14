@@ -495,7 +495,7 @@ function buildConfig(): SyncConfig {
     levels: parseLevelConfigs(),
     attributeModifiers: parseAttributeModifiers(),
     damageReduction: parseDamageReduction(),
-    checkRules: { critSuccessRoll: 20, critFailureRoll: 1, penaltyTriggerChance: 0.5, attrAdvantageCap: 3, escapeBaseDC: 10, escapeSurroundPerEnemy: 2 },
+    checkRules: { critSuccessRoll: 20, critFailureRoll: 1, penaltyTriggerChance: 0.5, attrAdvantageCap: 3, escapeBaseDC: 10, escapeSurroundPerEnemy: 2, bigSuccessMargin: 10, bigFailMargin: 10, barelySuccessMargin: 2 },
     combatRules: { hpEnduranceMultiplier: 5, ddcBase: 10, critDamageMultiplier: 2, critRateBase: 5, critRateCharismaDivisor: 2, critRateCap: 50, erosionDamageRatio: 0.05, hpPenaltyMax: 10, hpPenaltyMin: 1, critHitDivisor: 5, minDamage: 1 },
     skillRules: parseSkillRules(),
     equipmentRules: parseEquipmentRules(),

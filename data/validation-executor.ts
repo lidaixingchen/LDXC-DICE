@@ -1,5 +1,6 @@
 import type { ValidationRuleConfig } from './validation-presets';
 import { validationPresetManager } from './validation-preset-manager';
+import { isNpcTableName } from '../utils/helpers';
 
 export interface ValidationError {
   ruleId: string;
@@ -33,10 +34,6 @@ const RULE_TYPE_INFO: Record<string, { name: string; scope: 'table' | 'field'; i
   relation: { name: '关联验证', scope: 'field', icon: 'fa-link', desc: '引用其他表的值' },
   keyValue: { name: '键值对验证', scope: 'field', icon: 'fa-key', desc: '验证键值对格式和数值范围' },
 };
-
-function isNpcTableName(name: string): boolean {
-  return name.startsWith('重要角色') || name.startsWith('重要人物') || name.startsWith('NPC');
-}
 
 function findColumnIndex(headers: (string | number | null)[], columnName: string): number {
   if (!headers || !columnName) return -1;

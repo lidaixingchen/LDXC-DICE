@@ -354,9 +354,6 @@ export const EMOJI_MAP: IconMap[] = [
   [/环境|石|木|金属|障碍/, 'fa:mountain'],
 ];
 
-export const LOCATION_EMOJI_MAP = EMOJI_MAP;
-export const ELEMENT_EMOJI_MAP = EMOJI_MAP;
-
 export const RELATION_ICON_MAP: RelationIconMapping[] = [
   {
     icon: 'fa:heart',

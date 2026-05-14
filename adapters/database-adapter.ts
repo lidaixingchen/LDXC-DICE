@@ -1,5 +1,6 @@
 import type { DatabaseLockState } from '../core/types';
-import { getDatabaseApi } from '../utils/host-environment';
+import { getDatabaseApi, type GodDatabaseAPI } from '../utils/host-environment';
+import { iterateSheets } from '../utils/helpers';
 
 const PRIMARY_KEYS: Record<string, string | null> = {
   全局数据表: null,
@@ -68,7 +69,7 @@ export interface DatabaseAdapter {
 }
 
 export class GodDatabaseAdapter implements DatabaseAdapter {
-  private api: any = null;
+  private api: GodDatabaseAPI | null = null;
   private cachedData: Record<string, { name: string; content: (string | number | null)[][] }> | null = null;
 
   constructor() {
@@ -94,7 +95,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
     }
 
     try {
-      const data = this.api.exportTableAsJson() as Record<
+      const data = this.api!.exportTableAsJson() as Record<
         string,
         { name: string; content: (string | number | null)[][] }
       >;
@@ -211,12 +212,12 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
   }
 
   getLockState(sheetKey: string): DatabaseLockState | null {
-    if (!this.isAvailable() || typeof this.api.getTableLockState !== 'function') {
+    if (!this.isAvailable() || typeof this.api!.getTableLockState !== 'function') {
       return null;
     }
 
     try {
-      return this.api.getTableLockState(sheetKey) as DatabaseLockState;
+      return this.api!.getTableLockState!(sheetKey) as DatabaseLockState;
     } catch {
       return null;
     }
@@ -233,12 +234,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
 
     const searchNames = aliasCandidates ? [attrName, ...aliasCandidates.filter(n => n !== attrName)] : [attrName];
 
-    for (const sheetKey in data) {
-      if (!sheetKey.startsWith('sheet_')) continue;
-      const sheet = data[sheetKey];
-      if (!sheet?.content || sheet.content.length < 2) continue;
-
-      const headers = sheet.content[0] as string[];
+    for (const { key: sheetKey, sheet, headers } of iterateSheets(data as Record<string, { name: string; content: (string | number | null)[][] } | undefined>)) {
       const pkField = this.getPrimaryKey(sheet.name);
       let pkIndex = -1;
       if (pkField) {
@@ -293,12 +289,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
     let targetColIndex: number = -1;
     let resolvedAttrName = attrName;
 
-    for (const sheetKey in data) {
-      if (!sheetKey.startsWith('sheet_')) continue;
-      const sheet = data[sheetKey];
-      if (!sheet?.content || sheet.content.length < 2) continue;
-
-      const headers = sheet.content[0] as string[];
+    for (const { key: sheetKey, sheet, headers } of iterateSheets(data as Record<string, { name: string; content: (string | number | null)[][] } | undefined>)) {
       const pkField = this.getPrimaryKey(sheet.name);
       let pkIndex = -1;
       if (pkField) {
@@ -415,7 +406,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
 
     if (!options.skipSave) {
       const cleanData = JSON.parse(JSON.stringify(data));
-      const importResult = await this.api.importTableAsJson(cleanData);
+      const importResult = await this.api!.importTableAsJson(cleanData);
       if (!importResult) {
         sheet.content[targetRowIndex + 1][targetColIndex] = oldValue;
         return { success: false, oldValue, newValue: oldValue, error: '数据导入失败（返回 false）' };
@@ -483,7 +474,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
       }
 
       if (explicitSheetKeys) {
-        const latestRaw = this.api.exportTableAsJson() as Record<string, unknown> | null;
+        const latestRaw = this.api!.exportTableAsJson() as Record<string, unknown> | null;
         if (!latestRaw) {
           throw new Error('无法读取最新数据库基底，已取消保存以避免覆盖未保存表格');
         }
@@ -516,7 +507,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
           throw new Error(`修改表不存在：${explicitSheetKeys.join(', ')}`);
         }
 
-        const result = await this.api.importTableAsJson(merged);
+        const result = await this.api!.importTableAsJson(merged);
         if (result) {
           this.cachedData = data;
         }
@@ -524,7 +515,7 @@ export class GodDatabaseAdapter implements DatabaseAdapter {
       }
 
       const cleanData = JSON.parse(JSON.stringify(data));
-      const result = await this.api.importTableAsJson(cleanData);
+      const result = await this.api!.importTableAsJson(cleanData);
       if (result) {
         this.cachedData = data;
       }

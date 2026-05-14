@@ -202,11 +202,11 @@ export class CharacterDataService {
         if (sheet.name.includes('技能')) {
           for (const row of rows) {
             if (!row || !row.some((cell: any) => cell)) continue;
-            const nameCol = headers.findIndex((h: string) => h && h.includes('名称'));
-            const typeCol = headers.findIndex((h: string) => h && h.includes('类型'));
-            const descCol = headers.findIndex((h: string) => h && h.includes('效果'));
-            const valueCol = headers.findIndex((h: string) => h && h.includes('数值'));
-            const cdCol = headers.findIndex((h: string) => h && h.includes('冷却'));
+            const nameCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('名称'));
+            const typeCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('类型'));
+            const descCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('效果'));
+            const valueCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('数值'));
+            const cdCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('冷却'));
 
             const skillType = typeCol >= 0 ? String(row[typeCol] || '') : '';
             if (skillType === '主动') {
@@ -224,10 +224,10 @@ export class CharacterDataService {
         if (sheet.name.includes('物品')) {
           for (const row of rows) {
             if (!row || !row.some((cell: any) => cell)) continue;
-            const nameCol = headers.findIndex((h: string) => h && h.includes('名称'));
-            const typeCol = headers.findIndex((h: string) => h && h.includes('类型'));
-            const descCol = headers.findIndex((h: string) => h && (h.includes('效果') || h.includes('描述')));
-            const qtyCol = headers.findIndex((h: string) => h && (h.includes('数量') || h.includes('持有')));
+            const nameCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('名称'));
+            const typeCol = headers.findIndex((h) => typeof h === 'string' && h && h.includes('类型'));
+            const descCol = headers.findIndex((h) => typeof h === 'string' && h && (h.includes('效果') || h.includes('描述')));
+            const qtyCol = headers.findIndex((h) => typeof h === 'string' && h && (h.includes('数量') || h.includes('持有')));
 
             const itemType = typeCol >= 0 ? String(row[typeCol] || '') : '';
             if (itemType === '消耗品') {

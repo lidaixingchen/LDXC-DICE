@@ -5,6 +5,25 @@
  * `while(win.parent !== win)` 跨域检测模式。
  */
 
+/** AutoCardUpdaterAPI 宿主接口 */
+export interface GodDatabaseAPI {
+  exportTableAsJson(): Record<string, { name: string; content: (string | number | null)[][] }> | null;
+  importTableAsJson(data: Record<string, unknown>): Promise<boolean> | boolean;
+  getTableLockState?(sheetKey: string): { locked: boolean; by?: string } | null;
+  openSettings?(): void;
+  openVisualizer?(): void;
+  manualUpdate?(): Promise<void> | void;
+  getMvuData?(...args: unknown[]): unknown;
+  getVariables?(...args: unknown[]): unknown;
+}
+
+/** TavernHelper 宿主接口 */
+export interface TavernHelperAPI {
+  createChatMessages?(messages: unknown[], options?: Record<string, unknown>): Promise<void> | void;
+  triggerSlash?(command: string): Promise<void> | void;
+  [key: string]: unknown;
+}
+
 let cachedTopWindow: Window | null = null;
 
 /**
@@ -32,23 +51,26 @@ export function isCrossOrigin(): boolean {
 /**
  * 从顶层窗口或当前窗口获取宿主全局变量。
  */
-export function getHostGlobal<T = any>(name: string): T | null {
+export function getHostGlobal<T>(name: string): T | null {
   const top = getTopWindow();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (top as any)[name] ?? (window as any)[name] ?? null;
 }
 
-export function getDatabaseApi(): any {
-  return getHostGlobal('AutoCardUpdaterAPI');
+export function getDatabaseApi(): GodDatabaseAPI | null {
+  return getHostGlobal<GodDatabaseAPI>('AutoCardUpdaterAPI');
 }
 
-export function getTavernHelper(): any {
-  return getHostGlobal('TavernHelper');
+export function getTavernHelper(): TavernHelperAPI | null {
+  return getHostGlobal<TavernHelperAPI>('TavernHelper');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getHostjQuery(): any | null {
   return getHostGlobal('jQuery');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getSillyTavern(): any | null {
   return getHostGlobal('SillyTavern');
 }

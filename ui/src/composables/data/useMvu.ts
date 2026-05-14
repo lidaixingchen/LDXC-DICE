@@ -92,16 +92,16 @@ function getMvuDataFromWindow(): MvuData | null {
   if (api) {
     if (typeof api.getMvuData === 'function') {
       try {
-        const raw = (() => {
-          try { return api.getMvuData(MVU_CTX); } catch { return api.getMvuData(); }
+        const raw: Record<string, unknown> | null = (() => {
+          try { return api.getMvuData!(MVU_CTX) as Record<string, unknown> | null; } catch { return api.getMvuData!() as Record<string, unknown> | null; }
         })();
         if (raw) {
           console.log('[MVU] 从 API.getMvuData 获取成功');
           const hasStatData = raw.stat_data !== undefined;
           return {
             _source: 'mvu',
-            stat_data: hasStatData ? raw.stat_data : { ...raw },
-            delta_data: hasStatData ? raw.delta_data : undefined,
+            stat_data: (hasStatData ? raw.stat_data : { ...raw }) as Record<string, unknown>,
+            delta_data: (hasStatData ? raw.delta_data : undefined) as Record<string, { old: unknown; new: unknown }> | undefined,
           };
         }
       } catch (e) {
@@ -111,16 +111,16 @@ function getMvuDataFromWindow(): MvuData | null {
 
     if (typeof api.getVariables === 'function') {
       try {
-        const raw = (() => {
-          try { return api.getVariables(MVU_CTX); } catch { return api.getVariables(); }
+        const raw: Record<string, unknown> | null = (() => {
+          try { return api.getVariables!(MVU_CTX) as Record<string, unknown> | null; } catch { return api.getVariables!() as Record<string, unknown> | null; }
         })();
         if (raw) {
           console.log('[MVU] 从 API.getVariables 获取成功');
           const hasStatData = raw.stat_data !== undefined;
           return {
             _source: 'mvu',
-            stat_data: hasStatData ? raw.stat_data : { ...raw },
-            delta_data: hasStatData ? raw.delta_data : undefined,
+            stat_data: (hasStatData ? raw.stat_data : { ...raw }) as Record<string, unknown>,
+            delta_data: (hasStatData ? raw.delta_data : undefined) as Record<string, { old: unknown; new: unknown }> | undefined,
           };
         }
       } catch (e) {

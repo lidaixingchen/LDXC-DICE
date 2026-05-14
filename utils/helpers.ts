@@ -231,10 +231,29 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * 判断表名是否为 NPC 表（兼容新旧模板）
+ * 判断表名是否为 NPC 表（兼容新旧模板，大小写不敏感）
  */
 export function isNpcTableName(name: string): boolean {
-  return name === '重要人物表' || name === '重要角色表';
+  const n = name.toLowerCase();
+  return n.includes('npc') || n.includes('角色') || n.includes('人物');
+}
+
+export interface SheetData {
+  name: string;
+  content: (string | number | null)[][];
+}
+
+/**
+ * 遍历数据库数据中的所有 sheet（key 以 'sheet_' 开头且 content 有效）
+ */
+export function* iterateSheets(data: Record<string, SheetData | undefined>): Generator<{ key: string; sheet: SheetData; headers: string[] }> {
+  for (const sheetKey in data) {
+    if (!sheetKey.startsWith('sheet_')) continue;
+    const sheet = data[sheetKey];
+    if (!sheet?.content || sheet.content.length < 2) continue;
+    const headers = sheet.content[0] as string[];
+    yield { key: sheetKey, sheet, headers };
+  }
 }
 
 /**
