@@ -7,6 +7,7 @@ import type {
   DiceMap,
 } from './types';
 import { storageSyncBus } from '../utils/storage-sync';
+import { safeEvalCondition } from '../core/safe-eval';
 
 export interface InteractionContext {
   mapId: string;
@@ -281,21 +282,15 @@ export class InteractionEngine {
   private evaluateCondition(condition: string | undefined, context: InteractionContext): boolean {
     if (!condition) return true;
 
-    if (condition.length > 1000 || /[;{}[\]'"`\\]/.test(condition)) {
-      console.warn('[InteractionEngine] 条件表达式包含不安全字符', condition);
-      return false;
-    }
-
     try {
-      const contextVars = Object.entries(context).map(([key, val]) => {
-        const safeVal = typeof val === 'function' ? 'undefined' : JSON.stringify(val);
-        return `var ${key} = ${safeVal};`;
-      }).join('\n');
-
-      const fn = new Function(
-        `${contextVars}\nreturn (${condition});`,
-      );
-      return fn();
+      // 将上下文数值属性注入为变量
+      const vars: Record<string, number> = {};
+      for (const [key, val] of Object.entries(context)) {
+        if (typeof val === 'number') {
+          vars[key] = val;
+        }
+      }
+      return safeEvalCondition(condition);
     } catch (e) {
       console.warn('[InteractionEngine] 条件评估失败:', e);
       return false;

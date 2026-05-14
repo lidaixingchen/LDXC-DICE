@@ -81,6 +81,7 @@ type InjectionHandler = (
 ) => InjectionResult;
 
 import { storageSyncBus } from '../utils/storage-sync';
+import { safeEval, safeEvalCondition } from '../core/safe-eval';
 
 const INJECTIONS_STORAGE_KEY = 'acu_dice_table_injections';
 
@@ -361,13 +362,9 @@ export class TableInjector {
       case 'function':
         if (transform.function) {
           try {
-            const body = transform.function;
-            if (body.length > 500 || /[{}[\];]/.test(body)) {
-              console.warn('[TableInjector] 函数体不安全，已跳过');
-              return value;
-            }
-            const fn = new Function('value', `return ${body}`);
-            return fn(value);
+            const numValue = typeof value === 'number' ? value : Number(value);
+            if (!Number.isFinite(numValue)) return value;
+            return safeEval(transform.function.replace(/\bvalue\b/g, String(numValue)));
           } catch (e) {
             console.warn('[TableInjector] 函数执行失败:', e);
             return value;
@@ -385,15 +382,12 @@ export class TableInjector {
         if (transform.conditions) {
           for (const cond of transform.conditions) {
             try {
-              const condBody = cond.condition;
-              if (condBody.length > 500 || /[{}[\];]/.test(condBody)) {
-                continue;
-              }
-              const fn = new Function('value', `return ${condBody}`);
-              if (fn(value)) {
+              const numValue = typeof value === 'number' ? value : Number(value);
+              if (!Number.isFinite(numValue)) continue;
+              if (safeEvalCondition(cond.condition.replace(/\bvalue\b/g, String(numValue)))) {
                 return cond.value;
               }
-            } catch (e) {
+            } catch {
               continue;
             }
           }

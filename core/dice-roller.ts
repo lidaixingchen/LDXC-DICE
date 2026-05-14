@@ -1,4 +1,5 @@
 import type { RollResult } from './types';
+import { safeEval, safeEvalCondition } from './safe-eval';
 
 export class DiceExpressionError extends Error {
   constructor(message: string) {
@@ -22,15 +23,6 @@ interface ParsedDice {
 const DICE_REGEX = /^(\d+)?d(\d+)([bkpe]{1,2})?(\d+)?$/i;
 const MODIFIER_REGEX = /^[+-]$/;
 const NUMBER_REGEX = /^\d+(\.\d+)?$/;
-const SAFE_FORMULA_FUNCTIONS = {
-  abs: Math.abs,
-  ceil: Math.ceil,
-  floor: Math.floor,
-  max: Math.max,
-  min: Math.min,
-  round: Math.round,
-} as const;
-
 export function tokenize(expression: string): DiceToken[] {
   const tokens: DiceToken[] = [];
   let current = '';
@@ -513,18 +505,7 @@ export function evaluateFormula(formula: string, context: Record<string, number>
   });
 
   try {
-    const normalizedExpr = expr.toLowerCase().replace(/\s/g, '');
-    const safeExpr = normalizedExpr.replace(/[^0-9+\-*/().,a-z]/g, '');
-    // 只允许基础算符和已知数学函数；更复杂的表达式走回退解析。
-    if (safeExpr !== normalizedExpr) {
-      const rollResult = rollComplexDiceExpression(expr);
-      return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
-    }
-
-    const helperNames = Object.keys(SAFE_FORMULA_FUNCTIONS) as Array<keyof typeof SAFE_FORMULA_FUNCTIONS>;
-    const fn = new Function(...helperNames, `return ${safeExpr}`);
-    const result = fn(...helperNames.map(name => SAFE_FORMULA_FUNCTIONS[name]));
-    return typeof result === 'number' && !isNaN(result) ? result : 0;
+    return safeEval(expr);
   } catch {
     const rollResult = rollComplexDiceExpression(expr);
     return Number.isNaN(rollResult.total) ? 0 : rollResult.total;
@@ -556,13 +537,8 @@ export function evaluateCondition(
 
   if (hasLogical || hasComparison) {
     try {
-      const safeExpr = expr.replace(/[^0-9+\-*/().<>=!&| ]/g, '');
-      const fn = new Function(`return ${safeExpr}`);
-      const result = fn();
-      if (typeof result === 'boolean') {
-        return { success: true, value: result };
-      }
-      return { success: true, value: !!result };
+      const result = safeEvalCondition(expr);
+      return { success: true, value: result };
     } catch {
       // fall through
     }

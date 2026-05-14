@@ -1,6 +1,7 @@
 import type { AdvancedDicePreset, DiceRollContext } from '@core/types';
 import { computed, readonly, type ComputedRef } from 'vue';
 import { DiceSystem, createDiceSystem } from '@index';
+import { safeEval } from '@core/safe-eval';
 import { eventBus } from '../../event-bus';
 import type {
   CheckOptions,
@@ -104,37 +105,11 @@ export function useDiceSystem(): {
       return String(val);
     });
 
-    const normalized = expr
-      .replace(/\bmax\s*\(/g, 'Math.max(')
-      .replace(/\bmin\s*\(/g, 'Math.min(')
-      .replace(/\bfloor\s*\(/g, 'Math.floor(')
-      .replace(/\bceil\s*\(/g, 'Math.ceil(')
-      .replace(/\bround\s*\(/g, 'Math.round(')
-      .replace(/\babs\s*\(/g, 'Math.abs(')
-      .replace(/\bpow\s*\(/g, 'Math.pow(');
-
-    // 安全检测：仅允许数字、算术运算、括号、逗号以及白名单中的 Math 函数
-    const unsafeCharsPattern = /[;{}[\]'"`\\]/;
-    const remainingTokens = normalized.replace(/\bMath\.(max|min|floor|ceil|round|abs|pow)\b/g, '');
-    if (
-      unsafeCharsPattern.test(normalized) ||
-      /[A-Za-z_$]/.test(remainingTokens) ||
-      /[^0-9+\-*/%().,\s]/.test(remainingTokens)
-    ) {
+    try {
+      return safeEval(expr);
+    } catch {
       return diceSystemInstance!.evaluateFormula(formula, context);
     }
-
-    try {
-      const fn = new Function('Math', `return (${normalized});`);
-      const value = fn(Math);
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        return value;
-      }
-    } catch {
-      // Fall back to core evaluator.
-    }
-
-    return diceSystemInstance!.evaluateFormula(formula, context);
   }
 
   function fillTemplate(template: string, context: Record<string, number | string>): string {
