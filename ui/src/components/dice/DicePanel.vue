@@ -25,6 +25,7 @@ import type { AttributeButton } from '../../composables/data/useCharacterData';
 import type { CheckResult } from '../../types';
 import type { CheckTypeName, CheckTypeConfig, AdvancedDicePreset } from '@core/types';
 import { settingsManager } from '@data/settings-manager';
+import { showToast } from '../../utils/toast-manager';
 
 import DicePanelHeader from './DicePanelHeader.vue';
 import ModeSelector from './ModeSelector.vue';
@@ -538,6 +539,7 @@ async function handleRoll(): Promise<void> {
     }
   } catch (e) {
     console.error('[DicePanel] 掷骰失败:', e);
+    showToast(`掷骰失败: ${e instanceof Error ? e.message : '未知错误'}`, 'error');
   } finally {
     isRolling.value = false;
   }
@@ -711,14 +713,14 @@ function handleExportSave(): void {
 function handleImportSave(): void {
   const state = SaveService.parseImportText(importText.value)
   if (!state) {
-    alert('存档格式无效：未检测到有效存档数据')
+    showToast('存档格式无效：未检测到有效存档数据', 'error')
   } else {
     initiatorName.value = state.playerName
     worldLevel.value = state.level
     combat.value = { ...state.combat }
     equipment.value = { ...state.equipment }
     activeStatuses.value = state.statuses.map(s => ({ ...s }))
-    alert('存档导入成功！')
+    showToast('存档导入成功！', 'success')
   }
 }
 

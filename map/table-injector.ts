@@ -145,7 +145,7 @@ export class TableInjector {
   }
 
   createInjection(config: Omit<TableInjection, 'id' | 'createdAt' | 'updatedAt'>): TableInjection {
-    const id = `inject_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `inject_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const injection: TableInjection = {

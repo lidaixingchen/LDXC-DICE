@@ -142,7 +142,14 @@ function updateAdvancedField(field: keyof AdvancedSettings, value: AdvancedSetti
 
 function clearSystemCache() {
   if (window.confirm('确认清除ACU缓存？')) {
-    window.localStorage.clear();
+    const acuKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('acu_') || key.startsWith('aidm_'))) {
+        acuKeys.push(key);
+      }
+    }
+    acuKeys.forEach(key => localStorage.removeItem(key));
     window.location.reload();
   }
 }

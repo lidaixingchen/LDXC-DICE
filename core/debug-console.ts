@@ -123,7 +123,7 @@ export class DebugConsole {
     }
 
     const entry: LogEntry = {
-      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       level,
       message,
       timestamp: Date.now(),
@@ -376,6 +376,9 @@ export class DebugConsole {
       description: '执行JavaScript代码（警告：危险操作）',
       usage: 'eval <code>',
       handler: (args: string[], context: DebugContext) => {
+        if (!this.isEnabled()) {
+          return '执行错误: eval 命令仅在调试模式启用时可用（使用 enable 命令启用）';
+        }
         const code = args.join(' ');
         if (code.length > 500) {
           return '执行错误: 代码长度超过 500 字符限制';
@@ -441,7 +444,7 @@ export class DebugConsole {
           if (log.message && log.level) {
             this.logs.push({
               ...log,
-              id: log.id || `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              id: log.id || `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
             });
             imported++;
           }

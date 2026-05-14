@@ -559,7 +559,7 @@ export class SettingsManager {
   addCustomValidationRule(rule: Omit<CustomValidationRule, 'id'>): CustomValidationRule {
     const newRule: CustomValidationRule = {
       ...rule,
-      id: `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `rule_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
     this.settings.validation.customValidationRules.push(newRule);

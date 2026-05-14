@@ -3,7 +3,7 @@ import { settingsManager, type LegacySettings, getFontValue } from '@data/settin
 import { clearThemeColorCache } from '../../utils/theme-utils';
 import { syncRulesToEngine } from '@core/validation/regex-sync';
 import { setDatabaseToastMute, injectToastStyles } from '../../utils/toast-manager';
-import { computed, onMounted, onUnmounted, ref, provide, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, provide, watch } from 'vue';
 import { useDiceSystem, usePresets, useCombatState, useStatusEffects } from '../../composables';
 import { useDashboard } from '../../composables/data/useDashboard';
 import BottomNav, { type ActionButton } from './BottomNav.vue';
@@ -11,41 +11,20 @@ import ChangesPanel from '../data/ChangesPanel.vue';
 import DashboardPanel from '../data/DashboardPanel.vue';
 import DicePanel from '../dice/DicePanel.vue';
 import FavoritesPanel from '../tools/FavoritesPanel.vue';
-import GeneratePanel from '../tools/GeneratePanel.vue';
 import MvuPanel from '../data/MvuPanel.vue';
-import OpposedCheckPanel from '../dice/OpposedCheckPanel.vue';
-import RelationGraph from '../data/RelationGraph.vue';
 import SettingsPanel from '../settings/SettingsPanel.vue';
 import SavePanel from '../tools/SavePanel.vue';
 import DiceHistoryPanel from '../dice/DiceHistoryPanel.vue';
-import PresetManager from '../presets/PresetManager.vue';
-import TableBrowser from '../tools/TableBrowser.vue';
+
+const GeneratePanel = defineAsyncComponent(() => import('../tools/GeneratePanel.vue'));
+const OpposedCheckPanel = defineAsyncComponent(() => import('../dice/OpposedCheckPanel.vue'));
+const RelationGraph = defineAsyncComponent(() => import('../data/RelationGraph.vue'));
+const PresetManager = defineAsyncComponent(() => import('../presets/PresetManager.vue'));
+const TableBrowser = defineAsyncComponent(() => import('../tools/TableBrowser.vue'));
 
 const { getTableData, findTableByKeywords } = useDashboard();
 const { initialize } = useDiceSystem();
 const { loadPresets } = usePresets();
-
-interface StatusEffect {
-  id: number;
-  name: string;
-  type: 'buff' | 'debuff' | 'dot' | 'control' | 'shield';
-  intensity: 'weak' | 'medium' | 'strong';
-  value: number;
-  remainingRounds: number;
-  totalRounds?: number;
-  description: string;
-}
-
-interface CombatState {
-  active: boolean;
-  round: number;
-  enemyName: string;
-  enemyMaxHP: number;
-  enemyCurrentHP: number;
-  playerMaxHP: number;
-  playerCurrentHP: number;
-  playerShield: number;
-}
 
 const { activeStatuses } = useStatusEffects();
 const { combat } = useCombatState();

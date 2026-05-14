@@ -160,7 +160,7 @@ export class AvatarManager {
       return null;
     }
 
-    const id = `avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `avatar_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const newAvatar: Avatar = {
@@ -243,7 +243,7 @@ export class AvatarManager {
   }
 
   createCategory(name: string, icon: string = 'fa:folder'): AvatarCategory {
-    const id = `cat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `cat_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
     const category: AvatarCategory = {
       id,
@@ -365,7 +365,7 @@ export class AvatarManager {
       .filter((a): a is Avatar => !!a);
 
     const pack: AvatarPack = {
-      id: `pack_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `pack_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       name,
       description,
       version: '1.0.0',
@@ -387,7 +387,7 @@ export class AvatarManager {
       }
 
       const newId = this.avatars.has(avatar.id)
-        ? `avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        ? `avatar_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
         : avatar.id;
 
       this.avatars.set(newId, {

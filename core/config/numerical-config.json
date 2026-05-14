@@ -234,7 +234,10 @@
     "penaltyTriggerChance": 0.5,
     "attrAdvantageCap": 3,
     "escapeBaseDC": 10,
-    "escapeSurroundPerEnemy": 2
+    "escapeSurroundPerEnemy": 2,
+    "bigSuccessMargin": 10,
+    "bigFailMargin": 10,
+    "barelySuccessMargin": 2
   },
   "combatRules": {
     "hpEnduranceMultiplier": 5,

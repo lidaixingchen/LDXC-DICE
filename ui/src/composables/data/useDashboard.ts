@@ -465,7 +465,7 @@ function toggle(): void {
 function addChange(record: Omit<ChangeRecord, 'id' | 'timestamp'>): void {
   const newRecord: ChangeRecord = {
     ...record,
-    id: `change_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `change_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     timestamp: Date.now(),
   };
   changes.value.unshift(newRecord);

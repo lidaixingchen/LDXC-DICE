@@ -92,7 +92,7 @@ export class BookmarkManager {
   }
 
   addBookmark(bookmark: Omit<Bookmark, 'id' | 'createdAt' | 'updatedAt' | 'accessCount'>): Bookmark {
-    const id = `bookmark_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `bookmark_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const newBookmark: Bookmark = {
@@ -240,7 +240,7 @@ export class BookmarkManager {
   }
 
   createGroup(name: string, icon?: string, color?: string): BookmarkGroup {
-    const id = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `group_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const group: BookmarkGroup = {
@@ -375,7 +375,7 @@ export class BookmarkManager {
         for (const bookmark of data.bookmarks) {
           if (bookmark.name && bookmark.type && bookmark.target) {
             if (this.bookmarks.has(bookmark.id)) {
-              bookmark.id = `bookmark_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              bookmark.id = `bookmark_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
             }
             this.bookmarks.set(bookmark.id, {
               ...bookmark,
@@ -391,7 +391,7 @@ export class BookmarkManager {
         for (const group of data.groups) {
           if (group.name) {
             if (this.groups.has(group.id)) {
-              group.id = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              group.id = `group_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
             }
             this.groups.set(group.id, {
               ...group,

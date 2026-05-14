@@ -119,7 +119,7 @@ export class FavoritesManager {
       }
     }
 
-    const id = `fav_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `fav_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     let name = options.name;
@@ -254,7 +254,7 @@ export class FavoritesManager {
   }
 
   createGroup(name: string, options: { icon?: string; color?: string } = {}): FavoriteGroup {
-    const id = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `group_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const group: FavoriteGroup = {
@@ -376,7 +376,7 @@ export class FavoritesManager {
         for (const item of data.favorites) {
           if (item.id && item.type && item.data) {
             if (this.favorites.has(item.id)) {
-              item.id = `fav_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              item.id = `fav_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
             }
             this.favorites.set(item.id, item);
             imported++;
@@ -390,7 +390,7 @@ export class FavoritesManager {
         for (const group of data.groups) {
           if (group.id && group.name) {
             if (this.groups.has(group.id)) {
-              group.id = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              group.id = `group_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
             }
             this.groups.set(group.id, group);
           }

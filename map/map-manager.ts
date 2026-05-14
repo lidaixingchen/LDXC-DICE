@@ -95,7 +95,7 @@ export class MapManager {
     grid?: MapGrid;
     settings?: Partial<MapSettings>;
   }): DiceMap {
-    const id = `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `map_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const map: DiceMap = {
@@ -270,7 +270,7 @@ export class MapManager {
 
     const newToken: MapToken = {
       ...token,
-      id: `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `token_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
     map.tokens.push(newToken);
@@ -355,7 +355,7 @@ export class MapManager {
 
     const newShape: MapShape = {
       ...shape,
-      id: `shape_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `shape_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
     map.shapes.push(newShape);
@@ -411,7 +411,7 @@ export class MapManager {
 
     const newInteraction: MapInteraction = {
       ...interaction,
-      id: `interact_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `interact_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
     map.interactions.push(newInteraction);
@@ -441,7 +441,7 @@ export class MapManager {
 
     const newRegion: MapFogRegion = {
       ...region,
-      id: `fog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `fog_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     };
 
     map.fog.regions.push(newRegion);
@@ -478,7 +478,7 @@ export class MapManager {
     if (!map) return null;
 
     const snapshot: MapSnapshot = {
-      id: `snapshot_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `snapshot_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       mapId,
       name,
       timestamp: Date.now(),
@@ -610,7 +610,7 @@ export class MapManager {
       }
 
       if (this.maps.has(map.id)) {
-        map.id = `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        map.id = `map_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       }
 
       map.updatedAt = Date.now();
@@ -633,7 +633,7 @@ export class MapManager {
     const original = this.maps.get(id);
     if (!original) return null;
 
-    const newId = `map_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newId = `map_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const copy: DiceMap = {
       ...JSON.parse(JSON.stringify(original)),
       id: newId,

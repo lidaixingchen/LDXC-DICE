@@ -104,11 +104,11 @@ export class CheckCalculationService {
       isSuccess = false
       isBarelySuccess = false
       outcomeText = '大失败！'
-    } else if (isCritSuccess || margin >= 10) {
+    } else if (isCritSuccess || margin >= rules.bigSuccessMargin) {
       isSuccess = true
       isBarelySuccess = false
       outcomeText = '大成功！'
-    } else if (margin <= -10) {
+    } else if (margin <= -rules.bigFailMargin) {
       isSuccess = false
       isBarelySuccess = false
       outcomeText = '大失败！'
@@ -118,7 +118,7 @@ export class CheckCalculationService {
       const critChance = CombatCalculationService.computeCritRate(params.charisma)
       isCritHit = Math.random() * 100 < critChance
       outcomeText = isCritHit ? '暴击成功！' : '成功'
-    } else if (margin >= -2) {
+    } else if (margin >= -rules.barelySuccessMargin) {
       isSuccess = true
       isBarelySuccess = true
       outcomeText = '勉强成功'
@@ -517,7 +517,7 @@ ${result.total > result.target ? '✅ 先手行动权！' : (result.total < resu
       }
     }
 
-    const finalValue = params.rollTotal + myAgiMod + params.modifier;
+    const finalValue = params.rollTotal + myAgiMod + masteryBonus + params.modifier;
     const isSuccess = finalValue >= escapeDC;
 
     const result: CheckResult = {
@@ -529,7 +529,7 @@ ${result.total > result.target ? '✅ 先手行动权！' : (result.total < resu
       criticalSuccess: false,
       criticalFailure: false,
       outcome: isSuccess ? '逃跑成功！' : '逃跑失败，浪费一回合',
-      message: `D20(${params.rollTotal}) + 敏捷(${myAgiMod})${params.modifier !== 0 ? ` + 修正(${params.modifier >= 0 ? '+' : ''}${params.modifier})` : ''} = ${finalValue} vs DC ${escapeDC}`,
+      message: `D20(${params.rollTotal}) + 敏捷(${myAgiMod}) + 掌握(${masteryBonus})${params.modifier !== 0 ? ` + 修正(${params.modifier >= 0 ? '+' : ''}${params.modifier})` : ''} = ${finalValue} vs DC ${escapeDC}`,
       diceType: '1d20',
       presetId: 'escape',
     };
@@ -540,6 +540,7 @@ ${result.total > result.target ? '✅ 先手行动权！' : (result.total < resu
   static formatEscapeCheckContent(params: EscapeCheckParams, result: CheckResult, dcDescription: string): string {
     const typeLabel = params.escapeType === 'solo' ? '单对单' : (params.escapeType === 'surrounded' ? '被包围' : '有障碍');
     const myAgiMod = CombatCalculationService.computeAttributeModifier(params.agilityValue);
+    const masteryBonus = WorldConfigService.getMasteryBonus(params.level);
 
     return `<meta:检定结果>
 【AIDM逃跑检定 - ${typeLabel}】
@@ -547,6 +548,7 @@ ${result.total > result.target ? '✅ 先手行动权！' : (result.total < resu
 🎲 判定过程：
 ・D20投骰：${params.rollTotal}
 ・敏捷属性加成：${myAgiMod}（敏捷${params.agilityValue}）
+・掌握加成：${masteryBonus}
 ・额外修正：${params.modifier}
 ・最终值：${result.total}
 

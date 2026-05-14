@@ -58,7 +58,7 @@ export class BlacklistManager {
   }
 
   addEntry(entry: Omit<BlacklistEntry, 'id' | 'createdAt' | 'updatedAt' | 'hitCount'>): BlacklistEntry {
-    const id = `blacklist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `blacklist_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const now = Date.now();
 
     const newEntry: BlacklistEntry = {
@@ -268,7 +268,7 @@ export class BlacklistManager {
         for (const entry of data.entries) {
           if (entry.pattern && entry.type && entry.scope) {
             if (this.entries.has(entry.id)) {
-              entry.id = `blacklist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+              entry.id = `blacklist_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
             }
             this.entries.set(entry.id, {
               ...entry,

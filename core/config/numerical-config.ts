@@ -48,6 +48,9 @@ export interface CheckRules {
   attrAdvantageCap: number
   escapeBaseDC: number
   escapeSurroundPerEnemy: number
+  bigSuccessMargin: number
+  bigFailMargin: number
+  barelySuccessMargin: number
 }
 
 export interface CombatRules {

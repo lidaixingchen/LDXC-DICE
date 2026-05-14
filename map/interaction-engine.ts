@@ -96,7 +96,7 @@ export class InteractionEngine {
   }
 
   addRule(rule: Omit<MapInteraction, 'id'>): MapInteraction {
-    const id = `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const id = `rule_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const newRule: MapInteraction = {
       ...rule,
       id,

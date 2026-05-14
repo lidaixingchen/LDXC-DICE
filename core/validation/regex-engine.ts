@@ -450,7 +450,7 @@ export function transformExpression(
 export function addCustomRule(rule: Omit<RegexRule, 'id'>): RegexRule {
   const newRule: RegexRule = {
     ...rule,
-    id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `custom_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
   };
   regexEngine.addRule(newRule);
   return newRule;
