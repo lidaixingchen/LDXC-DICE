@@ -22,20 +22,23 @@ TypeScript + Vue 3 + Vite 5 + SCSS + Vitest + pnpm
 
 ```text
 骰子系统/
-├── core/                    # 纯逻辑层（骰子掷出、效果引擎、属性管理、验证规则）
-├── data/                    # 数据持久化层（预设/规则/设置管理器）
-├── adapters/                # DatabaseAdapter 接口 + 实现
-├── utils/                   # 横切关注点（日志、缓存、宿主环境检测）
-├── map/                     # 地图系统
-├── presets/                 # 预设管理
+├── core/                    # 纯逻辑层
+│   ├── dice-roller.ts       # 骰子表达式解析与掷出
+│   ├── effect-engine.ts     # 效果引擎（主效果 + 二级效果链）
+│   ├── attribute-manager.ts # 属性管理
+│   ├── safe-eval.ts         # 安全表达式求值器（递归下降解析器）
+│   ├── config/              # 数值配置（numerical-config.json）
+│   └── validation/          # 验证规则 + 正则引擎
+├── data/                    # 数据持久化层（预设/规则/设置管理器，localStorage）
+├── adapters/                # DatabaseAdapter 接口 + GodDatabaseAdapter 实现
+├── utils/                   # 横切关注点（日志、缓存、宿主环境检测、安全存储）
+├── map/                     # 地图系统（渲染、交互、图块管理）
+├── presets/                 # 预设管理 + 内置预设
 ├── ui/                      # Vue 前端界面
-│   ├── public/              # 静态资源（test.html 开发测试环境）
+│   ├── test.html            # 开发测试环境（模拟 SillyTavern 宿主）
 │   └── src/
 │       ├── types/           # 统一类型定义（core/check/dashboard/mvu）
-│       ├── services/        # 服务层
-│       │   ├── HostBridgeService.ts      # 宿主桥接（DOM、消息、样式注入）
-│       │   ├── CheckCalculationService.ts
-│       │   └── CombatCalculationService.ts
+│       ├── services/        # 服务层（HostBridge、检定计算、战斗计算、存档）
 │       ├── composables/     # Vue 组合式函数
 │       │   ├── core/        # 核心系统（useDiceSystem、usePanelState、usePresets）
 │       │   ├── check/       # 六种检定模式
@@ -49,12 +52,13 @@ TypeScript + Vue 3 + Vite 5 + SCSS + Vitest + pnpm
 │       │   ├── character/   # 角色相关
 │       │   ├── presets/     # 预设管理
 │       │   ├── settings/    # 设置配置
-│       │   ├── tools/       # 工具组件
-│       │   └── dev/         # 开发调试
+│       │   ├── tools/       # 工具组件（地图、存档、表格浏览）
+│       │   └── dev/         # 开发调试（DebugConsole）
 │       ├── styles/          # 模块化样式系统（13+ 主题）
 │       └── utils/           # 输入框智能填充、主题工具、Toast 管理
 └── docs/                    # 文档
-    └── demo/                # 产品展示页（docs/demo/index.html）
+    ├── demo/                # 产品展示页（docs/demo/index.html）
+    └── AIDM/                # 设计文档（世界书 YAML）
 ```
 
 ## 安装与使用
@@ -89,7 +93,7 @@ pnpm build        # 生产构建，输出 dist/stable.js + JSON 包
 ### 测试
 
 ```bash
-pnpm test                    # 运行全部测试
+pnpm test                    # 运行全部测试（404 个用例）
 pnpm test:watch              # 监听模式
 pnpm test -- path/to/test.ts  # 运行单个测试文件
 ```
@@ -99,6 +103,14 @@ pnpm test -- path/to/test.ts  # 运行单个测试文件
 ```bash
 pnpm typecheck
 ```
+
+### 代码规范
+
+```bash
+pnpm lint                    # ESLint 检查
+```
+
+项目使用 ESLint (flat config) + EditorConfig + Git hooks (husky + lint-staged) 确保代码质量。提交前自动运行 lint 和类型检查。
 
 ## 架构说明
 
@@ -112,6 +124,14 @@ pnpm typecheck
 ### 检定模式
 
 六种检定模式各对应一个 composable + service，计算逻辑在 `services/CheckCalculationService.ts`，状态通过模块级单例 ref 共享。
+
+### 安全表达式求值
+
+所有动态表达式求值统一通过 `core/safe-eval.ts` 的递归下降解析器执行，不使用 `new Function` / `eval`。支持算术、比较、逻辑、三元运算符及白名单数学函数。
+
+### 单例管理
+
+核心管理器使用延迟初始化 getter 模式（如 `getSettingsManager()`、`getPresetManager()`），不在模块加载时实例化。每个 getter 提供对应的 `reset*()` 函数用于测试隔离。
 
 ### 样式系统
 
